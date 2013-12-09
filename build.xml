@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+
+<project name="vesper" default="compile">
+
+    <import file="tasks.xml"/>
+
+    <path id="compile.classpath">
+        <fileset dir="${lib.dir}" includes="*.jar"/>
+    </path>
+
+    <target name="jar" depends="compile"
+            description="Build jar.">
+        <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
+                 classpath="lib/jarjar-1.4.jar"/>
+        <mkdir dir="${build.dir}/dist"/>
+        <jarjar jarfile="${build.dir}/dist/vesper-${version}.jar">
+            <fileset dir="${build.dir}/classes"/>
+        </jarjar>
+    </target>
+
+    <target name="dist" depends="jar, javadoc"
+            description="Build entire distribution.">
+
+        <copy toDir="${build.dir}/dist" file="COPYING"/>
+        <copy toDir="${build.dir}/dist">
+            <fileset dir="${lib.dir}"
+                     includes="*.jar"/>
+        </copy>
+        <copy toDir="${build.dir}/dist">
+            <fileset dir="${build.dir}" includes="javadoc/**/*"/>
+        </copy>
+
+        <zip destfile="${build.dir}/vesper-${version}.zip"
+             basedir="${build.dir}/dist"/>
+        <zip destfile="${build.dir}/vesper-${version}-src.zip"
+             basedir="."
+             excludes="build/**/*,build,.svn,.svn/**/*,**/.svn,classes,classes/**/*"/>
+    </target>
+
+    <target name="test.dist"
+            depends="jar, test.compile"
+            description="Execute JUnit tests against distribution jar.">
+        <java fork="true"
+              classname="org.junit.runner.JUnitCore"
+              failonerror="true">
+            <classpath>
+                <pathelement location="${build.dir}/tests"/>
+                <pathelement location="${build.dir}/dist/vesper-${version}.jar"/>
+                <pathelement location="${lib.dir}/*.jar" />
+                <path refid="compile.classpath"/>
+            </classpath>
+            <arg value="${test.class}"/>
+        </java>
+    </target>
+
+    <target name="javadoc"
+            description="Generate Javadocs.">
+        <mkdir dir="${build.dir}/javadoc"/>
+        <javadoc packagenames="${javadoc.packagenames}"
+                 destdir="${build.dir}/javadoc"
+                 author="false"
+                 protected="true"
+                 windowtitle="Vesper 1.0 API">
+            <sourcepath>
+                <pathelement location="${src.dir}"/>
+            </sourcepath>
+            <classpath refid="compile.classpath"/>
+            <link href="http://java.sun.com/javase/6/docs/api"/>
+        </javadoc>
+    </target>
+
+    <target name="clean.all"
+            depends="clean"
+            description="Remove generated files.">
+    </target>
+
+</project>
