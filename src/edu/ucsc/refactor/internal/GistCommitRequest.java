@@ -3,6 +3,7 @@ package edu.ucsc.refactor.internal;
 import edu.ucsc.refactor.Change;
 import edu.ucsc.refactor.CommitRequest;
 import edu.ucsc.refactor.Source;
+import edu.ucsc.refactor.spi.Upstream;
 
 import java.util.LinkedList;
 import java.util.Queue;
@@ -16,8 +17,8 @@ public final class GistCommitRequest implements CommitRequest {
     private static final Logger LOGGER      = Logger.getLogger(GistCommitRequest.class.getName());
     private static final String DOT_JAVA    = ".java";
 
-    private final Change        change;
-    private final Queue<Delta>  load;
+    private final Change            change;
+    private final Queue<Delta>      load;
 
     private final AtomicReference<Source> fileMatchingLastDelta;
 
@@ -27,8 +28,8 @@ public final class GistCommitRequest implements CommitRequest {
      * @param change The change to be applied and transmitted.
      */
     public GistCommitRequest(Change change){
-        this.change = change;
-        this.load   = new LinkedList<Delta>();
+        this.change     = change;
+        this.load       = new LinkedList<Delta>();
 
         for(Delta each : change.getDeltas()){ // in order
             this.load.add(each);
@@ -42,8 +43,10 @@ public final class GistCommitRequest implements CommitRequest {
         return change.isValid();
     }
 
-    @Override public void commit() throws RuntimeException {
+    @Override public void commit(Upstream to) throws RuntimeException {
         LOGGER.fine("Committing change...");
+
+        System.out.println(to.get() != null);
 
         while(!load.isEmpty()){
             final Delta each = this.load.remove();

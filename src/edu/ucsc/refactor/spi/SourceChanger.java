@@ -1,11 +1,8 @@
 package edu.ucsc.refactor.spi;
 
 import edu.ucsc.refactor.*;
-import edu.ucsc.refactor.internal.Delta;
-import edu.ucsc.refactor.internal.GistCommitRequest;
+import edu.ucsc.refactor.internal.*;
 import edu.ucsc.refactor.Location;
-import edu.ucsc.refactor.internal.SourceFormatter;
-import edu.ucsc.refactor.internal.SourceLocation;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;

@@ -46,6 +46,17 @@ public interface Host {
      */
     void addSourceChanger(SourceChanger changer);
 
+    /**
+     * User credentials to stored the refactored {@code Source}.
+     *
+     * @param credential The access credentials
+     */
+    void addCredentials(Credential credential);
+
+    /**
+     * @return The commit destination.
+     */
+    Upstream getUpstream();
 
     /**
      * Creates a new Java context for the source file.  This

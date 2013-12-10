@@ -1,15 +1,7 @@
 package edu.ucsc.refactor;
 
-import edu.ucsc.refactor.internal.EclipseJavaParser;
 import edu.ucsc.refactor.internal.HostImpl;
 import edu.ucsc.refactor.internal.InternalRefactorerCreator;
-import edu.ucsc.refactor.internal.changers.ReformatSourceCode;
-import edu.ucsc.refactor.internal.changers.RemoveUnusedImports;
-import edu.ucsc.refactor.internal.changers.RemoveUnusedMethods;
-import edu.ucsc.refactor.internal.changers.RemoveUnusedParameters;
-import edu.ucsc.refactor.internal.detectors.UnusedImports;
-import edu.ucsc.refactor.internal.detectors.UnusedMethods;
-import edu.ucsc.refactor.internal.detectors.UnusedParameters;
 
 import java.util.Arrays;
 import java.util.List;
@@ -133,14 +125,7 @@ public final class Vesper {
      */
     static class DefaultConfiguration extends AbstractConfiguration {
         @Override protected void configure() {
-            addJavaParser(new EclipseJavaParser());
-            addIssueDetector(new UnusedImports());
-            addSourceChanger(new RemoveUnusedImports());
-            addIssueDetector(new UnusedMethods());
-            addSourceChanger(new RemoveUnusedMethods());
-            addIssueDetector(new UnusedParameters());
-            addSourceChanger(new RemoveUnusedParameters());
-            addSourceChanger(new ReformatSourceCode());
+            installDefaultSettings();
         }
     }
 
@@ -157,6 +142,9 @@ public final class Vesper {
         System.out.println("\nfindings...");
         if(refactorer.hasIssues(code)){
 
+            // TODO(Huascar) changes to file are still orthogonal; i.e.,
+            // change A to S produce S`, and change B to S produced S``, which don't
+            // contain the changes in S`..
             final List<Change> suggestedChanges = refactorer.recommendChanges(code);
             for(Change change : suggestedChanges){
                 System.out.println(change);

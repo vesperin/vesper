@@ -1,6 +1,16 @@
 package edu.ucsc.refactor;
 
-import edu.ucsc.refactor.spi.*;
+import edu.ucsc.refactor.internal.EclipseJavaParser;
+import edu.ucsc.refactor.internal.changers.ReformatSourceCode;
+import edu.ucsc.refactor.internal.changers.RemoveUnusedImports;
+import edu.ucsc.refactor.internal.changers.RemoveUnusedMethods;
+import edu.ucsc.refactor.internal.changers.RemoveUnusedParameters;
+import edu.ucsc.refactor.internal.detectors.UnusedImports;
+import edu.ucsc.refactor.internal.detectors.UnusedMethods;
+import edu.ucsc.refactor.internal.detectors.UnusedParameters;
+import edu.ucsc.refactor.spi.IssueDetector;
+import edu.ucsc.refactor.spi.JavaParser;
+import edu.ucsc.refactor.spi.SourceChanger;
 import edu.ucsc.refactor.util.ToStringBuilder;
 
 /**
@@ -50,6 +60,31 @@ public abstract class AbstractConfiguration implements Configuration {
         } finally {
             this.host = null;
         }
+    }
+
+    /**
+     * Installs default settings. Extenders of this class should use it
+     * when creating their configuration.
+     */
+    protected void installDefaultSettings(){
+        addJavaParser(new EclipseJavaParser());
+        addIssueDetector(new UnusedImports());
+        addSourceChanger(new RemoveUnusedImports());
+        addIssueDetector(new UnusedMethods());
+        addSourceChanger(new RemoveUnusedMethods());
+        addIssueDetector(new UnusedParameters());
+        addSourceChanger(new RemoveUnusedParameters());
+        addSourceChanger(new ReformatSourceCode());
+
+        // credentials must be added here..
+        addCredentials(null);
+    }
+
+    /**
+     * @see {@link Host#addCredentials(Credential)}}
+     */
+    protected void addCredentials(Credential credential){
+        this.host.addCredentials(credential);
     }
 
     /**
