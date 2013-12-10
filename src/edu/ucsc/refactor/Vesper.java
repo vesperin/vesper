@@ -142,9 +142,6 @@ public final class Vesper {
         System.out.println("\nfindings...");
         if(refactorer.hasIssues(code)){
 
-            // TODO(Huascar) changes to file are still orthogonal; i.e.,
-            // change A to S produce S`, and change B to S produced S``, which don't
-            // contain the changes in S`..
             final List<Change> suggestedChanges = refactorer.recommendChanges(code);
             for(Change change : suggestedChanges){
                 System.out.println(change);
