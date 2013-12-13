@@ -9,6 +9,7 @@ import org.eclipse.egit.github.core.service.GistService;
  */
 public class GistRepository implements Upstream {
     private final GistService service;
+    private final Credential  credential;
 
     /**
      * Construct a new Gist service provider.
@@ -18,7 +19,12 @@ public class GistRepository implements Upstream {
     public GistRepository(Credential key){
         GistService service = new GistService();
         service.getClient().setCredentials(key.getUsername(), key.getPassword());
-        this.service = service;
+        this.service    = service;
+        this.credential = key;
+    }
+
+    Credential getCredential(){
+        return credential;
     }
 
     @Override public GistService get() {

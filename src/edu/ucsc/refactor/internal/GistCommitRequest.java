@@ -4,9 +4,18 @@ import edu.ucsc.refactor.Change;
 import edu.ucsc.refactor.CommitRequest;
 import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.spi.Upstream;
+import edu.ucsc.refactor.util.FileReader;
+import edu.ucsc.refactor.util.StringUtil;
+import org.eclipse.egit.github.core.Comment;
+import org.eclipse.egit.github.core.Gist;
+import org.eclipse.egit.github.core.GistFile;
+import org.eclipse.egit.github.core.User;
+import org.eclipse.egit.github.core.service.GistService;
 
-import java.util.LinkedList;
-import java.util.Queue;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Logger;
 
@@ -43,37 +52,96 @@ public final class GistCommitRequest implements CommitRequest {
         return change.isValid();
     }
 
-    @Override public void commit(Upstream to) throws RuntimeException {
-        LOGGER.fine("Committing change...");
+    static String squashedDeltas(String name, Queue<Delta> deltas) throws RuntimeException {
+        File tempFile = null;
+        try {
+            tempFile = File.createTempFile(name, DOT_JAVA);
+            while (!deltas.isEmpty()){
+                final Delta next = deltas.remove();
+                setFileContent(tempFile, next.getAfter());
+            }
 
-        System.out.println(to.get() != null);
-
-        while(!load.isEmpty()){
-            final Delta each = this.load.remove();
-
-            final String name    = each.getSourceFile().getName();
-            final String before  = each.getBefore();
-            final String after   = each.getAfter();
-
-            // talking to gist.github.com will occur here...
-            System.out.println("");
-            System.out.println("Establishing a Gist connection ... \n");
-            System.out.println("Processing " + name + " ... ");
-            System.out.println("... " + before + "\n");
-            System.out.println(name + " has been processed!");
-            System.out.println(" ... ");
-            System.out.println(after + "\n");
-
-            if(this.load.isEmpty()){
-                this.fileMatchingLastDelta.set(new Source(name + DOT_JAVA, after));
-                System.out.println("Closing the opened Gist connection ... ");
+            return FileReader.read(tempFile);
+        } catch (Throwable ex){
+            throw new RuntimeException(ex);
+        } finally {
+            if(tempFile != null){
+                if(tempFile.exists()){
+                    LOGGER.fine(name + " file was deleted? " + tempFile.delete());
+                }
             }
         }
+    }
 
-        LOGGER.fine("Done committing changes...");
+    /**
+     * Sets the contents of a file from a String.
+     *
+     * @param file    The file to write to.
+     * @param content The contents to set.
+     * @throws IOException When the file could not be found or written to.
+     */
+    static void setFileContent(File file, String content) throws IOException {
+        FileOutputStream fileOutputStream = new FileOutputStream(file);
+        fileOutputStream.write(content.getBytes());
+        fileOutputStream.close();
+    }
+
+
+
+    static Source createSource(GistService service, Gist gist) throws IOException {
+        final String        id           = gist.getId();
+        final String        description  = gist.getDescription();
+        final List<Comment> comments     = service.getComments(id);
+
+        String name     = null;
+        String content  = null;
+
+        for(String eachKey : gist.getFiles().keySet()){ // it should be only one file
+            name    = gist.getFiles().get(eachKey).getFilename();
+            content = gist.getFiles().get(eachKey).getContent();
+        }
+
+        assert name     != null;
+        assert content  != null;
+
+        final Source updatedSource = new Source(name, content, description);
+        updatedSource.setId(id);
+
+        for(Comment eachComment : comments){
+            // todo(Huascar) in the future, we can store the user who made
+            // the comment. This will be great when having multiple ppl
+            // updating the file. This will be cool.
+            updatedSource.addComment(eachComment.getBody());
+        }
+
+        return updatedSource;
+    }
+
+    @Override public void commit(Upstream to) throws RuntimeException {
+        final Source            current             = this.load.peek().getSourceFile();
+        final GistService       service             = (GistService) to.get();
+        final boolean           isAboutToBeUpdated  = !this.load.isEmpty();
+        final GistRepository    repository          = ((GistRepository)to);
+        final String            username            = repository.getCredential().getUsername();
+        final String            fileName            = StringUtil.extractName(current.getName());
+
+        try {
+            Gist local = new GistBuilder(service, isAboutToBeUpdated)
+                    .content(squashedDeltas(fileName, this.load))
+                    .file(current)
+                    .user(username)
+                    .build();
+
+            fileMatchingLastDelta.set(createSource(service, local));
+        } catch (Throwable ex) {
+            throw new RuntimeException(ex);
+        }
+
     }
 
     @Override public Source getUpdatedSource() {
+        assert this.fileMatchingLastDelta.get() != null;
+
         return this.fileMatchingLastDelta.get();
     }
 
@@ -81,5 +149,172 @@ public final class GistCommitRequest implements CommitRequest {
     @Override public String more() {
         // todo(Huascar) add `more` information
         return "";
+    }
+
+
+    /**
+     * Helper class to create or update a {@code Gist}.
+     */
+    static class GistBuilder {
+        final GistService service;
+        final boolean     aboutTobeUpdated;
+        final Set<String> comments;
+
+        // optional values
+        String description;
+        String content;
+        Source code;
+        String username;
+
+        /**
+         * Construct a builder with {@code GistService} and whether
+         * we will be updating a gist file as values.
+         */
+        GistBuilder(GistService service, boolean isAboutTobeUpdated){
+            this.service            = service;
+            this.aboutTobeUpdated   = isAboutTobeUpdated;
+            this.comments           = new HashSet<String>();
+
+            this.description        = null;
+            this.content            = null;
+            this.code               = null;
+            this.username           = null;
+        }
+
+        GistBuilder description(String description) {
+            this.description = description;
+            return this;
+        }
+
+        GistBuilder comments(Set<String> comments){
+            this.comments.clear();
+            this.comments.addAll(comments);
+            return this;
+        }
+
+        GistBuilder content(String content){
+            this.content = content;
+            return this;
+        }
+
+        GistBuilder file(Source code){
+            this.code = code;
+            description(this.code.getDescription()); // one and only description
+            comments(this.code.getComments());
+            return this;
+        }
+
+        GistBuilder user(String username){
+            this.username = username;
+            return this;
+        }
+
+        public Gist build() throws RuntimeException {
+            Gist result = null;
+            try {
+                final Gist remote = (this.code.getId() != null
+                                        ? service.getGist(this.code.getId())
+                                        : null);
+                if(remote == null){
+                    Gist brandNew = new Gist().setDescription(this.description);
+
+                    final String updatedContent = this.content;
+                    final String fileName       = this.code.getName();
+
+                    final GistFile file = new GistFile();
+                    file.setContent(updatedContent);
+                    file.setFilename(fileName);
+
+                    brandNew.setFiles(Collections.singletonMap(fileName, file));
+                    brandNew.setPublic(false);
+
+                    // add comments
+                    for(String eachCommentContent : comments){
+                        final Comment each = new Comment();
+                        each.setBody(eachCommentContent);
+                        each.setUser(new User().setName(username));
+                    }
+
+                    result = service.createGist(brandNew);
+                } else {
+                    if(isDirty(this, remote) || aboutTobeUpdated){
+
+                        for(String each : remote.getFiles().keySet()){ // ONLY one file
+                            remote.getFiles().get(each).setContent(content);
+                            remote.getFiles().get(each).setFilename(code.getName());
+                            remote.setDescription(description);
+                        }
+
+                        final List<String> comments = complement(
+                                code.getComments(), service.getComments(remote.getId())
+                        );
+
+                        // add only new comments
+                        for(String eachCommentContent : comments){
+                            final Comment each = new Comment();
+                            each.setBody(eachCommentContent);
+                            each.setUser(remote.getUser());
+                        }
+
+
+                        result = service.updateGist(remote);
+                    }
+                }
+            } catch (Throwable ex){
+                throw new RuntimeException(ex);
+            }
+
+            return result;
+        }
+
+        static List<String> complement(Set<String> input, List<Comment> comments){
+            final List<String> result = new ArrayList<String>();
+            for(Comment eachComment : comments){
+                result.add(eachComment.getBody());
+            }
+
+            // removes from input all the elements that are also contained
+            // in result.
+            input.removeAll(result);
+            return new ArrayList<String>(input);
+        }
+
+
+        static boolean isDirty(GistBuilder builder, Gist remote) throws RuntimeException {
+            // determine what we are updating...
+            final boolean updateDescription = !(StringUtil.isStringEmpty(
+                    builder.description));
+            final boolean updateComments    = !builder.comments.isEmpty();
+            final boolean updateName        = !sameName(
+                    builder.code.getName(), remote.getFiles()
+            );
+
+            final boolean updateContent   = !sameContent(builder.content, remote.getFiles());
+
+            return updateDescription || updateComments || updateName || updateContent;
+        }
+
+
+        static boolean sameContent(String content, Map<String, GistFile> files){
+            for(String key : files.keySet()){
+                final GistFile file = files.get(key);
+                if(StringUtil.equals(content, file.getContent())){
+                    return true;
+                }
+            }
+            return false;
+        }
+
+
+        static boolean sameName(String name, Map<String, GistFile> files){
+            for(String key : files.keySet()){
+                final GistFile file = files.get(key);
+                if(StringUtil.equals(name, file.getFilename())){
+                    return true;
+                }
+            }
+            return false;
+        }
+
     }
 }
