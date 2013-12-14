@@ -1,6 +1,7 @@
 package edu.ucsc.refactor.spi;
 
 import edu.ucsc.refactor.*;
+import edu.ucsc.refactor.gist.GistCommitRequest;
 import edu.ucsc.refactor.internal.*;
 import edu.ucsc.refactor.Location;
 import org.eclipse.jdt.core.JavaCore;
@@ -74,11 +75,11 @@ public abstract class SourceChanger implements Changer {
 
     /**
      * Tracks the changes made to a {@link Source file} by storing them
-     * in the {@link edu.ucsc.refactor.internal.Delta} object.
+     * in the {@link Delta} object.
      *
      * @param node The ASTNode object.
      * @param rewrite The ASTRewrite object.
-     * @return a new {@link edu.ucsc.refactor.internal.Delta} object.
+     * @return a new {@link Delta} object.
      */
     protected Delta createDelta(ASTNode node, ASTRewrite rewrite) {
         final Source    source      = Source.from(node);

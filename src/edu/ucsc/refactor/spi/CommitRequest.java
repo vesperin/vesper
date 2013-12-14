@@ -1,6 +1,7 @@
-package edu.ucsc.refactor;
+package edu.ucsc.refactor.spi;
 
-import edu.ucsc.refactor.spi.Upstream;
+import edu.ucsc.refactor.Change;
+import edu.ucsc.refactor.Source;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)

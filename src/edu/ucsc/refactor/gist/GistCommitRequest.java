@@ -1,10 +1,13 @@
-package edu.ucsc.refactor.internal;
+package edu.ucsc.refactor.gist;
 
+import com.google.common.base.Joiner;
+import com.google.common.io.Files;
 import edu.ucsc.refactor.Change;
-import edu.ucsc.refactor.CommitRequest;
 import edu.ucsc.refactor.Source;
+import edu.ucsc.refactor.internal.Delta;
+import edu.ucsc.refactor.spi.CommitRequest;
+import edu.ucsc.refactor.spi.Name;
 import edu.ucsc.refactor.spi.Upstream;
-import edu.ucsc.refactor.util.FileReader;
 import edu.ucsc.refactor.util.StringUtil;
 import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.Gist;
@@ -13,8 +16,8 @@ import org.eclipse.egit.github.core.User;
 import org.eclipse.egit.github.core.service.GistService;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Logger;
@@ -30,6 +33,7 @@ public final class GistCommitRequest implements CommitRequest {
     private final Queue<Delta>      load;
 
     private final AtomicReference<Source> fileMatchingLastDelta;
+    private final StringBuilder moreBuilder;
 
 
     /**
@@ -46,6 +50,7 @@ public final class GistCommitRequest implements CommitRequest {
 
 
         this.fileMatchingLastDelta  = new AtomicReference<Source>();
+        this.moreBuilder            = new StringBuilder();
     }
 
     @Override public boolean isValid() {
@@ -58,34 +63,28 @@ public final class GistCommitRequest implements CommitRequest {
             tempFile = File.createTempFile(name, DOT_JAVA);
             while (!deltas.isEmpty()){
                 final Delta next = deltas.remove();
-                setFileContent(tempFile, next.getAfter());
+                Files.write(next.getAfter().getBytes(), tempFile);
             }
 
-            return FileReader.read(tempFile);
+            Files.readLines(tempFile, Charset.defaultCharset());
+
+            return Joiner.on("\n").join(
+                    Files.readLines(
+                            tempFile,
+                            Charset.defaultCharset()
+                    )
+            );
         } catch (Throwable ex){
             throw new RuntimeException(ex);
         } finally {
             if(tempFile != null){
                 if(tempFile.exists()){
-                    LOGGER.fine(name + " file was deleted? " + tempFile.delete());
+                    final boolean deleted = tempFile.delete();
+                    LOGGER.fine(name + " file was deleted? " + deleted);
                 }
             }
         }
     }
-
-    /**
-     * Sets the contents of a file from a String.
-     *
-     * @param file    The file to write to.
-     * @param content The contents to set.
-     * @throws IOException When the file could not be found or written to.
-     */
-    static void setFileContent(File file, String content) throws IOException {
-        FileOutputStream fileOutputStream = new FileOutputStream(file);
-        fileOutputStream.write(content.getBytes());
-        fileOutputStream.close();
-    }
-
 
 
     static Source createSource(GistService service, Gist gist) throws IOException {
@@ -133,6 +132,15 @@ public final class GistCommitRequest implements CommitRequest {
                     .build();
 
             fileMatchingLastDelta.set(createSource(service, local));
+
+
+            // fill out the `more` information
+            final Name info = change.getCause().getName();
+            moreBuilder.append("commit ").append(local.getId()).append("\n");
+            moreBuilder.append("Author:\t").append(username).append("\n");
+            moreBuilder.append("Date:\t").append(local.getUpdatedAt()).append("\n\n\t\t");
+            moreBuilder.append(info.getKey()).append(": ").append(info.getSummary()).append("\n");
+
         } catch (Throwable ex) {
             throw new RuntimeException(ex);
         }
@@ -147,8 +155,7 @@ public final class GistCommitRequest implements CommitRequest {
 
 
     @Override public String more() {
-        // todo(Huascar) add `more` information
-        return "";
+        return moreBuilder.toString();
     }
 
 

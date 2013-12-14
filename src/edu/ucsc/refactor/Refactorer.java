@@ -1,5 +1,7 @@
 package edu.ucsc.refactor;
 
+import edu.ucsc.refactor.spi.CommitRequest;
+
 import java.util.List;
 import java.util.Map;
 

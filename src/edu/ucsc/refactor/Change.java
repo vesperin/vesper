@@ -1,6 +1,7 @@
 package edu.ucsc.refactor;
 
 import edu.ucsc.refactor.internal.Delta;
+import edu.ucsc.refactor.spi.CommitRequest;
 
 import java.util.ArrayList;
 import java.util.List;

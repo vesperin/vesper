@@ -3,6 +3,7 @@ package edu.ucsc.refactor.internal;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.visitors.MethodDeclarationVisitor;
 import edu.ucsc.refactor.internal.visitors.SelectedASTNodeVisitor;
+import edu.ucsc.refactor.spi.CommitRequest;
 import edu.ucsc.refactor.spi.IssueDetector;
 import edu.ucsc.refactor.spi.SourceChanger;
 import edu.ucsc.refactor.util.ToStringBuilder;

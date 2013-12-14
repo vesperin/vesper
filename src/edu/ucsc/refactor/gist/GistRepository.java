@@ -1,7 +1,8 @@
-package edu.ucsc.refactor.internal;
+package edu.ucsc.refactor.gist;
 
 import edu.ucsc.refactor.Credential;
 import edu.ucsc.refactor.spi.Upstream;
+import org.eclipse.egit.github.core.client.GitHubClient;
 import org.eclipse.egit.github.core.service.GistService;
 
 /**

@@ -2,7 +2,7 @@ package edu.ucsc.refactor.internal;
 
 import edu.ucsc.refactor.CauseOfChange;
 import edu.ucsc.refactor.Change;
-import edu.ucsc.refactor.CommitRequest;
+import edu.ucsc.refactor.spi.CommitRequest;
 import edu.ucsc.refactor.Parameter;
 import edu.ucsc.refactor.spi.Changer;
 import edu.ucsc.refactor.spi.SourceChanger;
