@@ -14,7 +14,7 @@ import org.junit.runners.Suite;
         LocationsTest.class,
         ASTUtilTest.class,
         IoTest.class,
-        Notes.class
+        NotesTest.class
 })
 public class UtilSuiteTest {
     public static junit.framework.Test suite() {
