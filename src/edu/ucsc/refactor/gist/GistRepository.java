@@ -2,7 +2,6 @@ package edu.ucsc.refactor.gist;
 
 import edu.ucsc.refactor.Credential;
 import edu.ucsc.refactor.spi.Upstream;
-import org.eclipse.egit.github.core.client.GitHubClient;
 import org.eclipse.egit.github.core.service.GistService;
 
 /**
@@ -26,6 +25,10 @@ public class GistRepository implements Upstream {
 
     Credential getCredential(){
         return credential;
+    }
+
+    @Override public String getUser() {
+        return getCredential().getUsername();
     }
 
     @Override public GistService get() {

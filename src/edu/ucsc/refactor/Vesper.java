@@ -101,6 +101,29 @@ public final class Vesper {
      * {@link Vesper}'s main configuration object.
      *
      * @param configuration The current configuration
+     * @param host          The current host.
+     * @param sources The list of sources.
+     *
+     * @return a new Refactorer
+     */
+    public static Refactorer createRefactorer(
+            Configuration configuration,
+            Host host, Iterable<Source> sources
+    ){
+        // installs a configuration to Vesper's host.
+        host.install(configuration);
+
+        return new InternalRefactorerCreator(host)
+                .addSources(sources)
+                .build();
+    }
+
+
+    /**
+     * Creates a refactorer for the given set of sources using
+     * {@link Vesper}'s main configuration object.
+     *
+     * @param configuration The current configuration
      * @param sources The list of sources.
      *
      * @return a new Refactorer
@@ -110,14 +133,11 @@ public final class Vesper {
             Iterable<Source> sources
     ){
 
-        final HostImpl host = new HostImpl();
-
-        // installs a configuration to Vesper's host.
-        host.install(configuration);
-
-        return new InternalRefactorerCreator(host)
-                .addSources(sources)
-                .build();
+        return createRefactorer(
+                configuration,
+                new HostImpl(),
+                sources
+        );
     }
 
     /**

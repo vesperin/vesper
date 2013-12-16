@@ -129,8 +129,7 @@ public final class GistCommitRequest implements CommitRequest {
         final Source            current             = this.load.peek().getSourceFile();
         final GistService       service             = (GistService) to.get();
         final boolean           isAboutToBeUpdated  = !this.load.isEmpty();
-        final GistRepository    repository          = ((GistRepository)to);
-        final String            username            = repository.getCredential().getUsername();
+        final String            username            = to.getUser();
         final String            fileName            = StringUtil.extractName(current.getName());
 
         try {
