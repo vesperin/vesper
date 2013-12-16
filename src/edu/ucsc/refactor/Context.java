@@ -1,13 +1,10 @@
 package edu.ucsc.refactor;
 
-import edu.ucsc.refactor.internal.SourceLocation;
 import edu.ucsc.refactor.util.Locations;
 import edu.ucsc.refactor.util.ToStringBuilder;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -26,7 +23,6 @@ public class Context {
     public Context(Source file){
         this.file   = file;
     }
-
 
 
     /**
