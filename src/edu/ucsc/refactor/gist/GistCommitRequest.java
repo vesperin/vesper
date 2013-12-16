@@ -3,16 +3,17 @@ package edu.ucsc.refactor.gist;
 import com.google.common.base.Joiner;
 import com.google.common.io.Files;
 import edu.ucsc.refactor.Change;
+import edu.ucsc.refactor.Note;
 import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.internal.Delta;
 import edu.ucsc.refactor.spi.CommitRequest;
 import edu.ucsc.refactor.spi.Name;
 import edu.ucsc.refactor.spi.Upstream;
+import edu.ucsc.refactor.util.Notes;
 import edu.ucsc.refactor.util.StringUtil;
 import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.Gist;
 import org.eclipse.egit.github.core.GistFile;
-import org.eclipse.egit.github.core.User;
 import org.eclipse.egit.github.core.service.GistService;
 
 import java.io.File;
@@ -107,10 +108,18 @@ public final class GistCommitRequest implements CommitRequest {
         updatedSource.setId(id);
 
         for(Comment eachComment : comments){
-            // todo(Huascar) in the future, we can store the user who made
-            // the comment. This will be great when having multiple ppl
-            // updating the file. This will be cool.
-            updatedSource.addComment(eachComment.getBody());
+
+            final String noteId         = String.valueOf(eachComment.getId());
+            final String user           = eachComment.getUser().getName();
+            final String noteContent    = eachComment.getBody();
+
+            final Note note = new Note(
+                    noteId,
+                    user,
+                    noteContent
+            );
+
+            updatedSource.addNote(note);
         }
 
         return updatedSource;
@@ -165,7 +174,8 @@ public final class GistCommitRequest implements CommitRequest {
     static class GistBuilder {
         final GistService service;
         final boolean     aboutTobeUpdated;
-        final Set<String> comments;
+
+        Notes notes;
 
         // optional values
         String description;
@@ -180,7 +190,7 @@ public final class GistCommitRequest implements CommitRequest {
         GistBuilder(GistService service, boolean isAboutTobeUpdated){
             this.service            = service;
             this.aboutTobeUpdated   = isAboutTobeUpdated;
-            this.comments           = new HashSet<String>();
+            this.notes              = new Notes();
 
             this.description        = null;
             this.content            = null;
@@ -193,9 +203,9 @@ public final class GistCommitRequest implements CommitRequest {
             return this;
         }
 
-        GistBuilder comments(Set<String> comments){
-            this.comments.clear();
-            this.comments.addAll(comments);
+        GistBuilder notes(Notes comments){
+            this.notes.clear();
+            this.notes = this.notes.union(comments);
             return this;
         }
 
@@ -207,7 +217,7 @@ public final class GistCommitRequest implements CommitRequest {
         GistBuilder file(Source code){
             this.code = code;
             description(this.code.getDescription()); // one and only description
-            comments(this.code.getComments());
+            notes(this.code.getNotes());
             return this;
         }
 
@@ -235,14 +245,13 @@ public final class GistCommitRequest implements CommitRequest {
                     brandNew.setFiles(Collections.singletonMap(fileName, file));
                     brandNew.setPublic(false);
 
-                    // add comments
-                    for(String eachCommentContent : comments){
-                        final Comment each = new Comment();
-                        each.setBody(eachCommentContent);
-                        each.setUser(new User().setName(username));
+                    result = service.createGist(brandNew);
+
+                    // add comments to an already created gist
+                    for(Note eachNote : notes){
+                        service.createComment(result.getId(), eachNote.getContent());
                     }
 
-                    result = service.createGist(brandNew);
                 } else {
                     if(isDirty(this, remote) || aboutTobeUpdated){
 
@@ -252,19 +261,17 @@ public final class GistCommitRequest implements CommitRequest {
                             remote.setDescription(description);
                         }
 
-                        final List<String> comments = complement(
-                                code.getComments(), service.getComments(remote.getId())
+                        final Notes newNotes = difference(
+                                code.getNotes(),
+                                service.getComments(remote.getId())
                         );
 
-                        // add only new comments
-                        for(String eachCommentContent : comments){
-                            final Comment each = new Comment();
-                            each.setBody(eachCommentContent);
-                            each.setUser(remote.getUser());
-                        }
-
-
                         result = service.updateGist(remote);
+
+                        // add only new comments
+                        for(Note eachNote : newNotes){
+                            service.createComment(result.getId(), eachNote.getContent());
+                        }
                     }
                 }
             } catch (Throwable ex){
@@ -274,16 +281,18 @@ public final class GistCommitRequest implements CommitRequest {
             return result;
         }
 
-        static List<String> complement(Set<String> input, List<Comment> comments){
-            final List<String> result = new ArrayList<String>();
-            for(Comment eachComment : comments){
-                result.add(eachComment.getBody());
+        static Notes difference(Notes input, List<Comment> comments){
+            Notes that = new Notes();
+            // todo(Huascar) How can we store the location or source selection?
+            // as of now, they will be null.
+            for (Comment x : comments) {
+                final Note each = new Note(x.getBody());
+                each.setId(String.valueOf(x.getId()));
+                each.setUser(x.getUser().getName());
+                that.add(each);
             }
 
-            // removes from input all the elements that are also contained
-            // in result.
-            input.removeAll(result);
-            return new ArrayList<String>(input);
+            return input.difference(that);
         }
 
 
@@ -291,14 +300,14 @@ public final class GistCommitRequest implements CommitRequest {
             // determine what we are updating...
             final boolean updateDescription = !(StringUtil.isStringEmpty(
                     builder.description));
-            final boolean updateComments    = !builder.comments.isEmpty();
+            final boolean updateNotes       = !builder.notes.isEmpty();
             final boolean updateName        = !sameName(
                     builder.code.getName(), remote.getFiles()
             );
 
             final boolean updateContent   = !sameContent(builder.content, remote.getFiles());
 
-            return updateDescription || updateComments || updateName || updateContent;
+            return updateDescription || updateNotes || updateName || updateContent;
         }
 
 

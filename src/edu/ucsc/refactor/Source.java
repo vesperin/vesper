@@ -1,27 +1,25 @@
 package edu.ucsc.refactor;
 
+import edu.ucsc.refactor.util.Notes;
 import edu.ucsc.refactor.util.StringUtil;
 import edu.ucsc.refactor.util.ToStringBuilder;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-// todo(Huascar) implement equals and hashCode
+// todo(Huascar) investigate the need for implementing equals and hashCode
 public class Source {
     public static final String SOURCE_FILE_PROPERTY = "kae.source_file.source_file_property";
 
     private final String        name;
     private final String        contents;
     private final String        description;
-    private final Set<String>   comments;
-
+    private final Notes notes;
 
     private final AtomicReference<String> id;
 
@@ -51,7 +49,7 @@ public class Source {
         this.contents    = contents;
         this.description = description;
         this.id          = new AtomicReference<String>();
-        this.comments    = new HashSet<String>();
+        this.notes       = new Notes();
     }
 
     /**
@@ -65,13 +63,13 @@ public class Source {
     }
 
     /**
-     * Removes a comment from the {@code Source}
+     * Adds a note or mark describing the {@code Source}
      *
-     * @param comment The comment to be added.
-     * @return {@code true} if the comment was added. {@code false} otherwise.
+     * @param note The note to be added.
+     * @return {@code true} if the note was added. {@code false} otherwise.
      */
-    public boolean addComment(String comment){
-        return this.comments.add(comment);
+    public boolean addNote(Note note){
+        return this.notes.add(note);
     }
 
 
@@ -92,6 +90,16 @@ public class Source {
      * @return The file's contents
      */
     public String getContents() { return contents; }
+
+    /**
+     * @return The general {@code Note} describing the entire {@code Source}.
+     */
+    public Note getGeneralNote(){ return getNotes().first(); }
+
+    /**
+     * @return All the notes describing the {@code Source}.
+     */
+    public Notes getNotes(){ return this.notes; }
 
     /**
      * Gets the file's id
@@ -115,12 +123,12 @@ public class Source {
     public int getLength()      { return getContents().length(); }
 
     /**
-     * Removes a comment from queue.
+     * Removes a note from symbol table.
      *
-     * @return {@code true} if the comment was removed.
+     * @return {@code true} if the note was removed.
      */
-    public boolean removeComment(String comment){
-        return comments.remove(comment);
+    public boolean removeNote(Note note){
+        return this.notes.delete(note);
     }
 
     /**
@@ -152,12 +160,5 @@ public class Source {
      */
     public IDocument toDocument() {
         return new Document(getContents());
-    }
-
-    /**
-     * @return The set of comments.
-     */
-    public Set<String> getComments() {
-        return comments;
     }
 }

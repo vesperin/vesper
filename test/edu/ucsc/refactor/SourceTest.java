@@ -24,7 +24,7 @@ public class SourceTest {
         assertThat(a.getContents(), equalTo(CONTENT));
         assertNotNull(a.toDocument());
         assertEquals(a.getDescription(), DESC);
-        assertThat(a.getComments().isEmpty(), is(true));
+        assertThat(a.getNotes().isEmpty(), is(true));
     }
 
 
@@ -36,25 +36,32 @@ public class SourceTest {
         assertThat("Source[name=" + StringUtil.extractName(b.getName()) + "]",
                 equalTo(b.toString()));
         assertEquals(b.getDescription(), VERBOSE_DESC);
-        assertThat(b.getComments().isEmpty(), is(true));
+        assertThat(b.getNotes().isEmpty(), is(true));
     }
 
     @Test public void testSourceComments(){
         final Source    code        = new Source(NAME, CONTENT, VERBOSE_DESC);
-        final String[]  comments    = {"a", "b", "c"};
-        for(String eachComment : comments){
-            code.addComment(eachComment);
+
+        final Note[]    notes       = {
+                new Note("a"), new Note("b"), new Note("c")
+        };
+
+
+        for(Note eachNote : notes){
+            code.addNote(eachNote);
         }
 
-        assertThat(code.getComments().isEmpty(), is(false));
-        assertThat(code.getComments().size(), is(3));
+        assertThat(code.getNotes().isEmpty(), is(false));
+        assertThat(code.getNotes().size(), is(3));
+        assertNotNull(code.getGeneralNote());
+        assertThat(code.getGeneralNote().getContent(), is("a"));
 
-        for(String eachComment : comments){
-            code.removeComment(eachComment);
+        for(Note eachNote : notes){
+            code.removeNote(eachNote);
         }
 
-        assertThat(code.getComments().isEmpty(), is(true));
-        assertThat(code.getComments().size(), is(0));
+        assertThat(code.getNotes().isEmpty(), is(true));
+        assertThat(code.getNotes().size(), is(0));
     }
 
     @Test public void testGivingSomeIdToSource(){
