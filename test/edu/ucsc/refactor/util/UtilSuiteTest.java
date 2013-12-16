@@ -12,7 +12,9 @@ import org.junit.runners.Suite;
         StringsTest.class,
         ToStringBuilderTest.class,
         LocationsTest.class,
-        ASTUtilTest.class
+        ASTUtilTest.class,
+        IoTest.class,
+        NotesTest.class
 })
 public class UtilSuiteTest {
     public static junit.framework.Test suite() {

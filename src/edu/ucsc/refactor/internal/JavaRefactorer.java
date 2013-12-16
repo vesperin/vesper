@@ -3,6 +3,7 @@ package edu.ucsc.refactor.internal;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.visitors.MethodDeclarationVisitor;
 import edu.ucsc.refactor.internal.visitors.SelectedASTNodeVisitor;
+import edu.ucsc.refactor.spi.CommitRequest;
 import edu.ucsc.refactor.spi.IssueDetector;
 import edu.ucsc.refactor.spi.SourceChanger;
 import edu.ucsc.refactor.util.ToStringBuilder;
@@ -18,7 +19,7 @@ import java.util.logging.Logger;
 public class JavaRefactorer implements Refactorer {
     private static final Logger LOGGER = Logger.getLogger(JavaRefactorer.class.getName());
 
-    private final Host host;
+    private final HostImpl host;
     private final Map<Source, List<Issue>>  findings;
     private final Map<String, List<Record>> history;
     private final Map<Source, Context>      cachedContexts;
@@ -33,7 +34,7 @@ public class JavaRefactorer implements Refactorer {
      * @param host Vesper's {@code Host}
      */
     public JavaRefactorer(Host host) {
-        this.host           = host;
+        this.host           = (HostImpl) host;
         this.findings       = new HashMap<Source, List<Issue>>();
         this.history        = new HashMap<String, List<Record>>();
         this.cachedContexts = new HashMap<Source, Context>();
@@ -55,7 +56,7 @@ public class JavaRefactorer implements Refactorer {
 
         if(applied.isValid()){
             try {
-                applied.commit();
+                applied.commit(host.getUpstream());
                 final Source updated = applied.getUpdatedSource();
                 checkpoint(change, updated);
                 detectIssues(updated);

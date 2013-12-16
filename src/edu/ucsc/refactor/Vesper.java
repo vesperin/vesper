@@ -1,15 +1,7 @@
 package edu.ucsc.refactor;
 
-import edu.ucsc.refactor.internal.EclipseJavaParser;
 import edu.ucsc.refactor.internal.HostImpl;
 import edu.ucsc.refactor.internal.InternalRefactorerCreator;
-import edu.ucsc.refactor.internal.changers.ReformatSourceCode;
-import edu.ucsc.refactor.internal.changers.RemoveUnusedImports;
-import edu.ucsc.refactor.internal.changers.RemoveUnusedMethods;
-import edu.ucsc.refactor.internal.changers.RemoveUnusedParameters;
-import edu.ucsc.refactor.internal.detectors.UnusedImports;
-import edu.ucsc.refactor.internal.detectors.UnusedMethods;
-import edu.ucsc.refactor.internal.detectors.UnusedParameters;
 
 import java.util.Arrays;
 import java.util.List;
@@ -109,6 +101,29 @@ public final class Vesper {
      * {@link Vesper}'s main configuration object.
      *
      * @param configuration The current configuration
+     * @param host          The current host.
+     * @param sources The list of sources.
+     *
+     * @return a new Refactorer
+     */
+    public static Refactorer createRefactorer(
+            Configuration configuration,
+            Host host, Iterable<Source> sources
+    ){
+        // installs a configuration to Vesper's host.
+        host.install(configuration);
+
+        return new InternalRefactorerCreator(host)
+                .addSources(sources)
+                .build();
+    }
+
+
+    /**
+     * Creates a refactorer for the given set of sources using
+     * {@link Vesper}'s main configuration object.
+     *
+     * @param configuration The current configuration
      * @param sources The list of sources.
      *
      * @return a new Refactorer
@@ -118,14 +133,11 @@ public final class Vesper {
             Iterable<Source> sources
     ){
 
-        final HostImpl host = new HostImpl();
-
-        // installs a configuration to Vesper's host.
-        host.install(configuration);
-
-        return new InternalRefactorerCreator(host)
-                .addSources(sources)
-                .build();
+        return createRefactorer(
+                configuration,
+                new HostImpl(),
+                sources
+        );
     }
 
     /**
@@ -133,14 +145,7 @@ public final class Vesper {
      */
     static class DefaultConfiguration extends AbstractConfiguration {
         @Override protected void configure() {
-            addJavaParser(new EclipseJavaParser());
-            addIssueDetector(new UnusedImports());
-            addSourceChanger(new RemoveUnusedImports());
-            addIssueDetector(new UnusedMethods());
-            addSourceChanger(new RemoveUnusedMethods());
-            addIssueDetector(new UnusedParameters());
-            addSourceChanger(new RemoveUnusedParameters());
-            addSourceChanger(new ReformatSourceCode());
+            installDefaultSettings();
         }
     }
 

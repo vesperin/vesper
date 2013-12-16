@@ -16,7 +16,8 @@ import org.junit.runners.Suite;
         SourceTest.class,
         SourceSelectionTest.class,
         RefactorerTest.class,
-        ContextTest.class
+        ContextTest.class,
+        VesperTest.class
 
 })
 public class AllTests {

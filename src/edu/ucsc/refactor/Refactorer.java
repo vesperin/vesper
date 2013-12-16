@@ -1,5 +1,7 @@
 package edu.ucsc.refactor;
 
+import edu.ucsc.refactor.spi.CommitRequest;
+
 import java.util.List;
 import java.util.Map;
 
@@ -82,6 +84,13 @@ public interface Refactorer {
      * Recommends changes for {@code Source} based on whether this {@code Source} has
      * issues. In other words, if this {@code Source} has 10 issues in it, then the
      * {@code Refactorer} will recommend 10 changes that will address this 10 issues.
+     *
+     * <strong>Note</strong>: If the user decides to apply any of the recommended
+     * changes, then the user is discouraged to apply the remaining ones as they
+     * may have become obsolete. If the user proceeds with applying obsolete changes, then
+     * this API does not make any guarantees that the source being updated will be ok.  This
+     * indicates that every time the user applies one change from the list of recommended changes,
+     * the user must re-call the {@link #recommendChanges(Source)} sub-routine.
      *
      * @param code The {@code Source}
      * @return The list of recommended changes

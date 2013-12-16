@@ -1,4 +1,7 @@
-package edu.ucsc.refactor;
+package edu.ucsc.refactor.spi;
+
+import edu.ucsc.refactor.Change;
+import edu.ucsc.refactor.Source;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -8,9 +11,10 @@ public interface CommitRequest {
      * commit changes to some external service, such as
      * Gist or Pastie.
      *
+     * @param to The storage service.
      * @throws RuntimeException if unable to commit changes.
      */
-    void commit() throws RuntimeException ;
+    void commit(Upstream to) throws RuntimeException ;
 
     /**
      * @return {@code true} if the changes this commit
