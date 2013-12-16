@@ -146,7 +146,15 @@ public final class GistCommitRequest implements CommitRequest {
             final Name info = change.getCause().getName();
             moreBuilder.append("commit ").append(local.getId()).append("\n");
             moreBuilder.append("Author:\t").append(username).append("\n");
-            moreBuilder.append("Date:\t").append(local.getUpdatedAt()).append("\n\n\t\t");
+
+            final boolean updatedDate = local.getUpdatedAt() != null;
+            final boolean createdDate = local.getCreatedAt() != null;
+
+            final Date date = createdDate
+                                ? (updatedDate ? local.getUpdatedAt() : local.getCreatedAt())
+                                : (updatedDate ? local.getUpdatedAt() : new Date());
+
+            moreBuilder.append("Date:\t").append(date).append("\n\n\t\t");
             moreBuilder.append(info.getKey()).append(": ").append(info.getSummary()).append("\n");
 
         } catch (Throwable ex) {
