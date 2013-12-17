@@ -1,10 +1,8 @@
 package edu.ucsc.refactor;
 
 import edu.ucsc.refactor.internal.EclipseJavaParser;
-import edu.ucsc.refactor.internal.changers.ReformatSourceCode;
-import edu.ucsc.refactor.internal.changers.RemoveUnusedImports;
-import edu.ucsc.refactor.internal.changers.RemoveUnusedMethods;
-import edu.ucsc.refactor.internal.changers.RemoveUnusedParameters;
+import edu.ucsc.refactor.internal.changers.*;
+import edu.ucsc.refactor.internal.detectors.MagicNumber;
 import edu.ucsc.refactor.internal.detectors.UnusedImports;
 import edu.ucsc.refactor.internal.detectors.UnusedMethods;
 import edu.ucsc.refactor.internal.detectors.UnusedParameters;
@@ -74,6 +72,8 @@ public abstract class AbstractConfiguration implements Configuration {
         addSourceChanger(new RemoveUnusedMethods());
         addIssueDetector(new UnusedParameters());
         addSourceChanger(new RemoveUnusedParameters());
+        addIssueDetector(new MagicNumber());
+        addSourceChanger(new RemoveMagicNumber());
         addSourceChanger(new ReformatSourceCode());
 
         // credentials must be added here..

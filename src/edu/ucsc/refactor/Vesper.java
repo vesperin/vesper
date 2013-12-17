@@ -153,7 +153,7 @@ public final class Vesper {
     public static void main(String[] args) {
         final String content = "import java.util.List; \n"
                 + "class Name {\n"
-                + "\tvoid boom(String msg){}\n"
+                + "\tvoid boom(String msg){ if(msg.length() > 1) {}}\n"
                 + "}";
 
         final Source        code        = new Source("Name.java", content);

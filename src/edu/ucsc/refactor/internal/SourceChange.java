@@ -58,7 +58,7 @@ public class SourceChange extends Change {
         }
 
         builder.append("can be performed to ");
-        builder.append("class ").append(name).append(".java ");
+        builder.append("class ").append(name);
         return builder.toString();
     }
 

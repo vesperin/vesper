@@ -1,5 +1,6 @@
 package edu.ucsc.refactor;
 
+import edu.ucsc.refactor.internal.InternalTestSuite;
 import edu.ucsc.refactor.util.UtilSuiteTest;
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -12,6 +13,7 @@ import org.junit.runners.Suite;
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
         UtilSuiteTest.class,
+        InternalTestSuite.class,
         ChangeRequestTest.class,
         SourceTest.class,
         SourceSelectionTest.class,

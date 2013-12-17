@@ -53,7 +53,7 @@ public abstract class SourceChanger implements Changer {
             parameters = new HashMap<String, Parameter>();
         }
 
-        merge(parameters, defaultParameters());
+        merge(defaultParameters(), parameters);
 
         return initChanger(cause, parameters);
     }
