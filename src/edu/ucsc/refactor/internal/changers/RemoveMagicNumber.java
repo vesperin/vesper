@@ -40,7 +40,7 @@ public class RemoveMagicNumber  extends SourceChanger {
         final Map<String, Parameter> parameters = new HashMap<String, Parameter>();
         final Parameter constantNameParameter   = new Parameter(
                 PARAMETER_CONSTANT_NAME,
-                "CONSTANT_" + HumanNumber.formatRandomNumber()
+                "CONSTANT_" + HumanNumber.formatNumberToEnglish()
         );
 
         constantNameParameter.getConstraints().add(
@@ -78,7 +78,7 @@ public class RemoveMagicNumber  extends SourceChanger {
 
         private HumanNumber(){}
 
-        static String formatRandomNumber(){
+        static String formatNumberToEnglish(){
             final int max = 100;
             final int min = 1;
             int r = min + (int) (Math.random() * (max-min));   // between 1 and 99
