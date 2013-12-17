@@ -59,6 +59,8 @@ public class RemoveMagicNumber  extends SourceChanger {
     /**
      * Turns numerical numbers into English-spoken strings, and then connects them
      * using {@code _}.
+     *
+     * @see {@code http://www.jibble.org/humannumber/HumanNumber.java}
      */
     static class HumanNumber {
         static final String[] UNITS = {"zero", "one", "two", "three", "four", "five", "six",
