@@ -1,5 +1,6 @@
 package edu.ucsc.refactor.util;
 
+import junit.framework.Test;
 import junit.framework.TestSuite;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -17,7 +18,7 @@ import org.junit.runners.Suite;
         NotesTest.class
 })
 public class UtilSuiteTest {
-    public static junit.framework.Test suite() {
+    public static Test suite() {
         return new TestSuite(UtilSuiteTest.class.getName());
     }
 }
