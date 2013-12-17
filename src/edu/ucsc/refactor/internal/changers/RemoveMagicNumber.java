@@ -1,5 +1,6 @@
 package edu.ucsc.refactor.internal.changers;
 
+import com.google.common.base.Joiner;
 import edu.ucsc.refactor.CauseOfChange;
 import edu.ucsc.refactor.Change;
 import edu.ucsc.refactor.Parameter;
@@ -13,7 +14,8 @@ import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Responsible for replacing a magic number with symbolic constant.
@@ -36,10 +38,9 @@ public class RemoveMagicNumber  extends SourceChanger {
 
     @Override protected Map<String, Parameter> defaultParameters() {
         final Map<String, Parameter> parameters = new HashMap<String, Parameter>();
-        final SimpleNameGenerator generator  = new SimpleNameGenerator();
         final Parameter constantNameParameter   = new Parameter(
                 PARAMETER_CONSTANT_NAME,
-                generator.randomIdentifier()
+                "CONSTANT_" + HumanNumber.formatRandomNumber()
         );
 
         constantNameParameter.getConstraints().add(
@@ -56,37 +57,119 @@ public class RemoveMagicNumber  extends SourceChanger {
     }
 
     /**
-     * @see {@code http://stackoverflow.com/questions/5025651/java-randomly-generate-distinct-names}
+     * Turns numerical numbers into English-spoken strings, and then connects them
+     * using {@code _}.
      */
-    static class SimpleNameGenerator {
-        // class variable
-        final String lexicon;
-        final Random rand;
-        final Set<String> identifiers;
+    static class HumanNumber {
+        static final String[] UNITS = {"zero", "one", "two", "three", "four", "five", "six",
+                "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen",
+                "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"};
 
-        SimpleNameGenerator(){
-            lexicon = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-            rand    = new Random();
-            identifiers = new HashSet<String>();
+        static final String[] TENS = {"zero", "ten", "twenty", "thirty", "forty", "fifty",
+                "sixty", "seventy", "eighty", "ninety"};
+
+        static final String[] ORDERS = {"thousand", "million", "billion", "trillion",
+                "quadrillion", "quintillion", "sextillion", "septillion", "octillion",
+                "nonillion", "decillion", "undecillion", "duodecillion", "tredecillion",
+                "quattuordecillion", "quindecillion", "sexdecillion", "septendecillion",
+                "octodecillion", "novemdecillion", "vigintillion"};
+
+        private HumanNumber(){}
+
+        static String formatRandomNumber(){
+            final int max = 100;
+            final int min = 1;
+            int r = min + (int) (Math.random() * (max-min));   // between 1 and 99
+            final String result = format(r);
+            final String[] split = result.split(" ");
+            return Joiner.on("_").join(split).toUpperCase();
         }
 
-        public String randomIdentifier() {
-            StringBuilder builder = new StringBuilder();
+        static String format(int input) {
+            return format(String.valueOf(input));
+        }
 
-            while(builder.toString().length() == 0) {
-                int length = rand.nextInt(5)+5;
+        static String format(String input) {
+            if ((input.length() + 2) / 3 - 1 > ORDERS.length) {
+                throw new IllegalArgumentException("Number too big.");
+            }
 
-                for(int i = 0; i < length; i++){
-                    builder.append(lexicon.charAt(rand.nextInt(lexicon.length())));
+            final StringBuilder result = new StringBuilder();
+            int i = input.length();
+            int order = -1;
+
+            while (i >= 3) {
+                int a = charToInt(input.charAt(i - 3));
+                int b = charToInt(input.charAt(i - 2));
+                int c = charToInt(input.charAt(i - 1));
+
+                final String number = format(a, b, c);
+
+                if (order >= 0 && !"".equals(number)) {
+                    result.insert(0, " " + ORDERS[order]);
                 }
 
-                if(identifiers.contains(builder.toString())){
-                    builder = new StringBuilder();
+                result.insert(0, number);
+
+                if (order == -1 && i > 3 && a == 0 && (b != 0 || c != 0)) {
+                    result.insert(0, " and ");
+                } else if (i > 3 && (a != 0 || b != 0 || c != 0)) {
+                    result.insert(0, ", ");
+                }
+
+                order++;
+                i = i - 3;
+
+            }
+
+            if(i > 0){
+                if (order >= 0) {
+                    result.insert(0, " " + ORDERS[order]);
+                }
+
+                if (i == 2) {
+                    result.insert(0, format(0, charToInt(input.charAt(0)), charToInt(input.charAt(1))));
+                } else if (i == 1) {
+                    result.insert(0, format(0, 0, charToInt(input.charAt(0))));
                 }
             }
 
-            return builder.toString().toUpperCase();
+            return result.toString();
+
         }
+
+
+        private static String format(int a, int b, int c) {
+            String result = "";
+            if (b == 1) {
+                result = UNITS[10 + c];
+            } else {
+                if (c != 0) {
+                    result = UNITS[c];
+                }
+                if (b >= 2) {
+                    if (c != 0) {
+                        result = " " + result;
+                    }
+                    result = TENS[b] + result;
+                }
+            }
+
+            if (a != 0) {
+                if (b != 0 || c != 0) {
+                    result = " and " + result;
+                }
+                result = UNITS[a] + " hundred" + result;
+            }
+            return result;
+        }
+
+
+        private static int charToInt(char ch) {
+            return ch - '0';
+        }
+
+
 
     }
 
@@ -165,8 +248,6 @@ public class RemoveMagicNumber  extends SourceChanger {
             change.getDeltas().add(change.createDelta(code));
             return change;
         }
-
-
 
         private static boolean existingConstantExists(final TypeDeclaration literalClass, final
                                                       String name) {
