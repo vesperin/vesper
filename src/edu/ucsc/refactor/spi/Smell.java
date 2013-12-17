@@ -15,7 +15,9 @@ public enum Smell implements Name {
     UNUSED_METHOD("Unused method", "Vesper has detected one or more unused methods!"),
     UNUSED_PARAMETER("Unused parameter", "Vesper has detected unused parameters in one or more methods"),
     UNUSED_FIELD("Unused field", "Vesper has detected one or more unused fields in code!"),
-    UNUSED_IMPORTS("Unused imports", "Vesper has detected one or more unused imports");
+    UNUSED_IMPORTS("Unused imports", "Vesper has detected one or more unused imports"),
+    MAGIC_NUMBER("Magic Number", "Vesper has detected the use of literals in conditional " +
+            "statements");
 
     private static final Map<String, Smell> LOOK_UP = new HashMap<String, Smell>();
 
