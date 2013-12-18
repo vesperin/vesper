@@ -9,6 +9,7 @@ import org.eclipse.jdt.core.dom.ASTNode;
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
+// todo(Huascar) review all location methods and fix any found bugs.
 public class Locations {
     private Locations(){
         throw new Error(
@@ -33,6 +34,25 @@ public class Locations {
         );
     }
 
+    public static boolean isBeforeBaseLocation(Location base, Location other){
+        final Position otherEnd     = other.getEnd();
+        final int nodeEnd           = otherEnd.getOffset();
+        final Position start        = base.getStart();
+
+        return (nodeEnd <= start.getOffset());
+    }
+
+
+    public static boolean isAfterBaseLocation(Location base, Location other){
+        final Position otherStart   = other.getStart();
+        final Position end          = base.getEnd();
+
+        final int nodeStart     = otherStart.getOffset();
+        final int exclusiveEnd  = end.getOffset() + 1;
+
+
+        return !(exclusiveEnd <= nodeStart);
+    }
 
     /**
      * Checks whether both locations are the same.
@@ -58,13 +78,13 @@ public class Locations {
         final Position start = base.getStart();
         final Position end   = base.getEnd();
 
-        final int startLine         = start.getLine();
-        final int exclusiveEndLine  = end.getLine() + 1;
-        final int otherStartLine    = other.getStart().getLine();
-        final int otherEndLine      = other.getEnd().getLine();
+        final Position otherStart = other.getStart();
+        final Position otherEnd   = other.getEnd();
 
-        return startLine <= otherStartLine
-                &&  otherEndLine <= exclusiveEndLine;
+        final int exclusiveEndOffset = end.getOffset() + 1;
+
+        return start.getOffset() <= otherStart.getOffset()
+                && (otherEnd.getOffset()) <= exclusiveEndOffset;
     }
 
 
@@ -74,17 +94,14 @@ public class Locations {
      *
      * @param base The base location.
      * @param position The other node's start position.
-     * @return {@code true} if this node's location covers a node at given start position.
+     * @return {@code true} if this node's location (base) covers a node at given start position.
      */
-    public static boolean coversAtPosition(Location base, Position position){
+    public static boolean matches(Location base, Position position){
         final Position start    = base.getStart();
         final Position end      = base.getEnd();
 
-        final int startLine     = start.getLine();
-        final int endLine       = end.getLine();
-
-        return startLine <= position.getLine()
-                && position.getLine() < endLine;
+        return start.getOffset() <= position.getOffset()
+                && position.getOffset() < end.getOffset();
 
     }
 
@@ -97,7 +114,6 @@ public class Locations {
      * node.
      */
     public static boolean coveredBy(Location base, Location other){
-        //new SourceCovering(other).covers(this.base);
         return Locations.covers(other, base);
     }
 
@@ -114,11 +130,12 @@ public class Locations {
         final Position otherEnd     = other.getEnd();
         final Position end          = base.getEnd();
 
-        final int otherStartLine    = otherStart.getLine();
-        final int otherEndLine      = otherEnd.getLine();
-        final int exclusiveEndLine  = end.getLine() + 1;
 
-        return otherStartLine < exclusiveEndLine && exclusiveEndLine < otherEndLine;
+        final int nodeStart     = otherStart.getOffset();
+        final int exclusiveEnd  = end.getOffset() + 1;
+
+        return nodeStart < exclusiveEnd
+                && exclusiveEnd < otherEnd.getOffset();
     }
 
 
@@ -135,15 +152,15 @@ public class Locations {
         final Position start        = base.getStart();
         final Position end          = base.getEnd();
 
-        final int otherStartLine    = otherStart.getLine();
-        final int otherEndLine      = otherEnd.getLine();
-        final int exclusiveEndLine  = end.getLine() + 1;
-        final int startLine         = start.getLine();
+        final int nodeStart = otherStart.getOffset();
+        final int nodeEnd   = otherEnd.getOffset();
 
-        final boolean locationBeforeSelection = startLine < otherStartLine;
-        final boolean selectionBeforeLocation = otherEndLine < exclusiveEndLine;
+        final int exclusiveEnd = end.getOffset() + 1;
 
-        return locationBeforeSelection || selectionBeforeLocation;
+        final boolean nodeBeforeBase = nodeEnd < start.getOffset();
+        final boolean baseBeforeNode = exclusiveEnd < nodeStart;
+
+        return nodeBeforeBase || baseBeforeNode;
     }
 
 
@@ -158,18 +175,16 @@ public class Locations {
         final Position otherStart   = other.getStart();
         final Position otherEnd     = other.getEnd();
 
-        final int otherStartLine    = otherStart.getLine();
-        final int otherEndLine      = otherEnd.getLine();
+        final int nodeStart = otherStart.getOffset();
+        final int nodeEnd   = otherEnd.getOffset();
 
-        final Position start        = base.getStart();
-        final Position end          = base.getEnd();
-        final int startLine         = start.getLine();
-        final int exclusiveEndLine  = end.getLine() + 1;
+        final Position start = base.getStart();
+        final Position end   = base.getEnd();
 
-        final boolean before     = otherEndLine <= startLine;
-        final boolean inside     = covers(base, other);
-        final boolean after      = exclusiveEndLine <= otherStartLine;
+        final int exclusiveEnd = end.getOffset() + 1;
 
-        return !before || !inside || !after;
+        return !(nodeEnd <= start.getOffset())   // before
+                && !(covers(base, other))        // within
+                && !(exclusiveEnd <= nodeStart); // after
     }
 }
