@@ -3,6 +3,7 @@ package edu.ucsc.refactor;
 import edu.ucsc.refactor.internal.HostImpl;
 import edu.ucsc.refactor.internal.InternalRefactorerCreator;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -110,6 +111,10 @@ public final class Vesper {
             Configuration configuration,
             Host host, Iterable<Source> sources
     ){
+
+        Vesper.nonNull(configuration, host, sources);
+
+
         // installs a configuration to Vesper's host.
         host.install(configuration);
 
@@ -147,6 +152,32 @@ public final class Vesper {
         @Override protected void configure() {
             installDefaultSettings();
         }
+    }
+
+
+    static void nonNull(Configuration configuration, Host host, Iterable<Source> sources) throws
+            CreationException {
+
+        final List<Throwable> throwables = new ArrayList<Throwable>();
+        if(configuration == null){
+            throwables.add(
+                    new Throwable("createRefactorer() has been given a null configuration.")
+            );
+        }
+
+        if(host == null){
+            throwables.add(
+                    new Throwable("createRefactorer() has been given a null host.")
+            );
+        }
+
+        if(sources == null){
+            throwables.add(
+                    new Throwable("createRefactorer() has been given no sources to inspect.")
+            );
+        }
+
+        throw new CreationException(throwables);
     }
 
     // basic test for Vesper
