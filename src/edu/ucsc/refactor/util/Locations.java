@@ -34,6 +34,24 @@ public class Locations {
         );
     }
 
+    /**
+     * Locates a word in the {@code Source}
+     *
+     * @param code The {@code Source} to be inspected.
+     * @param word The word to be located
+     *
+     * @return The location of the word in the {@code Source}
+     */
+    public static Location locateWord(Source code, String word){
+        final int offset = code.getContents().indexOf(word);
+        return SourceLocation.createLocation(
+                code,
+                code.getContents(),
+                offset,
+                offset + word.length()
+        );
+    }
+
     public static boolean isBeforeBaseLocation(Location base, Location other){
         final Position otherEnd     = other.getEnd();
         final int nodeEnd           = otherEnd.getOffset();

@@ -1,14 +1,22 @@
-package edu.ucsc.refactor.internal.detectors;
+package edu.ucsc.refactor.internal;
 
+import edu.ucsc.refactor.Location;
 import edu.ucsc.refactor.Source;
+import edu.ucsc.refactor.util.Locations;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public class DetectorsTestUtil {
-    private DetectorsTestUtil(){}
+public class InternalUtil {
+    private InternalUtil(){}
 
-    static Source createSourceWithMagicNumber(){
+
+    public static Location locateWord(Source code, String word){
+        return Locations.locateWord(code, word);
+    }
+
+
+    public static Source createSourceWithMagicNumber(){
         return createSource(
                 "Name.java",
                 new StringBuilder("class Name {\n")
@@ -17,7 +25,7 @@ public class DetectorsTestUtil {
         );
     }
 
-    static Source createSourceNoIssues(){
+    public static Source createSourceNoIssues(){
         return createSource(
                 "Name.java",
                 new StringBuilder("class Name {\n")
@@ -25,7 +33,7 @@ public class DetectorsTestUtil {
         );
     }
 
-    static Source createSourceWithUnusedMethodAndParameter(){
+    public static Source createSourceWithUnusedMethodAndParameter(){
         return createSource(
                 "Name.java",
                 new StringBuilder("class Name {\n")
@@ -34,7 +42,7 @@ public class DetectorsTestUtil {
         );
     }
 
-    static Source createSourceWithOneUnusedImportDirective(){
+    public static Source createSourceWithOneUnusedImportDirective(){
         return createSource(
                 "Name.java",
                 new StringBuilder("import java.util.List; \n")
@@ -44,7 +52,7 @@ public class DetectorsTestUtil {
         );
     }
 
-    static Source createSource(String name, StringBuilder builder){
+    public static Source createSource(String name, StringBuilder builder){
         return new Source(name, builder.toString());
     }
 }
