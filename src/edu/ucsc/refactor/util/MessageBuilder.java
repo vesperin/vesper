@@ -1,32 +1,35 @@
 package edu.ucsc.refactor.util;
 
 import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public class MessageBuilder {
-    private final StringBuilder core;
+    private final Map<String, Object> map;
 
     /**
      * Constructs a {@code MessageBuilder}.
      *
      */
     public MessageBuilder(){
-        this.core = new StringBuilder();
+        this.map  = new LinkedHashMap<String, Object>();
+
     }
 
     public MessageBuilder commit(String id){
-        return add("commit\t", id + "\n");
+        return add("commit", id + "\n");
     }
 
     public MessageBuilder author(String name){
-        return add("Author:\t", name + "\n");
+        return add("Author", name + "\n");
     }
 
 
     public MessageBuilder date(Date date){
-        return add("Date:\t", date + "\n\n\t\t");
+        return add("Date", date + "\n\n\t\t");
     }
 
 
@@ -47,12 +50,16 @@ public class MessageBuilder {
      * @return self
      */
     MessageBuilder add(String name, String value) {
-        this.core.append(name).append(": ").append(value);
+        this.map.put(name, value);
         return this;
     }
 
 
     @Override public String toString(){
-        return this.core.toString();
+        return this.map.toString()
+                .replace("{", "")
+                .replace("}", "")
+                .replace("=", ": ")
+                .replace(", ", "");
     }
 }
