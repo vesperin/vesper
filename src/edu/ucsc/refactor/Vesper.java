@@ -177,7 +177,10 @@ public final class Vesper {
             );
         }
 
-        throw new CreationException(throwables);
+        if(!throwables.isEmpty()){
+            throw new CreationException(throwables);
+        }
+
     }
 
     // basic test for Vesper

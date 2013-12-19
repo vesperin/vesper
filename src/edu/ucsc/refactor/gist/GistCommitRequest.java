@@ -7,8 +7,10 @@ import edu.ucsc.refactor.Note;
 import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.internal.Delta;
 import edu.ucsc.refactor.spi.CommitRequest;
+import edu.ucsc.refactor.spi.CommitStatus;
 import edu.ucsc.refactor.spi.Name;
 import edu.ucsc.refactor.spi.Upstream;
+import edu.ucsc.refactor.util.MessageBuilder;
 import edu.ucsc.refactor.util.Notes;
 import edu.ucsc.refactor.util.StringUtil;
 import org.eclipse.egit.github.core.Comment;
@@ -34,7 +36,8 @@ public final class GistCommitRequest implements CommitRequest {
     private final Queue<Delta>      load;
 
     private final AtomicReference<Source> fileMatchingLastDelta;
-    private final StringBuilder moreBuilder;
+
+    private CommitStatus status;
 
 
     /**
@@ -51,7 +54,7 @@ public final class GistCommitRequest implements CommitRequest {
 
 
         this.fileMatchingLastDelta  = new AtomicReference<Source>();
-        this.moreBuilder            = new StringBuilder();
+        this.status                 = CommitStatus.unknownStatus();
     }
 
     @Override public boolean isValid() {
@@ -125,7 +128,7 @@ public final class GistCommitRequest implements CommitRequest {
         return updatedSource;
     }
 
-    @Override public void commit(Upstream to) throws RuntimeException {
+    @Override public CommitStatus commit(Upstream to) throws RuntimeException {
         final Source            current             = this.load.peek().getSourceFile();
         final GistService       service             = (GistService) to.get();
         final boolean           isAboutToBeUpdated  = !this.load.isEmpty();
@@ -144,8 +147,6 @@ public final class GistCommitRequest implements CommitRequest {
 
             // fill out the `more` information
             final Name info = change.getCause().getName();
-            moreBuilder.append("commit ").append(local.getId()).append("\n");
-            moreBuilder.append("Author:\t").append(username).append("\n");
 
             final boolean updatedDate = local.getUpdatedAt() != null;
             final boolean createdDate = local.getCreatedAt() != null;
@@ -154,10 +155,28 @@ public final class GistCommitRequest implements CommitRequest {
                                 ? (updatedDate ? local.getUpdatedAt() : local.getCreatedAt())
                                 : (updatedDate ? local.getUpdatedAt() : new Date());
 
-            moreBuilder.append("Date:\t").append(date).append("\n\n\t\t");
-            moreBuilder.append(info.getKey()).append(": ").append(info.getSummary()).append("\n");
+
+            status = status.update(
+                    CommitStatus.succeededStatus(
+                            new MessageBuilder()
+                                    .commit(local.getId())
+                                    .author(username)
+                                    .date(date)
+                                    .comment(info.getKey(), info.getSummary()
+                                    )
+                    )
+            );
+
+            return status;
 
         } catch (Throwable ex) {
+            status = status.update(
+                    CommitStatus.failedStatus(
+                            new MessageBuilder()
+                                    .error(ex.getMessage()
+                                    )
+                    ) );
+            
             throw new RuntimeException(ex);
         }
 
@@ -171,7 +190,7 @@ public final class GistCommitRequest implements CommitRequest {
 
 
     @Override public String more() {
-        return moreBuilder.toString();
+        return status.more();
     }
 
 
