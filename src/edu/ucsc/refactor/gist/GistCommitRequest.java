@@ -10,7 +10,7 @@ import edu.ucsc.refactor.spi.CommitRequest;
 import edu.ucsc.refactor.spi.CommitStatus;
 import edu.ucsc.refactor.spi.Name;
 import edu.ucsc.refactor.spi.Upstream;
-import edu.ucsc.refactor.util.MessageBuilder;
+import edu.ucsc.refactor.util.Info;
 import edu.ucsc.refactor.util.Notes;
 import edu.ucsc.refactor.util.StringUtil;
 import org.eclipse.egit.github.core.Comment;
@@ -158,7 +158,7 @@ public final class GistCommitRequest implements CommitRequest {
 
             status = status.update(
                     CommitStatus.succeededStatus(
-                            new MessageBuilder()
+                            new Info()
                                     .commit(local.getId())
                                     .author(username)
                                     .date(date)
@@ -172,7 +172,7 @@ public final class GistCommitRequest implements CommitRequest {
         } catch (Throwable ex) {
             status = status.update(
                     CommitStatus.failedStatus(
-                            new MessageBuilder()
+                            new Info()
                                     .error(ex.getMessage()
                                     )
                     ) );

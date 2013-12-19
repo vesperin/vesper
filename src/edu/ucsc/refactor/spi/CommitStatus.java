@@ -1,6 +1,6 @@
 package edu.ucsc.refactor.spi;
 
-import edu.ucsc.refactor.util.MessageBuilder;
+import edu.ucsc.refactor.util.Info;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -23,29 +23,20 @@ public class CommitStatus {
     /**
      * Creates a failed commit status.
      *
-     * @param builder The MessageBuilder.
+     * @param builder The Info.
      * @return A failed commit status.
      */
-    public static CommitStatus failedStatus(MessageBuilder builder){
+    public static CommitStatus failedStatus(Info builder){
         return new CommitStatus(Status.FAILED, builder.toString());
     }
 
     /**
      * Creates a succeeded commit status.
-     * @param builder  The MessageBuilder.
+     * @param builder  The Info.
      * @return A succeeded commit status.
      */
-    public static CommitStatus succeededStatus(MessageBuilder builder){
+    public static CommitStatus succeededStatus(Info builder){
         return new CommitStatus(Status.SUCCEEDED, builder.toString());
-    }
-
-    /**
-     * Creates a canceled commit status.
-     * @param builder The MessageBuilder.
-     * @return a canceled commit status.
-     */
-    public static CommitStatus canceledStatus(MessageBuilder builder){
-        return new CommitStatus(Status.CANCELED, builder.toString());
     }
 
     /**
@@ -74,6 +65,10 @@ public class CommitStatus {
     }
 
 
+    @Override public String toString() {
+        return more();
+    }
+
     /**
      * The status
      */
@@ -82,8 +77,6 @@ public class CommitStatus {
         FAILED("Failed"),
         /** Succeeded commit **/
         SUCCEEDED("Succeeded"),
-        /** Canceled commit **/
-        CANCELED("Canceled"),
         /** Unknown status; i.e., no commit yet **/
         UNKNOWN("Unknown");
 
@@ -92,7 +85,6 @@ public class CommitStatus {
         Status(String key){
             this.key = key;
         }
-
 
         @Override public String toString() {
             return "(" + key + ")";
