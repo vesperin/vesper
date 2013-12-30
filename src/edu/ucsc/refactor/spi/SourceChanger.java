@@ -1,7 +1,7 @@
 package edu.ucsc.refactor.spi;
 
 import edu.ucsc.refactor.*;
-import edu.ucsc.refactor.gist.GistCommitRequest;
+import edu.ucsc.refactor.internal.GistCommitRequest;
 import edu.ucsc.refactor.internal.Delta;
 import edu.ucsc.refactor.internal.SourceFormatter;
 import edu.ucsc.refactor.internal.SourceLocation;

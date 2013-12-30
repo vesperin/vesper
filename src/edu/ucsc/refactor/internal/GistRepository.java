@@ -1,4 +1,4 @@
-package edu.ucsc.refactor.gist;
+package edu.ucsc.refactor.internal;
 
 import edu.ucsc.refactor.Credential;
 import edu.ucsc.refactor.spi.Upstream;

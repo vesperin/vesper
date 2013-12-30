@@ -1,11 +1,10 @@
-package edu.ucsc.refactor.gist;
+package edu.ucsc.refactor.internal;
 
 import com.google.common.base.Joiner;
 import com.google.common.io.Files;
 import edu.ucsc.refactor.Change;
 import edu.ucsc.refactor.Note;
 import edu.ucsc.refactor.Source;
-import edu.ucsc.refactor.internal.Delta;
 import edu.ucsc.refactor.spi.CommitRequest;
 import edu.ucsc.refactor.spi.CommitStatus;
 import edu.ucsc.refactor.spi.Name;
