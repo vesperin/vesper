@@ -10,6 +10,7 @@ import edu.ucsc.refactor.spi.CommitRequest;
 import edu.ucsc.refactor.spi.CommitStatus;
 import edu.ucsc.refactor.spi.Name;
 import edu.ucsc.refactor.spi.Upstream;
+import edu.ucsc.refactor.util.AstUtil;
 import edu.ucsc.refactor.util.Info;
 import edu.ucsc.refactor.util.Notes;
 import edu.ucsc.refactor.util.StringUtil;
@@ -17,6 +18,7 @@ import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.Gist;
 import org.eclipse.egit.github.core.GistFile;
 import org.eclipse.egit.github.core.service.GistService;
+import org.eclipse.jdt.core.dom.ASTNode;
 
 import java.io.File;
 import java.io.IOException;
@@ -61,13 +63,16 @@ public final class GistCommitRequest implements CommitRequest {
         return change.isValid();
     }
 
-    static String squashedDeltas(String name, Queue<Delta> deltas) throws RuntimeException {
+    static String squashedDeltas(String name, Queue<Delta> deltas, ASTNode node) throws RuntimeException {
         File tempFile = null;
         try {
             tempFile = File.createTempFile(name, DOT_JAVA);
             while (!deltas.isEmpty()){
                 final Delta next = deltas.remove();
                 Files.write(next.getAfter().getBytes(), tempFile);
+                if(deltas.isEmpty()){  // optimization
+                    AstUtil.syncSourceProperty(next.getSource(), node);
+                }
             }
 
             Files.readLines(tempFile, Charset.defaultCharset());
@@ -129,15 +134,16 @@ public final class GistCommitRequest implements CommitRequest {
     }
 
     @Override public CommitStatus commit(Upstream to) throws RuntimeException {
-        final Source            current             = this.load.peek().getSourceFile();
+        final Source            current             = this.load.peek().getSource();
         final GistService       service             = (GistService) to.get();
         final boolean           isAboutToBeUpdated  = !this.load.isEmpty();
         final String            username            = to.getUser();
         final String            fileName            = StringUtil.extractName(current.getName());
+        final ASTNode           node                = this.change.getCause().getAffectedNodes().get(0); // never null
 
         try {
             Gist local = new GistBuilder(service, isAboutToBeUpdated)
-                    .content(squashedDeltas(fileName, this.load))
+                    .content(squashedDeltas(fileName, this.load, node))
                     .file(current)
                     .user(username)
                     .build();
@@ -310,7 +316,7 @@ public final class GistCommitRequest implements CommitRequest {
         static Notes difference(Notes input, List<Comment> comments){
             Notes that = new Notes();
             // todo(Huascar) How can we store the location or source selection?
-            // as of now, they will be null.
+            // as of now, these locations are null.
             for (Comment x : comments) {
                 final Note each = new Note(x.getBody());
                 each.setId(String.valueOf(x.getId()));

@@ -9,7 +9,6 @@ import org.eclipse.jdt.core.dom.ASTNode;
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-// todo(Huascar) review all location methods and fix any found bugs.
 public class Locations {
     private Locations(){
         throw new Error(
@@ -26,6 +25,17 @@ public class Locations {
      */
     public static Location locate(ASTNode node) {
         final Source src = Source.from(node);
+        return Locations.locate(src, node);
+    }
+
+    /**
+     * Locates a ASTNode in the {@code Source}.
+     *
+     * @param src The Source being inspected.
+     * @param node The ASTNode to be located.
+     * @return A {@code Location} in the {@code Source} where a ASTNode is found.
+     */
+    public static Location locate(Source src, ASTNode node){
         return SourceLocation.createLocation(
                 src,
                 src.getContents(),
@@ -69,7 +79,7 @@ public class Locations {
         final int exclusiveEnd  = end.getOffset() + 1;
 
 
-        return !(exclusiveEnd <= nodeStart);
+        return (exclusiveEnd <= nodeStart);
     }
 
     /**
@@ -103,6 +113,25 @@ public class Locations {
 
         return start.getOffset() <= otherStart.getOffset()
                 && (otherEnd.getOffset()) <= exclusiveEndOffset;
+    }
+
+
+    /**
+     * Returns {@code true} if one node's location (the other) is inside another node's location (base).
+     *
+     * @param base The base location.
+     * @param other The location of another node.
+     * @return {@code true} if a code location of a node is inside the location of another node.
+     */
+    public static boolean inside(Location base, Location other){
+        final Position start = base.getStart();
+        final Position end   = base.getEnd();
+
+        final Position otherStart = other.getStart();
+        final Position otherEnd   = other.getEnd();
+
+        return start.getOffset() < otherStart.getOffset()
+                && (otherEnd.getOffset()) < end.getOffset();
     }
 
 
@@ -190,19 +219,8 @@ public class Locations {
      * @return {@code true} if <tt>this</tt> location intersects with another location.
      */
     public static boolean intersects(Location base, Location other){
-        final Position otherStart   = other.getStart();
-        final Position otherEnd     = other.getEnd();
-
-        final int nodeStart = otherStart.getOffset();
-        final int nodeEnd   = otherEnd.getOffset();
-
-        final Position start = base.getStart();
-        final Position end   = base.getEnd();
-
-        final int exclusiveEnd = end.getOffset() + 1;
-
-        return !(nodeEnd <= start.getOffset())   // before
-                && !(covers(base, other))        // within
-                && !(exclusiveEnd <= nodeStart); // after
+        return !Locations.isBeforeBaseLocation(base, other)     // !before
+                && !(covers(base, other))                       // !within
+                && !Locations.isAfterBaseLocation(base, other); // !after
     }
 }

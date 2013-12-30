@@ -2,6 +2,7 @@ package edu.ucsc.refactor.internal;
 
 import difflib.DiffUtils;
 import difflib.Patch;
+import edu.ucsc.refactor.Note;
 import edu.ucsc.refactor.Source;
 
 import java.util.Arrays;
@@ -50,7 +51,17 @@ public class Delta {
      * @param after The Source's after state.
      */
     public void setAfter(String after) {
-        this.after = after;
+        this.after  = after;
+        setSource(ensureSourceUpdate(getSource(), getAfter()));
+    }
+
+    /**
+     * Set the {@link Source}'s after update.
+     *
+     * @param source The Source's after update.
+     */
+    final void setSource(Source source){
+        this.source = source;
     }
 
     /**
@@ -67,7 +78,7 @@ public class Delta {
      *
      * @return the file
      */
-    public Source getSourceFile() {
+    public Source getSource() {
         return source;
     }
 
@@ -78,7 +89,7 @@ public class Delta {
      *      the updated {@code Source}.
      */
     public List<difflib.Delta> getDifferences() {
-        Patch patch = DiffUtils.diff(contentToLines(before), contentToLines(after));
+        Patch patch = DiffUtils.diff(contentToLines(getBefore()), contentToLines(getAfter()));
         return patch.getDeltas();
     }
 
@@ -95,5 +106,22 @@ public class Delta {
         linesAsList.addAll(Arrays.asList(lines));
 
         return linesAsList;
+    }
+
+
+    private static Source ensureSourceUpdate(Source original, String update){
+        final Source newSource = new Source(
+                original.getName(),
+                update,
+                original.getDescription()
+        );
+
+        for(Note each : original.getNotes()){
+            newSource.addNote(each);
+        }
+
+        newSource.setId(original.getId());
+        return newSource;
+
     }
 }

@@ -1,5 +1,7 @@
 package edu.ucsc.refactor;
 
+import edu.ucsc.refactor.util.Parameters;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -95,6 +97,29 @@ public class ChangeRequest {
      */
     public static ChangeRequest forEdit(SingleEdit edit){
         return forEdit(edit, DEFAULT_PARAMETERS);
+    }
+
+    /**
+     * Rename a method change request with selection and newName as values.
+     *
+     * @see {@link SingleEdit#renameMethod(SourceSelection)}
+     */
+    public static ChangeRequest renameMethod(SourceSelection selection, String newName){
+        return ChangeRequest.forEdit(
+                SingleEdit.renameMethod(selection),
+                Parameters.newMethodName(newName)
+        );
+    }
+
+    /**
+     * Reformat source code change request with selection and newName as values.
+     *
+     * @see {@link SingleEdit#reformatCode(Source)}
+     */
+    public static ChangeRequest reformatSource(Source source){
+        return ChangeRequest.forEdit(
+                SingleEdit.reformatCode(source)
+        );
     }
 
     /**

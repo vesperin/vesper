@@ -2,6 +2,8 @@ package edu.ucsc.refactor;
 
 import edu.ucsc.refactor.internal.HostImpl;
 import edu.ucsc.refactor.internal.InternalRefactorerCreator;
+import edu.ucsc.refactor.util.Locations;
+import edu.ucsc.refactor.util.Parameters;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -187,20 +189,22 @@ public final class Vesper {
     public static void main(String[] args) {
         final String content = "import java.util.List; \n"
                 + "class Name {\n"
-                + "\tvoid boom(String msg){ if(msg.length() > 1) {}}\n"
+                + "\tString boom(String msg){ if(null != msg) { return boom(null);} return \"Hi!\";}\n"
+                + "\t/** {@link Name#boom(String)}**/String baam(String msg){ return boom(msg); }\n"
                 + "}";
 
         final Source        code        = new Source("Name.java", content);
         final Refactorer    refactorer  = Vesper.createRefactorer(code);
 
-        System.out.println("\nfindings...");
-        if(refactorer.hasIssues(code)){
 
-            final List<Change> suggestedChanges = refactorer.recommendChanges(code);
-            for(Change change : suggestedChanges){
-                System.out.println(change);
-            }
-        }
+        System.out.println("\nfindings...");
+
+        final SourceSelection   selection   = new SourceSelection(Locations.locateWord(code, "boom"));
+        final Change            renamed     = refactorer.createChange(
+                ChangeRequest.renameMethod(selection, "print")
+        );
+
+        System.out.println(renamed.more());
 
         System.out.println("...");
     }

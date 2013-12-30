@@ -6,6 +6,7 @@ import org.eclipse.jdt.core.dom.MethodDeclaration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
