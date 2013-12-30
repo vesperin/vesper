@@ -5,6 +5,7 @@ import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.internal.SourceVisitor;
 import edu.ucsc.refactor.util.Locations;
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.MethodRef;
 
@@ -24,6 +25,20 @@ public class RenameAstNodeVisitor extends SourceVisitor {
         this.selection  = selection;
         this.oldName    = oldName;
         this.newName    = newName;
+    }
+
+    @Override public boolean visit(MethodDeclaration node){
+        if (!isFurtherTraversalNecessary(node)) {
+            return false;
+        }
+
+        if (isNodeWithinSelection(node) || isNodeExactlyAtLocation(node)) {
+            if(oldName.equals(node.getName().getIdentifier())){
+                node.setName(node.getAST().newSimpleName(newName));
+            }
+        }
+
+        return true;
     }
 
     @Override public boolean visit(MethodRef node){
@@ -75,7 +90,19 @@ public class RenameAstNodeVisitor extends SourceVisitor {
     }
 
 
+    private boolean isNodeExactlyAtLocation(ASTNode node) {
+
+        final Location nodeLocation     = Locations.locate(src, node);
+        final Location methodLocation   = this.selection;
+
+        // Is the method at the same position as the other node?
+        return (Locations.bothSame(nodeLocation, methodLocation));
+    }
+
+
     private boolean isFurtherTraversalNecessary(ASTNode node) {
-        return isNodeWithinSelection(node) || isNodeEnclosingMethod(node);
+        return isNodeWithinSelection(node)
+                || isNodeEnclosingMethod(node)
+                || isNodeExactlyAtLocation(node);
     }
 }

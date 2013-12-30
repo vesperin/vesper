@@ -4,19 +4,20 @@ import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.Delta;
 import edu.ucsc.refactor.internal.SourceChange;
 import edu.ucsc.refactor.internal.visitors.MethodDeclarationVisitor;
-import edu.ucsc.refactor.internal.visitors.MethodRefInJavaDocVisitor;
 import edu.ucsc.refactor.internal.visitors.RenameAstNodeVisitor;
 import edu.ucsc.refactor.spi.Refactoring;
 import edu.ucsc.refactor.spi.SourceChanger;
 import edu.ucsc.refactor.util.AstUtil;
 import edu.ucsc.refactor.util.Locations;
 import edu.ucsc.refactor.util.Parameters;
-import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -52,45 +53,18 @@ public class RenameMethod extends SourceChanger {
         final AST               ast     = parent.getAST();
         final ASTRewrite        rewrite = ASTRewrite.create(ast);
         final String            oldName = method.getName().getIdentifier();
+        final Source            src     = Source.from(method);
 
 
-        // I. create a new method similar to original method
-        // but with new name.
+        // I. Rename the actual method's name.
         // begin:
 
-        // todo(Huascar) do we need to create a copy?
-        final MethodDeclaration copy    = AstUtil.copySubtree(MethodDeclaration.class, ast, method);
-
-        final MethodDeclaration newMethod = ast.newMethodDeclaration();
-        final Block newBlock = AstUtil.copySubtree(Block.class, ast, copy.getBody());
-
-        final Source    src             = Source.from(method);
-        final Location  blockLocation   = Locations.locate(src, newBlock);
-
-        final RenameAstNodeVisitor visitor = new RenameAstNodeVisitor(
-                src,
-                blockLocation,  // block
-                oldName,        // old name
-                newName         // new name
-        );
-
-        newBlock.accept(visitor);
-
-        newMethod.setBody(newBlock);
-
-        newMethod.setReturnType2((Type) ASTNode.copySubtree(ast, copy.getReturnType2()));
-        newMethod.modifiers().addAll(ast.newModifiers(Modifier.PUBLIC));
-
-        AstUtil.copyParameters(copy.parameters(), newMethod);
-
-        newMethod.setName(ast.newSimpleName(newName));
-
-        rewrite.replace(method, newMethod, null);
+        internalRename(oldName, newName, method, src, rewrite);
 
         // :end
 
-        // II. look for method invocations of original method
-        // and the rename them to new method having the new name.
+        // II. look for method invocations and references (in JavaDocs) of original method
+        // and then rename them using the `new name`.
         // begin:
 
         final MethodDeclarationVisitor  methodsVisitor  = new MethodDeclarationVisitor();
@@ -102,53 +76,36 @@ public class RenameMethod extends SourceChanger {
                 continue;
             }
 
-            final MethodDeclaration methodCopy = AstUtil.copySubtree(
-                    MethodDeclaration.class,
-                    declaration.getAST(),
-                    declaration
-            );
-
-            final Location  methodLocation = Locations.locate(src, methodCopy);
-            final RenameAstNodeVisitor renameInvocations = new RenameAstNodeVisitor(
-                    src, methodLocation, oldName, newName
-            );
-
-            methodCopy.accept(renameInvocations);
-
-            rewrite.replace(declaration, methodCopy, null);
+            internalRename(oldName, newName, declaration, src, rewrite);
         }
-
-        // :end
-
-        // III. look for method references in JavaDocs
-        // and the rename them to new method having the new name.
-        // begin:
-
-        final MethodRefInJavaDocVisitor referencesVisitor = new MethodRefInJavaDocVisitor();
-        parent.accept(referencesVisitor);
-
-        final Set<MethodRef> references = referencesVisitor.getMethodReferences();
-        for(MethodRef eachReference : references){
-            if(!eachReference.getName().getIdentifier().equals(oldName)){
-                continue;
-            }
-
-            final MethodRef referenceCopy     = AstUtil.copySubtree(MethodRef.class, ast, eachReference);
-            final Location  referenceLocation = Locations.locate(src, referenceCopy);
-            final RenameAstNodeVisitor renameReferences = new RenameAstNodeVisitor(
-                    src, referenceLocation, oldName, newName
-            );
-
-            referenceCopy.accept(renameReferences);
-
-            rewrite.replace(eachReference, referenceCopy, null);
-        }
-
 
         // :end
 
         return createDelta(node, rewrite);
     }
 
+    private void internalRename(String oldName, String newName, MethodDeclaration declaration, Source src, ASTRewrite rewrite) {
+        final MethodDeclaration methodWithRenamedInvokes = AstUtil.copySubtree(
+                MethodDeclaration.class,
+                declaration.getAST(),
+                declaration
+        );
+
+        final Location methodWithRenamedInvokesLocation = Locations.locate(src, methodWithRenamedInvokes);
+
+        renameAstNode(src, methodWithRenamedInvokesLocation, methodWithRenamedInvokes, oldName, newName );
+
+        rewrite.replace(declaration, methodWithRenamedInvokes, null);
+    }
+
+
+    static void renameAstNode(Source src, Location location,
+                              ASTNode affected, String oldName, String newName){
+        final RenameAstNodeVisitor renamingVisitor = new RenameAstNodeVisitor(
+                src, location, oldName, newName
+        );
+
+        affected.accept(renamingVisitor);
+    }
 
 }

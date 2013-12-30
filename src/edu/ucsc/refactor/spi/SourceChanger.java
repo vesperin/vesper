@@ -90,7 +90,7 @@ public abstract class SourceChanger implements Changer {
         final IDocument document    = source.toDocument();
 
         Delta delta = new Delta(source);
-        delta.setBefore(document.get());
+        delta.setBefore(format(document));
 
         TextEdit textEdit = rewrite.rewriteAST(document, JavaCore.getOptions());
         try {
