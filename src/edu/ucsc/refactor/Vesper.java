@@ -3,7 +3,6 @@ package edu.ucsc.refactor;
 import edu.ucsc.refactor.internal.HostImpl;
 import edu.ucsc.refactor.internal.InternalRefactorerCreator;
 import edu.ucsc.refactor.util.Locations;
-import edu.ucsc.refactor.util.Parameters;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,30 +48,17 @@ import java.util.List;
  *     for(Change each : changes){
  *        final CommitRequest applied = refactorer.apply(each);
  *        System.out.println(applied.more());
+ *        break; // the rest of changes in list of changes are outdated; please re-run recommendChanges
  *     }
  *
- *     // a much simpler usage
- *
- *     final List<Change> failedOnes = refactorer.apply(changes);
- *     for(Change failed : failedOnes){
- *        System.out.println(failed.more()); // displays the reason why it failed
- *     }
  *
  *     // select a method
  *     final SourceSelection    selection = new SourceSelection(code, 37, 62);
  *
- *     // II. Dealing with random edits from a user (in order)
- *     final List<Change> randomChanges = Arrays.asList(
- *         refactorer.createChange(forEdit(SingleEdit.reformatCode(code))),
- *         refactorer.createChange(forEdit(SingleEdit.renameMethod(selection), userInput)),
- *         refactorer.createChange(forEdit(SingleEdit.renameParameter(selection), userInput)),
- *         refactorer.createChange(forEdit(SingleEdit.deleteMethod(selection)))
- *     );
+ *     // II. Dealing with random edits from a user
  *
- *     final List<Change> failedOnes2 = refactorer.apply(randomChanges);
- *     for(Change failed : failedOnes2){
- *        System.out.println(failed.more()); // displays the reason why it failed
- *     }
+ *     Change reformat = refactorer.createChange(forEdit(SingleEdit.reformatCode(code)));
+ *     System.out.println(refactorer.apply(reformat).more());
  *
  * </pre>
  *
