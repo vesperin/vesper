@@ -89,19 +89,6 @@ public class JavaRefactorer implements Refactorer {
         }
     }
 
-    @Override public List<Change> apply(List<Change> changes) {
-        final List<Change> badRequests = new ArrayList<Change>();
-        for(Change change : changes){
-            final CommitRequest applied = apply(change);
-
-            if(applied == null){
-                badRequests.add(change);
-            }
-        }
-
-        return badRequests;
-    }
-
     @Override public Change createChange(ChangeRequest request) {
         final boolean                isIssue    = request.isIssue();
         final CauseOfChange          cause      = request.getCauseOfChange();
