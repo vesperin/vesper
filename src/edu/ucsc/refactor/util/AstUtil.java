@@ -142,4 +142,40 @@ public class AstUtil {
                 || isNodeEnclosingMethod(src, node, selection)
                 || isNodeExactlyAtLocation(src, node, selection);
     }
+
+    public static VariableDeclaration getVariableDeclaration(Name node) {
+        final IBinding binding  = node.resolveBinding();
+        if (binding == null && node.getParent() instanceof VariableDeclaration) {
+            return (VariableDeclaration) node.getParent();
+        }
+
+        if (binding != null && binding.getKind() == IBinding.VARIABLE) {
+            final CompilationUnit cu  = parent(CompilationUnit.class, node);
+            return findVariableDeclaration(((IVariableBinding) binding), cu);
+        }
+
+        return null;
+    }
+
+    public static ASTNode findDeclaration(IBinding binding, ASTNode root) {
+        root    = root.getRoot();
+        if (root instanceof CompilationUnit) {
+            return ((CompilationUnit)root).findDeclaringNode(binding);
+        }
+
+        return null;
+    }
+
+    public static VariableDeclaration findVariableDeclaration(IVariableBinding binding, ASTNode root) {
+        if (binding.isField()) {
+            return null;
+        }
+
+        final ASTNode result    = findDeclaration(binding, root);
+        if (result instanceof VariableDeclaration) {
+            return (VariableDeclaration)result;
+        }
+
+        return null;
+    }
 }
