@@ -7,10 +7,7 @@ import edu.ucsc.refactor.internal.visitors.MethodInvocationVisitor;
 import edu.ucsc.refactor.spi.IssueDetector;
 import edu.ucsc.refactor.spi.Smell;
 import edu.ucsc.refactor.util.AstUtil;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,9 +58,12 @@ public class UnusedMethods extends IssueDetector {
     private void buildHashMapWithMethodDeclarationsAndInvocations() {
         for (MethodInvocation methodInvocation : methodInvocationList) {
             for (MethodDeclaration methodDeclaration : methodUsages.keySet()) {
-                if (methodDeclaration.resolveBinding().equals(methodInvocation.resolveMethodBinding())) {
-                    methodUsages.get(methodDeclaration).add(methodInvocation);
-                    break;
+                final IMethodBinding methodBinding = methodDeclaration.resolveBinding();
+                if(methodBinding != null){
+                    if (methodBinding.equals(methodInvocation.resolveMethodBinding())) {
+                        methodUsages.get(methodDeclaration).add(methodInvocation);
+                        break;
+                    }
                 }
             }
         }

@@ -1,9 +1,10 @@
 package edu.ucsc.refactor.spi;
 
 import edu.ucsc.refactor.*;
-import edu.ucsc.refactor.gist.GistCommitRequest;
-import edu.ucsc.refactor.internal.*;
-import edu.ucsc.refactor.Location;
+import edu.ucsc.refactor.internal.GistCommitRequest;
+import edu.ucsc.refactor.internal.Delta;
+import edu.ucsc.refactor.internal.SourceFormatter;
+import edu.ucsc.refactor.internal.SourceLocation;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
@@ -81,12 +82,15 @@ public abstract class SourceChanger implements Changer {
      * @param rewrite The ASTRewrite object.
      * @return a new {@link Delta} object.
      */
+    // todo(Huascar) investigate whether we can make deltas non orthogonal (make deltas aware of
+    // related deltas' changes). Currently, deltas are orthogonal in terms of the file they
+    // are changing.
     protected Delta createDelta(ASTNode node, ASTRewrite rewrite) {
         final Source    source      = Source.from(node);
         final IDocument document    = source.toDocument();
 
         Delta delta = new Delta(source);
-        delta.setBefore(document.get());
+        delta.setBefore(format(document));
 
         TextEdit textEdit = rewrite.rewriteAST(document, JavaCore.getOptions());
         try {
@@ -98,6 +102,7 @@ public abstract class SourceChanger implements Changer {
         }
 
         delta.setAfter(format(document));
+
         return delta;
     }
 
@@ -156,7 +161,5 @@ public abstract class SourceChanger implements Changer {
                 node.getStartPosition() + node.getLength()
         );
     }
-
-
 
 }

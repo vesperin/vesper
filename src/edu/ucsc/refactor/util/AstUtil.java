@@ -1,5 +1,6 @@
 package edu.ucsc.refactor.util;
 
+import edu.ucsc.refactor.Source;
 import org.eclipse.jdt.core.dom.*;
 
 import java.util.List;
@@ -48,6 +49,33 @@ public class AstUtil {
             return binding.getAnnotations().length;
         }
         return 0;
+    }
+
+    public static <T extends ASTNode> T copySubtree(final Class<T> thatClass, AST ast, final ASTNode node){
+        // similar to //(MethodDeclaration)ASTNode.copySubtree(ast, method);
+        return thatClass.cast(ASTNode.copySubtree(ast, node));
+    }
+
+
+    public static void copyParameters(List src, MethodDeclaration dst){
+        for(Object eachObj : src){
+            final SingleVariableDeclaration next  = (SingleVariableDeclaration)eachObj;
+            final SingleVariableDeclaration param = AstUtil.copySubtree(SingleVariableDeclaration.class, dst.getAST(), next);
+            dst.parameters().add(param);
+        }
+    }
+
+
+    public static void syncSourceProperty(Source updatedSource, ASTNode node){
+        if(node instanceof CompilationUnit){
+            node.setProperty(Source.SOURCE_FILE_PROPERTY, updatedSource);
+        }  else {
+            // do this after each delta's application
+            AstUtil.parent(CompilationUnit.class, node).setProperty(
+                    Source.SOURCE_FILE_PROPERTY,
+                    updatedSource
+            );
+        }
     }
 
 

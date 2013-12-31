@@ -2,7 +2,9 @@ package edu.ucsc.refactor;
 
 import edu.ucsc.refactor.internal.HostImpl;
 import edu.ucsc.refactor.internal.InternalRefactorerCreator;
+import edu.ucsc.refactor.util.Locations;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -46,30 +48,17 @@ import java.util.List;
  *     for(Change each : changes){
  *        final CommitRequest applied = refactorer.apply(each);
  *        System.out.println(applied.more());
+ *        break; // the rest of changes in list of changes are outdated; please re-run recommendChanges
  *     }
  *
- *     // a much simpler usage
- *
- *     final List<Change> failedOnes = refactorer.apply(changes);
- *     for(Change failed : failedOnes){
- *        System.out.println(failed.more()); // displays the reason why it failed
- *     }
  *
  *     // select a method
  *     final SourceSelection    selection = new SourceSelection(code, 37, 62);
  *
- *     // II. Dealing with random edits from a user (in order)
- *     final List<Change> randomChanges = Arrays.asList(
- *         refactorer.createChange(forEdit(SingleEdit.reformatCode(code))),
- *         refactorer.createChange(forEdit(SingleEdit.renameMethod(selection), userInput)),
- *         refactorer.createChange(forEdit(SingleEdit.renameParameter(selection), userInput)),
- *         refactorer.createChange(forEdit(SingleEdit.deleteMethod(selection)))
- *     );
+ *     // II. Dealing with random edits from a user
  *
- *     final List<Change> failedOnes2 = refactorer.apply(randomChanges);
- *     for(Change failed : failedOnes2){
- *        System.out.println(failed.more()); // displays the reason why it failed
- *     }
+ *     Change reformat = refactorer.createChange(forEdit(SingleEdit.reformatCode(code)));
+ *     System.out.println(refactorer.apply(reformat).more());
  *
  * </pre>
  *
@@ -110,6 +99,10 @@ public final class Vesper {
             Configuration configuration,
             Host host, Iterable<Source> sources
     ){
+
+        Vesper.nonNull(configuration, host, sources);
+
+
         // installs a configuration to Vesper's host.
         host.install(configuration);
 
@@ -149,24 +142,55 @@ public final class Vesper {
         }
     }
 
+
+    static void nonNull(Configuration configuration, Host host, Iterable<Source> sources) throws
+            CreationException {
+
+        final List<Throwable> throwables = new ArrayList<Throwable>();
+        if(configuration == null){
+            throwables.add(
+                    new Throwable("createRefactorer() has been given a null configuration.")
+            );
+        }
+
+        if(host == null){
+            throwables.add(
+                    new Throwable("createRefactorer() has been given a null host.")
+            );
+        }
+
+        if(sources == null){
+            throwables.add(
+                    new Throwable("createRefactorer() has been given no sources to inspect.")
+            );
+        }
+
+        if(!throwables.isEmpty()){
+            throw new CreationException(throwables);
+        }
+
+    }
+
     // basic test for Vesper
     public static void main(String[] args) {
         final String content = "import java.util.List; \n"
                 + "class Name {\n"
-                + "\tvoid boom(String msg){ if(msg.length() > 1) {}}\n"
+                + "\tString boom(String msg){ if(null != msg) { return boom(null);} return \"Hi!\";}\n"
+                + "\t/** {@link Name#boom(String)}**/String baam(String msg){ return boom(msg); }\n"
                 + "}";
 
         final Source        code        = new Source("Name.java", content);
         final Refactorer    refactorer  = Vesper.createRefactorer(code);
 
-        System.out.println("\nfindings...");
-        if(refactorer.hasIssues(code)){
 
-            final List<Change> suggestedChanges = refactorer.recommendChanges(code);
-            for(Change change : suggestedChanges){
-                System.out.println(change);
-            }
-        }
+        System.out.println("\nfindings...");
+
+        final SourceSelection   selection   = new SourceSelection(Locations.locateWord(code, "boom"));
+        final Change            renamed     = refactorer.createChange(
+                ChangeRequest.renameMethod(selection, "print")
+        );
+
+        System.out.println(renamed.more());
 
         System.out.println("...");
     }

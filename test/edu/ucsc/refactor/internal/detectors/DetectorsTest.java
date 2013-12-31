@@ -3,6 +3,7 @@ package edu.ucsc.refactor.internal.detectors;
 import edu.ucsc.refactor.Context;
 import edu.ucsc.refactor.Issue;
 import edu.ucsc.refactor.internal.EclipseJavaParser;
+import edu.ucsc.refactor.internal.InternalUtil;
 import edu.ucsc.refactor.spi.JavaParser;
 import org.junit.After;
 import org.junit.Before;
@@ -25,7 +26,7 @@ public class DetectorsTest {
 
     @Test public void testDetectMagicNumber(){
 
-        final Context context = new Context(DetectorsTestUtil.createSourceWithMagicNumber());
+        final Context context = new Context(InternalUtil.createSourceWithMagicNumber());
         parser.parseJava(context);
 
         final MagicNumber   magicNumber = new MagicNumber();
@@ -34,7 +35,7 @@ public class DetectorsTest {
     }
 
     @Test public void testUnableToDetectMagicNumber(){
-        final Context context = new Context(DetectorsTestUtil.createSourceNoIssues());
+        final Context context = new Context(InternalUtil.createSourceNoIssues());
         parser.parseJava(context);
 
         final MagicNumber   magicNumber = new MagicNumber();
@@ -48,7 +49,7 @@ public class DetectorsTest {
     public void testDetectUnusedImportDirective(){
 
         final Context context = new Context(
-                DetectorsTestUtil.createSourceWithOneUnusedImportDirective()
+                InternalUtil.createSourceWithOneUnusedImportDirective()
         );
 
         parser.parseJava(context);
@@ -61,7 +62,7 @@ public class DetectorsTest {
 
 
     @Test public void testUnableToDetectUnusedImport(){
-        final Context context = new Context(DetectorsTestUtil.createSourceNoIssues());
+        final Context context = new Context(InternalUtil.createSourceNoIssues());
         parser.parseJava(context);
 
         final UnusedImports unusedImports = new UnusedImports();
@@ -73,7 +74,7 @@ public class DetectorsTest {
 
     @Test public void testDetectUnusedMethod(){
         final Context context = new Context(
-                DetectorsTestUtil.createSourceWithUnusedMethodAndParameter()
+                InternalUtil.createSourceWithUnusedMethodAndParameter()
         );
 
         parser.parseJava(context);
@@ -86,7 +87,7 @@ public class DetectorsTest {
 
     @Test public void testDetectUnusedMethodParameter(){
         final Context context = new Context(
-                DetectorsTestUtil.createSourceWithUnusedMethodAndParameter()
+                InternalUtil.createSourceWithUnusedMethodAndParameter()
         );
 
         parser.parseJava(context);
@@ -99,7 +100,7 @@ public class DetectorsTest {
 
     @Test public void testUnableToDetectUnusedMethod(){
         final Context context = new Context(
-                DetectorsTestUtil.createSourceNoIssues()
+                InternalUtil.createSourceNoIssues()
         );
 
         parser.parseJava(context);
@@ -112,7 +113,7 @@ public class DetectorsTest {
 
     @Test public void testUnableToDetectUnusedMethodParameter(){
         final Context context = new Context(
-                DetectorsTestUtil.createSourceNoIssues()
+                InternalUtil.createSourceNoIssues()
         );
 
         parser.parseJava(context);

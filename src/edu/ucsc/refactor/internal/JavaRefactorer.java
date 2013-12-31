@@ -24,8 +24,8 @@ public class JavaRefactorer implements Refactorer {
     private final Map<String, List<Record>> history;
     private final Map<Source, Context>      cachedContexts;
 
-    private final HealthInspector   inspector;
-    private final ChangeMaker       changeMaker;
+    private final SourceChecking inspector;
+    private final SourceChanging changer;
 
 
 
@@ -39,8 +39,8 @@ public class JavaRefactorer implements Refactorer {
         this.history        = new HashMap<String, List<Record>>();
         this.cachedContexts = new HashMap<Source, Context>();
 
-        this.inspector   = new HealthInspector(host.getIssueDetectors());
-        this.changeMaker = new ChangeMaker(host.getSourceChangers());
+        this.inspector  = new SourceChecking(host.getIssueDetectors());
+        this.changer    = new SourceChanging(host.getSourceChangers());
     }
 
     @Override public CommitRequest apply(Change change) {
@@ -89,19 +89,6 @@ public class JavaRefactorer implements Refactorer {
         }
     }
 
-    @Override public List<Change> apply(List<Change> changes) {
-        final List<Change> badRequests = new ArrayList<Change>();
-        for(Change change : changes){
-            final CommitRequest applied = apply(change);
-
-            if(applied == null){
-                badRequests.add(change);
-            }
-        }
-
-        return badRequests;
-    }
-
     @Override public Change createChange(ChangeRequest request) {
         final boolean                isIssue    = request.isIssue();
         final CauseOfChange          cause      = request.getCauseOfChange();
@@ -111,7 +98,7 @@ public class JavaRefactorer implements Refactorer {
                         ? "Creating a change for an issue."
                         : "creating a change for a single edit.") );
 
-        return changeMaker.createChange(
+        return changer.createChange(
                 (isIssue ? cause : prep(cause, request)), parameters
         );
     }
@@ -257,10 +244,10 @@ public class JavaRefactorer implements Refactorer {
      * Helper class that allow {@code Refactorer} to scan the given
      * {@code Source}s in search of issues.
      */
-    static class HealthInspector {
+    static class SourceChecking {
         private final List<IssueDetector> detectors;
 
-        HealthInspector(List<IssueDetector> detectors){
+        SourceChecking(List<IssueDetector> detectors){
             this.detectors = detectors;
         }
 
@@ -332,11 +319,11 @@ public class JavaRefactorer implements Refactorer {
      * Helper class that allow {@code Refactorer} to change a given {@code Source}s
      * because of found {@code Issue}s or triggered {@code SingleEdit}s.
      */
-    static class ChangeMaker {
-        private final List<SourceChanger> solvers;
+    static class SourceChanging {
+        private final List<SourceChanger> changers;
 
-        ChangeMaker(List<SourceChanger> changers){
-            this.solvers = changers;
+        SourceChanging(List<SourceChanger> changers){
+            this.changers = changers;
         }
 
 
@@ -385,7 +372,7 @@ public class JavaRefactorer implements Refactorer {
          * @return The list of issue changers.
          */
         List<SourceChanger> getChangers() {
-            return solvers;
+            return changers;
         }
     }
 }

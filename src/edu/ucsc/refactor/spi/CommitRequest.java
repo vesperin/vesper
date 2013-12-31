@@ -12,9 +12,10 @@ public interface CommitRequest {
      * Gist or Pastie.
      *
      * @param to The storage service.
+     * @return A {@code CommitStatus}.
      * @throws RuntimeException if unable to commit changes.
      */
-    void commit(Upstream to) throws RuntimeException ;
+    CommitStatus commit(Upstream to) throws RuntimeException ;
 
     /**
      * @return {@code true} if the changes this commit

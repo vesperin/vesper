@@ -75,6 +75,7 @@ public abstract class AbstractConfiguration implements Configuration {
         addIssueDetector(new MagicNumber());
         addSourceChanger(new RemoveMagicNumber());
         addSourceChanger(new ReformatSourceCode());
+        addSourceChanger(new RenameMethod());
 
         // credentials must be added here..
         addCredentials(null);

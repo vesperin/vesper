@@ -1,7 +1,6 @@
 package edu.ucsc.refactor.internal;
 
 import edu.ucsc.refactor.*;
-import edu.ucsc.refactor.gist.GistRepository;
 import edu.ucsc.refactor.spi.IssueDetector;
 import edu.ucsc.refactor.spi.JavaParser;
 import edu.ucsc.refactor.spi.Upstream;

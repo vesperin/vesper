@@ -11,26 +11,19 @@ import java.util.Map;
 public interface Refactorer {
 
     /**
-     * Applies a change and then return its committed {@link CommitRequest}.
+     * Applies a change to a {@code Source} and then return its committed {@link CommitRequest}.
+     * Once a change is applied to a {@code Source}, the {@link Refactorer} will re-inspect the
+     * {@link Source} to update its list of {@code Source}'s issues. This list of issues can
+     * be either empty (no issues found) or have more than one issue.
      *
-     * <strong>Node</strong>After applying the change, the {@link Refactorer} will
-     * re-inspect the {@link Source} to update the {@link Source}'s list of issues.
-     * Consequently, the caller of this method must call the {@link Refactorer#getIssues(Source)}
-     * to get an updated list of {@link Source}'s issues.
+     * To obtain the refreshed list of issues after the application of a change, the user must
+     * call the  {@link Refactorer#getIssues(Source)} method.
      *
      * @param change The change to be applied
      * @return The committed request, null if the {@link CommitRequest} could not
      *      be committed.
      */
     CommitRequest apply(Change change);
-
-    /**
-     * Applies a list of changes to a {@link Source}, and return those ones that failed.
-     *
-     * @param changes The list of changes to be applied.
-     * @return the list of changes that could NOT be processed.
-     */
-    List<Change> apply(List<Change> changes);
 
     /**
      * Creates a change or solution that will address (e.g., fix or amend) a
@@ -81,16 +74,16 @@ public interface Refactorer {
     boolean hasIssues(Source code);
 
     /**
-     * Recommends changes for {@code Source} based on whether this {@code Source} has
-     * issues. In other words, if this {@code Source} has 10 issues in it, then the
+     * Recommends changes for {@code Source} based on found {@code issues}.
+     * In other words, if this {@code Source} has 10 issues in it, then the
      * {@code Refactorer} will recommend 10 changes that will address this 10 issues.
      *
-     * <strong>Note</strong>: If the user decides to apply any of the recommended
-     * changes, then the user is discouraged to apply the remaining ones as they
-     * may have become obsolete. If the user proceeds with applying obsolete changes, then
-     * this API does not make any guarantees that the source being updated will be ok.  This
-     * indicates that every time the user applies one change from the list of recommended changes,
-     * the user must re-call the {@link #recommendChanges(Source)} sub-routine.
+     * Each change is orthogonal to every other change of the {@code recommended} list. Consequently,
+     * once a change is applied to a {@code Source}, the remaining changes become outdated since
+     * they contain an outdated version of the {@code Source}. To alleviate this problem, each time
+     * the user chooses a change from the recommended list and then applies it, the user must run
+     * the {@code Refactorer#recommendChanges(Source)} method again to
+     * guarantee a fresh set of changes. Otherwise, source code conflicts may occur.
      *
      * @param code The {@code Source}
      * @return The list of recommended changes

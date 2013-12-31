@@ -32,7 +32,7 @@ public class EclipseJavaParser implements JavaParser {
 
     @Override public CompilationUnit parseJava(Context context) {
 
-        astParser.setUnitName("handsoap");
+        astParser.setUnitName("vesper");
 
         LOGGER.fine("Parsing context: " + context);
 
