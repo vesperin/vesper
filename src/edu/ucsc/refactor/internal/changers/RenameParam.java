@@ -3,7 +3,7 @@ package edu.ucsc.refactor.internal.changers;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.Delta;
 import edu.ucsc.refactor.internal.SourceChange;
-import edu.ucsc.refactor.internal.visitors.RenameParameterVisitor;
+import edu.ucsc.refactor.internal.visitors.RenameAstNodeVisitor;
 import edu.ucsc.refactor.spi.Refactoring;
 import edu.ucsc.refactor.spi.SourceChanger;
 import edu.ucsc.refactor.util.AstUtil;
@@ -47,8 +47,7 @@ public class RenameParam extends SourceChanger {
 
     private Delta renameParameter(SingleVariableDeclaration node, MethodDeclaration method, String newName){
         final AST           ast     = method.getAST();
-        // todo(Huascar) avoid using multiple rewrites,
-        final ASTRewrite    rewrite = ASTRewrite.create(ast);
+        final ASTRewrite    rewrite = AstUtil.createAstRewrite(ast);
         final String        oldName = node.getName().getIdentifier();
         final Source        src     = Source.from(method);
 
@@ -63,7 +62,7 @@ public class RenameParam extends SourceChanger {
 
 
         final Location copyLocation = Locations.locate(src, copy);
-        final RenameParameterVisitor renameParameterVisitor = new RenameParameterVisitor(
+        final RenameAstNodeVisitor renameParameterVisitor = new RenameAstNodeVisitor(
                 src, copyLocation, oldName, newName
         );
 

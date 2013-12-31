@@ -4,7 +4,7 @@ import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.Delta;
 import edu.ucsc.refactor.internal.SourceChange;
 import edu.ucsc.refactor.internal.visitors.MethodDeclarationVisitor;
-import edu.ucsc.refactor.internal.visitors.RenameMethodVisitor;
+import edu.ucsc.refactor.internal.visitors.RenameAstNodeVisitor;
 import edu.ucsc.refactor.spi.Refactoring;
 import edu.ucsc.refactor.spi.SourceChanger;
 import edu.ucsc.refactor.util.AstUtil;
@@ -116,11 +116,12 @@ public class RenameMethod extends SourceChanger {
 
     static void renameAstNode(Source src, Location location,
                               ASTNode affected, String oldName, String newName){
-        final RenameMethodVisitor renamingVisitor = new RenameMethodVisitor(
+
+        final RenameAstNodeVisitor renameAllMatches = new RenameAstNodeVisitor(
                 src, location, oldName, newName
         );
 
-        affected.accept(renamingVisitor);
+        affected.accept(renameAllMatches);
     }
 
 }
