@@ -31,12 +31,14 @@ public class RenameMethod extends SourceChanger {
     @Override protected Change initChanger(CauseOfChange cause,
                                            Map<String, Parameter> parameters) {
 
-        final Change change = new SourceChange(cause, this, parameters);
+        final Change change  = new SourceChange(cause, this, parameters);
+        final String newName = (String) parameters.get(Parameters.METHOD_NEW_NAME).getValue();
         try {
             for(ASTNode each : cause.getAffectedNodes()){ // assumption, there is only one affected node
                 final Delta delta = renameMethod(
                         each,
-                        (String) parameters.get(Parameters.METHOD_NEW_NAME).getValue()
+                        newName,
+                        Refactoring.from(cause.getName().getKey())
                 );
 
                 change.getDeltas().add(delta);
@@ -48,10 +50,15 @@ public class RenameMethod extends SourceChanger {
         return change;
     }
 
-    private Delta renameMethod(ASTNode node, String newName){
+    private Delta renameMethod(ASTNode node, String newName, Refactoring refactoring){
+        if(!Refactoring.RENAME_METHOD.isSame(refactoring)){
+            throw new IllegalStateException(
+                    "wrong refactoring strategy: expected RenameMethod, but got " + refactoring
+            );
+        }
 
-        final MethodDeclaration method = AstUtil.parent(MethodDeclaration.class, node);
-        final CompilationUnit   parent = AstUtil.parent(CompilationUnit.class, method);
+        final MethodDeclaration method      = AstUtil.parent(MethodDeclaration.class, node);
+        final CompilationUnit   parent      = AstUtil.parent(CompilationUnit.class, method);
 
 
         final AST               ast     = parent.getAST();
@@ -69,7 +76,7 @@ public class RenameMethod extends SourceChanger {
         // I. Rename the actual method's name.
         // begin:
 
-        internalRename(oldName, newName, method, src, rewrite);
+        internalRename(oldName, newName, method, src, rewrite, refactoring);
 
         // :end
 
@@ -83,7 +90,7 @@ public class RenameMethod extends SourceChanger {
                 continue;
             }
 
-            internalRename(oldName, newName, declaration, src, rewrite);
+            internalRename(oldName, newName, declaration, src, rewrite, refactoring);
         }
 
         // :end
@@ -99,7 +106,10 @@ public class RenameMethod extends SourceChanger {
         }
     }
 
-    private void internalRename(String oldName, String newName, MethodDeclaration declaration, Source src, ASTRewrite rewrite) {
+    private void internalRename(String oldName, String newName,
+                                MethodDeclaration declaration, Source src,
+                                ASTRewrite rewrite, Refactoring refactoring) {
+
         final MethodDeclaration methodWithRenamedInvokes = AstUtil.copySubtree(
                 MethodDeclaration.class,
                 declaration.getAST(),
@@ -108,18 +118,20 @@ public class RenameMethod extends SourceChanger {
 
         final Location methodWithRenamedInvokesLocation = Locations.locate(src, methodWithRenamedInvokes);
 
-        renameAstNode(src, methodWithRenamedInvokesLocation, methodWithRenamedInvokes, oldName, newName );
+        renameAstNode(src, methodWithRenamedInvokesLocation, methodWithRenamedInvokes, oldName, newName, refactoring);
 
         rewrite.replace(declaration, methodWithRenamedInvokes, null);
     }
 
 
     static void renameAstNode(Source src, Location location,
-                              ASTNode affected, String oldName, String newName){
+                              ASTNode affected, String oldName, String newName, Refactoring refactoring){
 
         final RenameAstNodeVisitor renameAllMatches = new RenameAstNodeVisitor(
                 src, location, oldName, newName
         );
+
+        renameAllMatches.setStrategy(refactoring);
 
         affected.accept(renameAllMatches);
     }

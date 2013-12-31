@@ -36,7 +36,7 @@ public class RenameParam extends SourceChanger {
             for(ASTNode each : cause.getAffectedNodes()){
                 if(method == null) { method = AstUtil.parent(MethodDeclaration.class, each); }
                 final SingleVariableDeclaration variable = AstUtil.parent(SingleVariableDeclaration.class, each);
-                change.getDeltas().add(renameParameter(variable, method, newName));
+                change.getDeltas().add(renameParameter(variable, method, newName, Refactoring.from(cause.getName().getKey())));
             }
         } catch (Throwable ex){
             change.getErrors().add(ex.getMessage());
@@ -45,7 +45,13 @@ public class RenameParam extends SourceChanger {
         return change;
     }
 
-    private Delta renameParameter(SingleVariableDeclaration node, MethodDeclaration method, String newName){
+    private Delta renameParameter(SingleVariableDeclaration node, MethodDeclaration method, String newName, Refactoring refactoring){
+        if(!Refactoring.RENAME_PARAMETER.isSame(refactoring)){
+            throw new IllegalStateException(
+                    "wrong refactoring strategy: expected RenameParameter, but got " + refactoring
+            );
+        }
+
         final AST           ast     = method.getAST();
         final ASTRewrite    rewrite = AstUtil.createAstRewrite(ast);
         final String        oldName = node.getName().getIdentifier();
@@ -65,6 +71,8 @@ public class RenameParam extends SourceChanger {
         final RenameAstNodeVisitor renameParameterVisitor = new RenameAstNodeVisitor(
                 src, copyLocation, oldName, newName
         );
+
+        renameParameterVisitor.setStrategy(refactoring);
 
         copy.accept(renameParameterVisitor);
 
