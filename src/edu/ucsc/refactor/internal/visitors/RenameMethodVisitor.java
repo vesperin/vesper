@@ -4,22 +4,19 @@ import edu.ucsc.refactor.Location;
 import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.internal.SourceVisitor;
 import edu.ucsc.refactor.util.Locations;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.MethodRef;
+import org.eclipse.jdt.core.dom.*;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public class RenameAstNodeVisitor extends SourceVisitor {
+public class RenameMethodVisitor extends SourceVisitor {
     private final Source    src;
     private final Location  selection;
     private final String    oldName;
     private final String    newName;
 
 
-    public RenameAstNodeVisitor(Source src, Location selection, String oldName, String newName){
+    public RenameMethodVisitor(Source src, Location selection, String oldName, String newName){
         super(true);
         this.src        = src;
         this.selection  = selection;

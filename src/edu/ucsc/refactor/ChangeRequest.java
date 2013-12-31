@@ -111,6 +111,19 @@ public class ChangeRequest {
         );
     }
 
+
+    /**
+     * Rename a parameter change request with selection and newName as values.
+     *
+     * @see {@link SingleEdit#renameParameter(SourceSelection)}
+     */
+    public static ChangeRequest renameParameter(SourceSelection selection, String newName){
+        return ChangeRequest.forEdit(
+                SingleEdit.renameParameter(selection),
+                Parameters.newParameterName(newName)
+        );
+    }
+
     /**
      * Reformat source code change request with selection and newName as values.
      *

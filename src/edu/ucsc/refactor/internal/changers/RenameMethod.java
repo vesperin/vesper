@@ -4,7 +4,7 @@ import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.Delta;
 import edu.ucsc.refactor.internal.SourceChange;
 import edu.ucsc.refactor.internal.visitors.MethodDeclarationVisitor;
-import edu.ucsc.refactor.internal.visitors.RenameAstNodeVisitor;
+import edu.ucsc.refactor.internal.visitors.RenameMethodVisitor;
 import edu.ucsc.refactor.spi.Refactoring;
 import edu.ucsc.refactor.spi.SourceChanger;
 import edu.ucsc.refactor.util.AstUtil;
@@ -32,13 +32,17 @@ public class RenameMethod extends SourceChanger {
                                            Map<String, Parameter> parameters) {
 
         final Change change = new SourceChange(cause, this, parameters);
-        for(ASTNode each : cause.getAffectedNodes()){ // assumption, there is only one affected node
-            final Delta delta = renameMethod(
-                    each,
-                    (String) parameters.get(Parameters.METHOD_NEW_NAME).getValue()
-            );
+        try {
+            for(ASTNode each : cause.getAffectedNodes()){ // assumption, there is only one affected node
+                final Delta delta = renameMethod(
+                        each,
+                        (String) parameters.get(Parameters.METHOD_NEW_NAME).getValue()
+                );
 
-            change.getDeltas().add(delta);
+                change.getDeltas().add(delta);
+            }
+        } catch (Throwable ex){
+            change.getErrors().add(ex.getMessage());
         }
 
         return change;
@@ -55,6 +59,12 @@ public class RenameMethod extends SourceChanger {
         final String            oldName = method.getName().getIdentifier();
         final Source            src     = Source.from(method);
 
+        final MethodDeclarationVisitor  methodsVisitor  = new MethodDeclarationVisitor();
+        parent.accept(methodsVisitor);
+
+        final List<MethodDeclaration>  methods  = methodsVisitor.getMethodDeclarations();
+
+        checkNameNotTaken(methods, newName);
 
         // I. Rename the actual method's name.
         // begin:
@@ -67,10 +77,7 @@ public class RenameMethod extends SourceChanger {
         // and then rename them using the `new name`.
         // begin:
 
-        final MethodDeclarationVisitor  methodsVisitor  = new MethodDeclarationVisitor();
-        parent.accept(methodsVisitor);
 
-        final List<MethodDeclaration>  methods  = methodsVisitor.getMethodDeclarations();
         for(MethodDeclaration declaration : methods){
             if(declaration.getName().getIdentifier().equals(oldName)){
                 continue;
@@ -82,6 +89,14 @@ public class RenameMethod extends SourceChanger {
         // :end
 
         return createDelta(node, rewrite);
+    }
+
+    private void checkNameNotTaken(List<MethodDeclaration> methods, String newName) {
+        for(MethodDeclaration each : methods){
+            if(newName.equals(each.getName().getIdentifier())){
+                throw new RuntimeException(newName + " is already taken!");
+            }
+        }
     }
 
     private void internalRename(String oldName, String newName, MethodDeclaration declaration, Source src, ASTRewrite rewrite) {
@@ -101,7 +116,7 @@ public class RenameMethod extends SourceChanger {
 
     static void renameAstNode(Source src, Location location,
                               ASTNode affected, String oldName, String newName){
-        final RenameAstNodeVisitor renamingVisitor = new RenameAstNodeVisitor(
+        final RenameMethodVisitor renamingVisitor = new RenameMethodVisitor(
                 src, location, oldName, newName
         );
 

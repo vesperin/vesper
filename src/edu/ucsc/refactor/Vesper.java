@@ -174,9 +174,10 @@ public final class Vesper {
     // basic test for Vesper
     public static void main(String[] args) {
         final String content = "import java.util.List; \n"
+                + "import java.util.Collection; \n"
                 + "class Name {\n"
                 + "\tString boom(String msg){ if(null != msg) { return boom(null);} return \"Hi!\";}\n"
-                + "\t/** {@link Name#boom(String)}**/String baam(String msg){ return boom(msg); }\n"
+                + "\t/** {@link Name#boom(String)}**/String baam(String msg){ String i = msg + (msg+msg); return boom(i); }\n"
                 + "}";
 
         final Source        code        = new Source("Name.java", content);
@@ -192,6 +193,12 @@ public final class Vesper {
 
         System.out.println(renamed.more());
 
+
+        final Change            renamedParam    = refactorer.createChange(
+                ChangeRequest.renameParameter(new SourceSelection(code, 198, 201)/*msg*/, "ooo")
+        );
+
+        System.out.println(renamedParam.more());
         System.out.println("...");
     }
 }

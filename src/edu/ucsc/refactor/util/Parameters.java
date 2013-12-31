@@ -18,26 +18,34 @@ public class Parameters {
     };
 
     public static final String METHOD_NEW_NAME         = "New method name";
+    public static final String PARAMETER_NEW_NAME      = "New method name";
     public static final String PARAMETER_CONSTANT_NAME = "Constant name";
 
     private Parameters(){}
 
     public static Map<String, Parameter> newMethodName(String value){
-        final Parameter newNameParameter = new Parameter(METHOD_NEW_NAME, value/*new name*/);
+        return createConstrainedParameter(METHOD_NEW_NAME, value, CONSTRAINT);
+    }
 
-        newNameParameter.getConstraints().add(CONSTRAINT);
 
-        return Collections.singletonMap(METHOD_NEW_NAME, newNameParameter);
+    public static Map<String, Parameter> newParameterName(String value){
+        return createConstrainedParameter(PARAMETER_NEW_NAME, value, CONSTRAINT);
     }
 
 
     public static Map<String, Parameter> newRandomConstantName(){
         final String name = "CONSTANT_" + HumanNumber.formatNumberToEnglish();
-        final Parameter constantNameParameter = new Parameter(PARAMETER_CONSTANT_NAME, name);
+        return createConstrainedParameter(PARAMETER_CONSTANT_NAME, name, CONSTRAINT);
+    }
 
-        constantNameParameter.getConstraints().add(CONSTRAINT);
 
-        return Collections.singletonMap(PARAMETER_CONSTANT_NAME, constantNameParameter);
+    private static Map<String, Parameter> createConstrainedParameter(String key, String value,
+                                                                Parameter.Constraint constraint){
+        final Parameter parameterObject = new Parameter(key, value/*new name*/);
+
+        parameterObject.getConstraints().add(constraint);
+
+        return Collections.singletonMap(key, parameterObject);
     }
 
 
