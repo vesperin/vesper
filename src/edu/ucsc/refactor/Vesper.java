@@ -176,8 +176,9 @@ public final class Vesper {
         final String content = "import java.util.List; \n"
                 + "import java.util.Collection; \n"
                 + "class Name {\n"
+                + "String msg = \"Hi!\";\n"
                 + "\tString boom(String msg){ if(null != msg) { return boom(null);} return \"Hi!\";}\n"
-                + "\t/** {@link Name#boom(String)}**/String baam(String msg){ String i = msg + (msg+msg); return boom(i); }\n"
+                + "\t/** {@link Name#boom(String)}**/String baam(String msg){ this.msg = msg + (msg+this.msg); return boom(this.msg); }\n"
                 + "}";
 
         final Source        code        = new Source("Name.java", content);
@@ -193,9 +194,8 @@ public final class Vesper {
 
         System.out.println(renamed.more());
 
-
         final Change            renamedParam    = refactorer.createChange(
-                ChangeRequest.renameParameter(new SourceSelection(code, 198, 201)/*msg*/, "ooo")
+                ChangeRequest.renameParameter(new SourceSelection(code, 218, 221)/*msg*/, "ooo")
         );
 
         System.out.println(renamedParam.more());
