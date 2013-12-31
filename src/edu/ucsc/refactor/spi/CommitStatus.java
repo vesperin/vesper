@@ -1,6 +1,6 @@
 package edu.ucsc.refactor.spi;
 
-import edu.ucsc.refactor.util.Info;
+import edu.ucsc.refactor.util.CommitInformation;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -23,19 +23,19 @@ public class CommitStatus {
     /**
      * Creates a failed commit status.
      *
-     * @param builder The Info.
+     * @param builder The CommitInformation.
      * @return A failed commit status.
      */
-    public static CommitStatus failedStatus(Info builder){
+    public static CommitStatus failedStatus(CommitInformation builder){
         return new CommitStatus(Status.FAILED, builder.toString());
     }
 
     /**
      * Creates a succeeded commit status.
-     * @param builder  The Info.
+     * @param builder  The CommitInformation.
      * @return A succeeded commit status.
      */
-    public static CommitStatus succeededStatus(Info builder){
+    public static CommitStatus succeededStatus(CommitInformation builder){
         return new CommitStatus(Status.SUCCEEDED, builder.toString());
     }
 
