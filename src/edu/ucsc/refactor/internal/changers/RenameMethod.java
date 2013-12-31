@@ -55,7 +55,7 @@ public class RenameMethod extends SourceChanger {
 
 
         final AST               ast     = parent.getAST();
-        final ASTRewrite        rewrite = ASTRewrite.create(ast);
+        final ASTRewrite        rewrite = AstUtil.createAstRewrite(ast);
         final String            oldName = method.getName().getIdentifier();
         final Source            src     = Source.from(method);
 
