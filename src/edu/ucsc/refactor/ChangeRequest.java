@@ -99,6 +99,19 @@ public class ChangeRequest {
         return forEdit(edit, DEFAULT_PARAMETERS);
     }
 
+
+    /**
+     * Rename a class/interface change request with selection and newName as values.
+     *
+     * @see {@link SingleEdit#renameMethod(SourceSelection)}
+     */
+    public static ChangeRequest renameClassOrInterface(SourceSelection selection, String newName){
+        return ChangeRequest.forEdit(
+                SingleEdit.renameClassOrInterface(selection),
+                Parameters.newClassOrInterfaceName(newName)
+        );
+    }
+
     /**
      * Rename a method change request with selection and newName as values.
      *

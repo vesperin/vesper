@@ -46,6 +46,16 @@ public class SingleEdit extends AbstractCauseOfChange {
     }
 
     /**
+     * Renames a class or interface, which location can be inferred from {@code SourceSelection}
+     *
+     * @param selection The selected class
+     * @return The {@code SingleEdit}.
+     */
+    public static SingleEdit renameClassOrInterface(SourceSelection selection){
+        return new SingleEdit(Refactoring.RENAME_TYPE, selection);
+    }
+
+    /**
      * Renames a method, which location can be inferred from {@code SourceSelection}
      *
      * @param selection The selected method

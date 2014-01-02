@@ -213,6 +213,10 @@ public final class Vesper {
         final Change reformat = refactorer.createChange(ChangeRequest.reformatSource(code));
         System.out.println(reformat.more());
 
+        final SourceSelection   c   = new SourceSelection(Locations.locateWord(code, "Name"));
+        final Change classRename = refactorer.createChange(ChangeRequest.renameClassOrInterface(c, "Test"));
+        System.out.println(classRename.more());
+
         System.out.println("...");
     }
 }

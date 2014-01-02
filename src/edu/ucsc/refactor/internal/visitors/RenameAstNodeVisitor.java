@@ -59,6 +59,9 @@ public class RenameAstNodeVisitor extends ASTVisitor {
                     case RENAME_FIELD:
                         renameField(node, declaration, newName);
                         break;
+                    case RENAME_TYPE: // rename class or interface
+                        renameType(node, newName);
+                        break;
                     default:
                         throw new NoSuchElementException(this.refactoring + " not found!");
                 }
@@ -100,6 +103,13 @@ public class RenameAstNodeVisitor extends ASTVisitor {
             if(declaration.getParent() instanceof FieldDeclaration){
                 node.setIdentifier(newName);
             }
+        }
+    }
+
+    static void renameType(SimpleName node, String newName){
+        if(node.getParent() instanceof TypeDeclaration
+                || node.getParent() instanceof ConstructorInvocation){
+            node.setIdentifier(newName);
         }
     }
 

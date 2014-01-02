@@ -78,6 +78,7 @@ public abstract class AbstractConfiguration implements Configuration {
         addSourceChanger(new RenameMethod());
         addSourceChanger(new RenameParam());
         addSourceChanger(new RenameField());
+        addSourceChanger(new RenameClassOrInterface());
 
         // credentials must be added here..
         addCredentials(null);
