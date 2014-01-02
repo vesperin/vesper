@@ -96,6 +96,10 @@ public class RenameAstNodeVisitor extends ASTVisitor {
             if((node.getParent() instanceof FieldAccess)){ // field
                 node.setIdentifier(newName);
             }
+        } else {
+            if(declaration.getParent() instanceof FieldDeclaration){
+                node.setIdentifier(newName);
+            }
         }
     }
 

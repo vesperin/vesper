@@ -19,28 +19,33 @@ public class Parameters {
 
     public static final String METHOD_NEW_NAME         = "New method name";
     public static final String PARAMETER_NEW_NAME      = "New method name";
+    public static final String FIELD_NEW_NAME          = "New method name";
     public static final String PARAMETER_CONSTANT_NAME = "Constant name";
 
     private Parameters(){}
 
     public static Map<String, Parameter> newMethodName(String value){
-        return createConstrainedParameter(METHOD_NEW_NAME, value, CONSTRAINT);
+        return createParameter(METHOD_NEW_NAME, value, CONSTRAINT);
     }
 
 
     public static Map<String, Parameter> newParameterName(String value){
-        return createConstrainedParameter(PARAMETER_NEW_NAME, value, CONSTRAINT);
+        return createParameter(PARAMETER_NEW_NAME, value, CONSTRAINT);
+    }
+
+    public static Map<String, Parameter> newFieldName(String value){
+        return createParameter(FIELD_NEW_NAME, value, CONSTRAINT);
     }
 
 
     public static Map<String, Parameter> newRandomConstantName(){
         final String name = "CONSTANT_" + HumanNumber.formatNumberToEnglish();
-        return createConstrainedParameter(PARAMETER_CONSTANT_NAME, name, CONSTRAINT);
+        return createParameter(PARAMETER_CONSTANT_NAME, name, CONSTRAINT);
     }
 
 
-    private static Map<String, Parameter> createConstrainedParameter(String key, String value,
-                                                                Parameter.Constraint constraint){
+    private static Map<String, Parameter> createParameter(String key, String value,
+                                                          Parameter.Constraint constraint){
         final Parameter parameterObject = new Parameter(key, value/*new name*/);
 
         parameterObject.getConstraints().add(constraint);

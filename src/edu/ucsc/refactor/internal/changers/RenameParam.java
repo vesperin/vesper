@@ -52,13 +52,14 @@ public class RenameParam extends SourceChanger {
             );
         }
 
+        // checking preconditions
+        checkNameIsNotTaken(method, method.parameters(), newName);
+
         final AST           ast     = method.getAST();
         final ASTRewrite    rewrite = AstUtil.createAstRewrite(ast);
         final String        oldName = node.getName().getIdentifier();
         final Source        src     = Source.from(method);
 
-        // checking preconditions
-        checkNameIsNotTaken(method, method.parameters(), newName);
 
         final MethodDeclaration copy = AstUtil.copySubtree(
                 MethodDeclaration.class,
@@ -87,7 +88,7 @@ public class RenameParam extends SourceChanger {
             final SingleVariableDeclaration variable = (SingleVariableDeclaration)eachDeclared;
             if(AstUtil.usesVariable(methodDeclaration, variable)){
                if(newName.equals(variable.getName().getIdentifier())){
-                   throw new RuntimeException(newName + " is already taken! Please select another name.");
+                   throw new RuntimeException(newName + " is already taken!");
                }
             }
         }

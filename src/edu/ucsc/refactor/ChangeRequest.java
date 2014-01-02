@@ -124,6 +124,20 @@ public class ChangeRequest {
         );
     }
 
+
+
+    /**
+     * Rename a field change request with selection and newName as values.
+     *
+     * @see {@link SingleEdit#renameField(SourceSelection)}
+     */
+    public static ChangeRequest renameField(SourceSelection selection, String newName){
+        return ChangeRequest.forEdit(
+                SingleEdit.renameField(selection),
+                Parameters.newFieldName(newName)
+        );
+    }
+
     /**
      * Reformat source code change request with selection and newName as values.
      *

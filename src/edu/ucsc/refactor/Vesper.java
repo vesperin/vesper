@@ -177,8 +177,10 @@ public final class Vesper {
                 + "import java.util.Collection; \n"
                 + "class Name {\n"
                 + "String msg = \"Hi!\";\n"
-                + "\tString boom(String msg){ if(null != msg) { return boom(null);} return \"Hi!\";}\n"
-                + "\t/** {@link Name#boom(String)}**/String baam(String msg){ this.msg = msg + (msg+this.msg); return boom(this.msg); }\n"
+                + "\tString boom(String msg){ if(null != msg) { return boom(null);} "
+                + "return \"Hi!\";}\n"
+                + "\t/** {@link Name#boom(String)}**/String baam(String msg){ this.msg = msg "
+                + "+ (msg+this.msg); return boom(this.msg); }\n"
                 + "}";
 
         final Source        code        = new Source("Name.java", content);
@@ -194,11 +196,23 @@ public final class Vesper {
 
         System.out.println(renamed.more());
 
+
         final Change            renamedParam    = refactorer.createChange(
                 ChangeRequest.renameParameter(new SourceSelection(code, 218, 221)/*msg*/, "ooo")
         );
 
         System.out.println(renamedParam.more());
+
+        final Change            renameField    = refactorer.createChange(
+                ChangeRequest.renameField(new SourceSelection(code, 74, 77)/*msg*/, "ooo")
+        );
+
+        System.out.println(renameField.more());
+
+
+        final Change reformat = refactorer.createChange(ChangeRequest.reformatSource(code));
+        System.out.println(reformat.more());
+
         System.out.println("...");
     }
 }
