@@ -25,13 +25,17 @@ public class RemoveUnusedImports extends SourceChanger {
 
         final SourceChange change = new SourceChange(cause, this, parameters);
 
-        for(ASTNode eachUnusedImportDeclaration : cause.getAffectedNodes()){
-            final ASTRewrite rewrite = ASTRewrite.create(
-                    eachUnusedImportDeclaration.getRoot().getAST()
-            );
+        try {
+            for(ASTNode eachUnusedImportDeclaration : cause.getAffectedNodes()){
+                final ASTRewrite rewrite = ASTRewrite.create(
+                        eachUnusedImportDeclaration.getRoot().getAST()
+                );
 
-            rewrite.remove(eachUnusedImportDeclaration, null);
-            change.getDeltas().add(createDelta(eachUnusedImportDeclaration, rewrite));
+                rewrite.remove(eachUnusedImportDeclaration, null);
+                change.getDeltas().add(createDelta(eachUnusedImportDeclaration, rewrite));
+            }
+        } catch (Throwable ex){
+            change.getErrors().add(ex.getMessage());
         }
 
         return change;
