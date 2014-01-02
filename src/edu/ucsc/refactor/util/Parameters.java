@@ -18,26 +18,45 @@ public class Parameters {
     };
 
     public static final String METHOD_NEW_NAME         = "New method name";
+    public static final String TYPE_NEW_NAME           = "New class or interface name";
+    public static final String PARAMETER_NEW_NAME      = "New method name";
+    public static final String FIELD_NEW_NAME          = "New method name";
     public static final String PARAMETER_CONSTANT_NAME = "Constant name";
 
     private Parameters(){}
 
+
+    public static Map<String, Parameter> newClassOrInterfaceName(String value){
+        return createParameter(TYPE_NEW_NAME, value, CONSTRAINT);
+    }
+
     public static Map<String, Parameter> newMethodName(String value){
-        final Parameter newNameParameter = new Parameter(METHOD_NEW_NAME, value/*new name*/);
+        return createParameter(METHOD_NEW_NAME, value, CONSTRAINT);
+    }
 
-        newNameParameter.getConstraints().add(CONSTRAINT);
 
-        return Collections.singletonMap(METHOD_NEW_NAME, newNameParameter);
+    public static Map<String, Parameter> newParameterName(String value){
+        return createParameter(PARAMETER_NEW_NAME, value, CONSTRAINT);
+    }
+
+    public static Map<String, Parameter> newFieldName(String value){
+        return createParameter(FIELD_NEW_NAME, value, CONSTRAINT);
     }
 
 
     public static Map<String, Parameter> newRandomConstantName(){
         final String name = "CONSTANT_" + HumanNumber.formatNumberToEnglish();
-        final Parameter constantNameParameter = new Parameter(PARAMETER_CONSTANT_NAME, name);
+        return createParameter(PARAMETER_CONSTANT_NAME, name, CONSTRAINT);
+    }
 
-        constantNameParameter.getConstraints().add(CONSTRAINT);
 
-        return Collections.singletonMap(PARAMETER_CONSTANT_NAME, constantNameParameter);
+    private static Map<String, Parameter> createParameter(String key, String value,
+                                                          Parameter.Constraint constraint){
+        final Parameter parameterObject = new Parameter(key, value/*new name*/);
+
+        parameterObject.getConstraints().add(constraint);
+
+        return Collections.singletonMap(key, parameterObject);
     }
 
 

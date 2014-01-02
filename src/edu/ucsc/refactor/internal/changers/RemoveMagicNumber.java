@@ -29,9 +29,15 @@ public class RemoveMagicNumber  extends SourceChanger {
 
     @Override protected Change initChanger(CauseOfChange cause,
                                            Map<String, Parameter> parameters) {
+        final SourceChange change = new SourceChange(cause, this, parameters);
 
-        final ChangeBuilder changeBuilder = new ChangeBuilder(cause, this, parameters);
-        return changeBuilder.build();
+        try {
+            final ChangeBuilder changeBuilder = new ChangeBuilder(cause, parameters);
+            return changeBuilder.build(change);
+        } catch (Throwable ex){
+            change.getErrors().add(ex.getMessage());
+            return change;
+        }
     }
 
     @Override protected Map<String, Parameter> defaultParameters() {
@@ -40,18 +46,16 @@ public class RemoveMagicNumber  extends SourceChanger {
 
     static class ChangeBuilder {
         private final CauseOfChange cause;
-        private final SourceChanger changer;
         private final Map<String, Parameter> parameters;
 
         ChangeBuilder(CauseOfChange cause,
-                      SourceChanger changer, Map<String, Parameter> parameters){
+                      Map<String, Parameter> parameters){
 
-            this.cause = cause;
-            this.changer = changer;
+            this.cause      = cause;
             this.parameters = parameters;
         }
 
-        Change build(){
+        Change build(SourceChange change){
 
             final NumberLiteral   literal      = (NumberLiteral) cause.getAffectedNodes().get(0);
             final TypeDeclaration literalClass = AstUtil.parent(TypeDeclaration.class, literal);
@@ -67,7 +71,7 @@ public class RemoveMagicNumber  extends SourceChanger {
 
             replaceMagicNumberWithConstant(literal, rewrite, name);
 
-            return buildSolution(literalClass);
+            return buildSolution(literalClass, change);
         }
 
 
@@ -106,10 +110,9 @@ public class RemoveMagicNumber  extends SourceChanger {
         }
 
 
-        SourceChange buildSolution(TypeDeclaration literalClass){
+        SourceChange buildSolution(TypeDeclaration literalClass, SourceChange change){
 
             final Source code = Source.from(literalClass);
-            final SourceChange change = new SourceChange(cause, changer, parameters);
             change.getDeltas().add(change.createDelta(code));
             return change;
         }

@@ -99,6 +99,19 @@ public class ChangeRequest {
         return forEdit(edit, DEFAULT_PARAMETERS);
     }
 
+
+    /**
+     * Rename a class/interface change request with selection and newName as values.
+     *
+     * @see {@link SingleEdit#renameMethod(SourceSelection)}
+     */
+    public static ChangeRequest renameClassOrInterface(SourceSelection selection, String newName){
+        return ChangeRequest.forEdit(
+                SingleEdit.renameClassOrInterface(selection),
+                Parameters.newClassOrInterfaceName(newName)
+        );
+    }
+
     /**
      * Rename a method change request with selection and newName as values.
      *
@@ -108,6 +121,33 @@ public class ChangeRequest {
         return ChangeRequest.forEdit(
                 SingleEdit.renameMethod(selection),
                 Parameters.newMethodName(newName)
+        );
+    }
+
+
+    /**
+     * Rename a parameter change request with selection and newName as values.
+     *
+     * @see {@link SingleEdit#renameParameter(SourceSelection)}
+     */
+    public static ChangeRequest renameParameter(SourceSelection selection, String newName){
+        return ChangeRequest.forEdit(
+                SingleEdit.renameParameter(selection),
+                Parameters.newParameterName(newName)
+        );
+    }
+
+
+
+    /**
+     * Rename a field change request with selection and newName as values.
+     *
+     * @see {@link SingleEdit#renameField(SourceSelection)}
+     */
+    public static ChangeRequest renameField(SourceSelection selection, String newName){
+        return ChangeRequest.forEdit(
+                SingleEdit.renameField(selection),
+                Parameters.newFieldName(newName)
         );
     }
 

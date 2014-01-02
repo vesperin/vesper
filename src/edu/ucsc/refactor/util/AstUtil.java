@@ -1,7 +1,9 @@
 package edu.ucsc.refactor.util;
 
+import edu.ucsc.refactor.Location;
 import edu.ucsc.refactor.Source;
 import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 
 import java.util.List;
 
@@ -56,6 +58,14 @@ public class AstUtil {
         return thatClass.cast(ASTNode.copySubtree(ast, node));
     }
 
+    public static ASTRewrite createAstRewrite(AST ast){
+        if(ast == null) throw new NullPointerException("createAstRewrite() was given a null AST");
+        //  please remember to avoid creating multiple rewrites, one per affected node...
+        //  that will make changes to be out of sync and cause source code overrides; e.g.,
+        //  delete method A in Src, rename parameter in Src with method A not deleted.
+        return ASTRewrite.create(ast);
+    }
+
 
     public static void copyParameters(List src, MethodDeclaration dst){
         for(Object eachObj : src){
@@ -94,5 +104,78 @@ public class AstUtil {
     public static boolean processJavadocComments(CompilationUnit astRoot) {
         return !(astRoot != null && astRoot.getTypeRoot() != null)
                 || !"package-info.java".equals(astRoot.getTypeRoot().getElementName());
+    }
+
+
+    public static boolean isNodeWithinSelection(Source src, ASTNode node, Location selection) {
+
+        final Location nodeLocation     = Locations.locate(src, node);
+        final Location methodLocation   = selection;
+
+
+        return (Locations.inside(methodLocation, nodeLocation))
+                || (Locations.covers(methodLocation, nodeLocation));
+    }
+
+    public static boolean isNodeEnclosingMethod(Source src, ASTNode node, Location selection) {
+
+        final Location nodeLocation     = Locations.locate(src, node);
+        final Location methodLocation   = selection;
+
+        // Is the method completely enclosed by the node?
+        return (Locations.inside(nodeLocation, methodLocation));
+    }
+
+
+    public static boolean isNodeExactlyAtLocation(Source src, ASTNode node, Location selection) {
+
+        final Location nodeLocation     = Locations.locate(src, node);
+        final Location methodLocation   = selection;
+
+        // Is the method at the same position as the other node?
+        return (Locations.bothSame(nodeLocation, methodLocation));
+    }
+
+
+    public static boolean isFurtherTraversalNecessary(Source src, ASTNode node, Location selection) {
+        return isNodeWithinSelection(src, node, selection)
+                || isNodeEnclosingMethod(src, node, selection)
+                || isNodeExactlyAtLocation(src, node, selection);
+    }
+
+    public static VariableDeclaration getVariableDeclaration(Name node) {
+        final IBinding binding  = node.resolveBinding();
+        if (binding == null && node.getParent() instanceof VariableDeclaration) {
+            return (VariableDeclaration) node.getParent();
+        }
+
+        if (binding != null && binding.getKind() == IBinding.VARIABLE) {
+            final CompilationUnit cu  = parent(CompilationUnit.class, node);
+            return findVariableDeclaration(((IVariableBinding) binding), cu);
+        }
+
+        return null;
+    }
+
+    public static ASTNode findDeclaration(IBinding binding, ASTNode root) {
+        root    = root.getRoot();
+        if (root instanceof CompilationUnit) {
+            return ((CompilationUnit)root).findDeclaringNode(binding);
+        }
+
+        return null;
+    }
+
+    public static VariableDeclaration findVariableDeclaration(IVariableBinding binding, ASTNode root) {
+        if (binding.isField()) {
+            return null;
+        }
+
+        final ASTNode result    = findDeclaration(binding, root);
+        if (result instanceof VariableDeclaration) {
+            return (VariableDeclaration)result;
+        }
+
+        return null;
     }
 }
