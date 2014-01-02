@@ -24,9 +24,13 @@ public class ReformatSourceCode extends SourceChanger {
                                            Map<String, Parameter> parameters) {
 
         final Change change = new SourceChange(cause, this, parameters);
-        for(ASTNode each : cause.getAffectedNodes()){
-            final Delta delta = reformat(each);
-            change.getDeltas().add(delta);
+        try {
+            for(ASTNode each : cause.getAffectedNodes()){
+                final Delta delta = reformat(each);
+                change.getDeltas().add(delta);
+            }
+        } catch (Throwable ex){
+            change.getErrors().add(ex.getMessage());
         }
 
         return change;

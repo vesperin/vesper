@@ -35,10 +35,14 @@ public class RemoveUnusedMethods extends SourceChanger {
                                            Map<String, Parameter> parameters) {
 
         final SourceChange      change      = new SourceChange(cause, this, parameters);
-        final MethodDeclaration declaration = getMethodDeclaration(cause.getAffectedNodes());
-        final Delta             delta       = removeFromDeclaration(declaration);
+        try {
+            final MethodDeclaration declaration = getMethodDeclaration(cause.getAffectedNodes());
+            final Delta             delta       = removeFromDeclaration(declaration);
 
-        change.getDeltas().add(delta);
+            change.getDeltas().add(delta);
+        } catch (Throwable ex){
+            change.getErrors().add(ex.getMessage());
+        }
 
         return change;
     }

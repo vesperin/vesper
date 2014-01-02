@@ -38,18 +38,23 @@ public class RemoveUnusedParameters extends SourceChanger {
     @Override protected Change initChanger(CauseOfChange cause,
                                            Map<String, Parameter> parameters) {
 
-        final MethodDeclaration         methodDeclaration   = getMethodDeclarationNode(cause);
-        final SingleVariableDeclaration variableDeclaration = getSingleVariableDeclarationNode(cause);
-
         final SourceChange solution = new SourceChange(cause, this, parameters);
 
+        try {
+            final MethodDeclaration         methodDeclaration   = getMethodDeclarationNode(cause);
+            final SingleVariableDeclaration variableDeclaration = getSingleVariableDeclarationNode(cause);
 
-        //1. Remove parameter from the method declaration
-        solution.getDeltas().add(removeFromDeclaration(methodDeclaration, variableDeclaration));
 
-        //2. Remove parameter from method invocations
-        solution.getDeltas().addAll(removeFromInvocations(cause, methodDeclaration,
-                variableDeclaration));
+
+            //1. Remove parameter from the method declaration
+            solution.getDeltas().add(removeFromDeclaration(methodDeclaration, variableDeclaration));
+
+            //2. Remove parameter from method invocations
+            solution.getDeltas().addAll(removeFromInvocations(cause, methodDeclaration,
+                    variableDeclaration));
+        } catch (Throwable ex){
+            solution.getErrors().add(ex.getMessage());
+        }
 
         return solution;
     }

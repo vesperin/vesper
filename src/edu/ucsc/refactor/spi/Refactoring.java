@@ -9,14 +9,15 @@ import java.util.NoSuchElementException;
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public enum Refactoring implements Name {
-    REFORMAT_CODE("Reformat code", "Vesper will automatically reformat a selected code block"),
-    DELETE_METHOD("Delete method", "Vesper will delete a selected method"),
-    DELETE_PARAMETER("Delete parameter", "Vesper will delete the selected method parameter"),
-    DELETE_FIELD("Delete field", "Vesper will delete the selected field"),
-    DELETE_UNUSED_IMPORTS("Delete unused imports", "Vesper will optimize your imports"),
-    RENAME_METHOD("Rename method", "Vesper will rename the name of the selected method"),
-    RENAME_PARAMETER("Rename parameter", "Vesper will rename the name of the selected method's parameter"),
-    RENAME_FIELD("Rename field", "Vesper will rename the name of a class's selected field");
+    REFORMAT_CODE("Reformat Code", "Vesper will automatically reformat a selected code block"),
+    DELETE_METHOD("Delete Method", "Vesper will delete a selected method"),
+    DELETE_PARAMETER("Delete Parameter", "Vesper will delete the selected method parameter"),
+    DELETE_FIELD("Delete Field", "Vesper will delete the selected field"),
+    DELETE_UNUSED_IMPORTS("Delete Unused Imports", "Vesper will optimize your imports"),
+    RENAME_METHOD("Rename Method", "Vesper will rename the name of the selected method"),
+    RENAME_PARAMETER("Rename Parameter", "Vesper will rename the name of the selected method's parameter"),
+    RENAME_FIELD("Rename field", "Vesper will rename the name of a class's selected field"),
+    RENAME_TYPE("Rename Type", "Vesper will rename the name of a class or interface");
 
     private static final Map<String, Refactoring> LOOK_UP = new HashMap<String, Refactoring>();
 
