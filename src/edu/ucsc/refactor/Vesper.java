@@ -2,7 +2,6 @@ package edu.ucsc.refactor;
 
 import edu.ucsc.refactor.internal.HostImpl;
 import edu.ucsc.refactor.internal.InternalRefactorerCreator;
-import edu.ucsc.refactor.util.Locations;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -169,54 +168,5 @@ public final class Vesper {
             throw new CreationException(throwables);
         }
 
-    }
-
-    // basic test for Vesper
-    public static void main(String[] args) {
-        final String content = "import java.util.List; \n"
-                + "import java.util.Collection; \n"
-                + "class Name {\n"
-                + "String msg = \"Hi!\";\n"
-                + "\tString boom(String msg){ if(null != msg) { return boom(null);} "
-                + "return \"Hi!\";}\n"
-                + "\t/** {@link Name#boom(String)}**/String baam(String msg){ this.msg = msg "
-                + "+ (msg+this.msg); return boom(this.msg); }\n"
-                + "}";
-
-        final Source        code        = new Source("Name.java", content);
-        final Refactorer    refactorer  = Vesper.createRefactorer(code);
-
-
-        System.out.println("\nfindings...");
-
-        final SourceSelection   selection   = new SourceSelection(Locations.locateWord(code, "boom"));
-        final Change            renamed     = refactorer.createChange(
-                ChangeRequest.renameMethod(selection, "print")
-        );
-
-        System.out.println(renamed.more());
-
-
-        final Change            renamedParam    = refactorer.createChange(
-                ChangeRequest.renameParameter(new SourceSelection(code, 218, 221)/*msg*/, "ooo")
-        );
-
-        System.out.println(renamedParam.more());
-
-        final Change            renameField    = refactorer.createChange(
-                ChangeRequest.renameField(new SourceSelection(code, 74, 77)/*msg*/, "ooo")
-        );
-
-        System.out.println(renameField.more());
-
-
-        final Change reformat = refactorer.createChange(ChangeRequest.reformatSource(code));
-        System.out.println(reformat.more());
-
-        final SourceSelection   c   = new SourceSelection(Locations.locateWord(code, "Name"));
-        final Change classRename = refactorer.createChange(ChangeRequest.renameClassOrInterface(c, "Test"));
-        System.out.println(classRename.more());
-
-        System.out.println("...");
     }
 }
