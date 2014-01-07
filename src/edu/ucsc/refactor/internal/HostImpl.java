@@ -62,8 +62,7 @@ public class HostImpl implements Host {
     }
 
     @Override public void addCredentials(Credential credential) {
-        if(credential == null) return;
-        this.credential = credential;
+        this.credential = credential == null ? Credential.none() : credential;
     }
 
     @Override public Upstream getUpstream() {

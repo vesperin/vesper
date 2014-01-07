@@ -20,6 +20,15 @@ public final class Credential {
         this.password = password;
     }
 
+    /**
+     * Creates the NoCredential object.
+     *
+     * @return THe NoCredential object.
+     */
+    public static Credential none(){
+        return new Credential("NONE", "NONE");
+    }
+
 
     /**
      * @return The username

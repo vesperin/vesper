@@ -18,7 +18,9 @@ public class GistRepository implements Upstream {
      */
     public GistRepository(Credential key){
         GistService service = new GistService();
-        service.getClient().setCredentials(key.getUsername(), key.getPassword());
+        if(key != null && "None".equals(key.getUsername())){
+            service.getClient().setCredentials(key.getUsername(), key.getPassword());
+        }
         this.service    = service;
         this.credential = key;
     }

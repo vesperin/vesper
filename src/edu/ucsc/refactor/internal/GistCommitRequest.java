@@ -65,7 +65,7 @@ public final class GistCommitRequest implements CommitRequest {
     static String squashedDeltas(String name, Queue<Delta> deltas, ASTNode node) throws RuntimeException {
         File tempFile = null;
         try {
-            tempFile = File.createTempFile(name, DOT_JAVA);
+            tempFile = File.createTempFile(fixPrefixTooShort(name), DOT_JAVA);
             while (!deltas.isEmpty()){
                 final Delta next = deltas.remove();
                 Files.write(next.getAfter().getBytes(), tempFile);
@@ -92,6 +92,12 @@ public final class GistCommitRequest implements CommitRequest {
                 }
             }
         }
+    }
+
+
+    static String fixPrefixTooShort(String name){
+        if(name.trim().length() < 3) return name + "temp";
+        return name;
     }
 
 
