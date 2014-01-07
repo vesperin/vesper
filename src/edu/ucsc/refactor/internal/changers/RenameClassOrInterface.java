@@ -71,7 +71,9 @@ public class RenameClassOrInterface extends SourceChanger {
 
         rewrite.replace(unit, copy, null);
 
-        return createDelta(unit, rewrite);
+        src.setName(newName);
+
+        return createDelta(src, rewrite);
     }
 
     private static void checkNameIsNotTaken(TypeDeclaration unit, String newName){

@@ -73,20 +73,15 @@ public abstract class SourceChanger implements Changer {
      */
     protected abstract Change initChanger(CauseOfChange cause, Map<String, Parameter> parameters);
 
-
     /**
      * Tracks the changes made to a {@link Source file} by storing them
      * in the {@link Delta} object.
      *
-     * @param node The ASTNode object.
+     * @param source The Source object.
      * @param rewrite The ASTRewrite object.
      * @return a new {@link Delta} object.
      */
-    // todo(Huascar) investigate whether we can make deltas non orthogonal (make deltas aware of
-    // related deltas' changes). Currently, deltas are orthogonal in terms of the file they
-    // are changing.
-    protected Delta createDelta(ASTNode node, ASTRewrite rewrite) {
-        final Source    source      = Source.from(node);
+    protected Delta createDelta(Source source, ASTRewrite rewrite){
         final IDocument document    = source.toDocument();
 
         Delta delta = new Delta(source);
@@ -104,6 +99,18 @@ public abstract class SourceChanger implements Changer {
         delta.setAfter(format(document));
 
         return delta;
+    }
+
+    /**
+     * Tracks the changes made to a {@link Source file} by storing them
+     * in the {@link Delta} object.
+     *
+     * @param node The ASTNode object.
+     * @param rewrite The ASTRewrite object.
+     * @return a new {@link Delta} object.
+     */
+    protected Delta createDelta(ASTNode node, ASTRewrite rewrite) {
+        return createDelta(Source.from(node), rewrite);
     }
 
 

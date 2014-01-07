@@ -16,11 +16,11 @@ import java.util.concurrent.atomic.AtomicReference;
 public class Source {
     public static final String SOURCE_FILE_PROPERTY = "kae.source_file.source_file_property";
 
-    private final String        name;
     private final String        contents;
     private final String        description;
     private final Notes notes;
 
+    private final AtomicReference<String> name;
     private final AtomicReference<String> id;
 
     /**
@@ -45,7 +45,7 @@ public class Source {
      * @param description The file's description.
      */
     public Source(String name, String contents, String description){
-        this.name        = name;
+        this.name        = new AtomicReference<String>(name);
         this.contents    = contents;
         this.description = description;
         this.id          = new AtomicReference<String>();
@@ -113,7 +113,7 @@ public class Source {
      *
      * @return The file's name
      */
-    public String getName()     { return name; }
+    public String getName()     { return name.get(); }
 
     /**
      * Gets the content's length.
@@ -129,6 +129,16 @@ public class Source {
      */
     public boolean removeNote(Note note){
         return this.notes.delete(note);
+    }
+
+    /**
+     * Sets the name of the {@code Source}, which is different than the one
+     * initially given.
+     *
+     * @param name The {@code Source}'s name.
+     */
+    public void setName(String name){
+        this.name.compareAndSet(getName(), name);
     }
 
     /**
