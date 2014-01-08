@@ -14,9 +14,9 @@ public interface Formatter {
     String format(String code);
 
     /**
-     * Formats a {@link org.eclipse.jface.text.IDocument}'s content.
-     * @param document a {@link org.eclipse.jface.text.IDocument}
-     * @return formatted {@link org.eclipse.jface.text.IDocument}'s content.
+     * Formats a {@link IDocument}'s content.
+     * @param document a {@link IDocument}
+     * @return formatted {@link IDocument}'s content.
      */
     String format(IDocument document);
 }
