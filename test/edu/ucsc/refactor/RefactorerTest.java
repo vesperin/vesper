@@ -71,9 +71,7 @@ public class RefactorerTest {
 
 
         final Change amendment = refactorer.createChange(
-                ChangeRequest.forEdit(
-                        SingleEdit.reformatCode(new SourceSelection(SRC, 0, SRC.getLength()))
-                )
+                ChangeRequest.reformatSource(SRC)
         );
 
         assertNotNull(amendment);
