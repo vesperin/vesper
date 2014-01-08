@@ -152,13 +152,25 @@ public class ChangeRequest {
     }
 
     /**
-     * Reformat source code change request with selection and newName as values.
+     * Reformat source code change request with selection as value.
      *
-     * @see {@link SingleEdit#reformatCode(Source)}
+     * @see {@link SingleEdit#reformatCode(SourceSelection)}
+     */
+    public static ChangeRequest reformatSource(SourceSelection selection){
+        return ChangeRequest.forEdit(
+                SingleEdit.reformatCode(selection)
+        );
+    }
+
+
+    /**
+     * Reformat source code change request with source as value.
+     *
+     * @see {@link ChangeRequest#reformatSource(SourceSelection)}
      */
     public static ChangeRequest reformatSource(Source source){
-        return ChangeRequest.forEdit(
-                SingleEdit.reformatCode(source)
+        return reformatSource(
+                new SourceSelection(source, 0, source.getLength())
         );
     }
 

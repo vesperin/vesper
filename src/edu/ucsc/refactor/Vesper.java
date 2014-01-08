@@ -56,7 +56,7 @@ import java.util.List;
  *
  *     // II. Dealing with random edits from a user
  *
- *     Change reformat = refactorer.createChange(forEdit(SingleEdit.reformatCode(code)));
+ *     Change reformat = refactorer.createChange(forEdit(SingleEdit.reformatCode(selection)));
  *     System.out.println(refactorer.apply(reformat).more());
  *
  * </pre>

@@ -23,15 +23,15 @@ public class SingleEdit extends AbstractCauseOfChange {
     }
 
     /**
-     * Reformats the {@code Source} code.
+     * Reformat the {@code Source} code.
      *
-     * @param code The source code to be formatted.
+     * @param selection The selected code to be formatted.
      * @return The {@code SingleEdit}.
      */
-    public static SingleEdit reformatCode(Source code){
+    public static SingleEdit reformatCode(SourceSelection selection){
         return new SingleEdit(
                 Refactoring.REFORMAT_CODE,
-                new SourceSelection(code, 0, code.getLength())
+                selection
         );
     }
 

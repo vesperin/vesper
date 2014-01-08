@@ -72,7 +72,7 @@ public class RefactorerTest {
 
         final Change amendment = refactorer.createChange(
                 ChangeRequest.forEdit(
-                        SingleEdit.reformatCode(SRC)
+                        SingleEdit.reformatCode(new SourceSelection(SRC, 0, SRC.getLength()))
                 )
         );
 
