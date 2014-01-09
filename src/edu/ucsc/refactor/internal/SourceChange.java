@@ -7,6 +7,8 @@ import edu.ucsc.refactor.Parameter;
 import edu.ucsc.refactor.spi.Changer;
 import edu.ucsc.refactor.spi.SourceChanger;
 
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -47,19 +49,40 @@ public class SourceChange extends Change {
     @Override public String more() {
         final StringBuilder builder = new StringBuilder();
         final String name = getSource().getName();
-        builder.append("Change for ").append(getCause().getName().getKey()).append(" ");
+        builder.append("Change for ").append(quote(getCause().getName().getKey())).append(" ");
 
         if(!isValid()){
             builder.append("cannot be performed to ");
             builder.append("class ").append(name).append(".java ");
             builder.append("Change contains ").append(getErrors().size());
             builder.append(" errors.");
+            builder.append(provideSpecifics(getErrors()));
             return builder.toString();
         }
 
         builder.append("can be performed to ");
         builder.append("class ").append(name);
         return builder.toString();
+    }
+
+    private static String quote(String text){
+        return "'" + text + "'";
+    }
+
+    private static String provideSpecifics(List<String> errors){
+        final StringBuilder msg = new StringBuilder();
+        if(!errors.isEmpty()){
+            msg.append("See:\n\t");
+            final Iterator<String> iterator = errors.iterator();
+            while(iterator.hasNext()){
+                msg.append("\t").append(iterator.next());
+                if(iterator.hasNext()) msg.append("\n");
+            }
+
+            return msg.toString();
+        } else {
+            return msg.toString();
+        }
     }
 
     @Override public CommitRequest perform() {
