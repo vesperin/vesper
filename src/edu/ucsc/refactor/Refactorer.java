@@ -1,6 +1,8 @@
 package edu.ucsc.refactor;
 
 import edu.ucsc.refactor.spi.CommitRequest;
+import edu.ucsc.refactor.spi.CommitStatus;
+import edu.ucsc.refactor.spi.Upstream;
 
 import java.util.List;
 import java.util.Map;
@@ -72,6 +74,26 @@ public interface Refactorer {
      * @return {@code true} if the {@code Source} has issues. {@code false} otherwise.
      */
     boolean hasIssues(Source code);
+
+    /**
+     * Commit local changes to a remote upstream.
+     * @param localCommit The request (locally committed)
+     * @return The request status (remotely committed)
+     * @throws java.lang.IllegalArgumentException if {@code Vesper} lacks of the right
+     *      credentials (!= null) to publish a local commit to a remote repository.
+     */
+    CommitStatus publish(CommitRequest localCommit);
+
+    /**
+     * Commit local changes to a remote upstream.
+     *
+     *
+     * @param request A valid commit request (locally committed and with no errors).
+     * @param upstream The upstream.
+     * @return The request (remotely committed)
+     * @throws java.lang.IllegalStateException if the request has already been remotely committed.
+     */
+    CommitStatus publish(CommitRequest request, Upstream upstream);
 
     /**
      * Recommends changes for {@code Source} based on found {@code issues}.

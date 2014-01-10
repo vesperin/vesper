@@ -130,11 +130,9 @@ public abstract class Change {
     /**
      * Performs this change by creating a commit request,
      * which will be committed to an external service.
-     * @param offline {@code true} if changes are done
-     *                locally and not remotely ({@code false} value).
      * @return The commit request.
      */
-    public abstract CommitRequest perform(boolean offline);
+    public abstract CommitRequest perform();
 
     /**
      * Removes a {@code Delta}.

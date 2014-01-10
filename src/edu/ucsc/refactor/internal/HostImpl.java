@@ -4,14 +4,12 @@ import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.spi.IssueDetector;
 import edu.ucsc.refactor.spi.JavaParser;
 import edu.ucsc.refactor.spi.SourceChanger;
-import edu.ucsc.refactor.spi.Upstream;
 import edu.ucsc.refactor.util.ToStringBuilder;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -21,8 +19,6 @@ public class HostImpl implements Host {
     private final Collection<Throwable> errors;
     private final List<IssueDetector>   detectors;
     private final List<SourceChanger>   changers;
-
-    private final AtomicBoolean         offlineMode;
 
     private JavaParser  parser;
     private Credential credential;
@@ -34,7 +30,6 @@ public class HostImpl implements Host {
         this.errors         = new ArrayList<Throwable>();
         this.detectors      = new ArrayList<IssueDetector>();
         this.changers       = new ArrayList<SourceChanger>();
-        this.offlineMode    = new AtomicBoolean();
         this.parser         = null;
         this.credential     = null;
     }
@@ -67,10 +62,6 @@ public class HostImpl implements Host {
 
     @Override public void addCredentials(Credential credential) {
         this.credential = credential;
-    }
-
-    @Override public Upstream getUpstream() {
-        return isCommittedLocally() ? new LocalRepository(getStorageKey()): new GistRepository(getStorageKey());
     }
 
     // Internal method
@@ -124,12 +115,8 @@ public class HostImpl implements Host {
         configuration.configure(this);
     }
 
-    @Override public boolean isCommittedLocally() {
-        return this.offlineMode.get();
-    }
-
-    @Override public void commitLocally(boolean mode) {
-        this.offlineMode.compareAndSet(isCommittedLocally(), mode);
+    @Override public boolean isRemoteUpstreamEnabled() {
+        return getStorageKey() != null;
     }
 
     @Override public void throwCreationErrorIfErrorsExist() throws RuntimeException {

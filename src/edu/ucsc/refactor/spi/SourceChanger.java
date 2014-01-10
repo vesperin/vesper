@@ -32,9 +32,9 @@ public abstract class SourceChanger implements Changer {
      *
      * @param change The {@link Change} object.
      */
-    public CommitRequest applyChange(Change change, boolean offline){
+    public CommitRequest applyChange(Change change){
         LOGGER.fine("Applying change " + change);
-        final CommitRequest request = commitChange(change, offline);
+        final CommitRequest request = commitChange(change);
         LOGGER.fine("Commit request created: " + request.more());
         return request;
     }
@@ -57,8 +57,10 @@ public abstract class SourceChanger implements Changer {
     }
 
 
-    @Override public CommitRequest commitChange(Change change, boolean offline) {
-        return offline ? new LocalCommitRequest(change) : new GistCommitRequest(change);
+    @Override public CommitRequest commitChange(Change change) {
+        // Always commit changes locally...once we are ready to save changes, we perform
+        // a remote commit...
+        return new LocalCommitRequest(change);
     }
 
     /**

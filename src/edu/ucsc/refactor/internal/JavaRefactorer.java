@@ -1,11 +1,10 @@
 package edu.ucsc.refactor.internal;
 
+import com.google.common.base.Preconditions;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.visitors.MethodDeclarationVisitor;
 import edu.ucsc.refactor.internal.visitors.SelectedASTNodeVisitor;
-import edu.ucsc.refactor.spi.CommitRequest;
-import edu.ucsc.refactor.spi.IssueDetector;
-import edu.ucsc.refactor.spi.SourceChanger;
+import edu.ucsc.refactor.spi.*;
 import edu.ucsc.refactor.util.ToStringBuilder;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -50,14 +49,13 @@ public class JavaRefactorer implements Refactorer {
             );
         }
 
-        final boolean locally = this.host.isCommittedLocally();
-        final CommitRequest applied = change.perform(locally);
+        final CommitRequest applied = change.perform();
 
         if(applied == null) { return null; }
 
         if(applied.isValid()){
             try {
-                applied.commit(host.getUpstream());
+                applied.commit();
                 final Source updated = applied.getUpdatedSource();
                 checkpoint(change, updated);
                 detectIssues(updated);
@@ -209,6 +207,24 @@ public class JavaRefactorer implements Refactorer {
 
     @Override public boolean hasIssues(Source code) {
         return !getIssues(code).isEmpty();
+    }
+
+    @Override public CommitStatus publish(CommitRequest localCommit){
+        final Upstream upstream = (this.host.isRemoteUpstreamEnabled()
+                ? new RemoteRepository(this.host.getStorageKey())
+                : new LocalRepository(this.host.getStorageKey())
+        );
+
+        return publish(
+                Preconditions.checkNotNull(localCommit),
+                upstream
+        );
+    }
+
+    @Override public CommitStatus publish(CommitRequest request, Upstream upstream) {
+        return Preconditions.checkNotNull(upstream).publish(
+                Preconditions.checkNotNull(request)
+        );
     }
 
     @Override public List<Change> recommendChanges(Source code) {

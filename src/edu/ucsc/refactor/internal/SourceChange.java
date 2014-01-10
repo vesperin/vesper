@@ -85,13 +85,13 @@ public class SourceChange extends Change {
         }
     }
 
-    @Override public CommitRequest perform(boolean offline) {
+    @Override public CommitRequest perform() {
         final SourceChanger currentChanger = getSourceChanger();
         if(null == currentChanger){
             getErrors().add("No suitable changer available.");
             return null;
         }
 
-        return currentChanger.applyChange(this, offline);
+        return currentChanger.applyChange(this);
     }
 }

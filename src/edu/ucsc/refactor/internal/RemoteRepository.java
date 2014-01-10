@@ -1,8 +1,10 @@
 package edu.ucsc.refactor.internal;
 
-import edu.ucsc.refactor.Change;
+import com.google.common.base.Preconditions;
+import edu.ucsc.refactor.Credential;
 import edu.ucsc.refactor.Note;
 import edu.ucsc.refactor.Source;
+import edu.ucsc.refactor.spi.CommitRequest;
 import edu.ucsc.refactor.spi.CommitStatus;
 import edu.ucsc.refactor.spi.Name;
 import edu.ucsc.refactor.spi.Upstream;
@@ -13,34 +15,84 @@ import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.Gist;
 import org.eclipse.egit.github.core.GistFile;
 import org.eclipse.egit.github.core.service.GistService;
-import org.eclipse.jdt.core.dom.ASTNode;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public final class GistCommitRequest extends AbstractCommitRequest {
-    private static final Logger LOGGER      = Logger.getLogger(GistCommitRequest.class.getName());
-
+public class RemoteRepository implements Upstream {
+    private final GistService service;
+    private final Credential  credential;
 
     /**
-     * Instantiates a new {@link GistCommitRequest}
-     * @param change The change to be applied and transmitted.
+     * Construct a new RemoteRepository
+     *
+     * @param key The storage service key
      */
-    public GistCommitRequest(Change change){
-        super(change);
+    public RemoteRepository(Credential key){
+        this(key, new GistService());
     }
 
-    static Source createSource(GistService service, Gist gist) throws IOException {
+    /**
+     * Construct a new RemoteRepository
+     *
+     * @param key The storage service key
+     * @param service The GistService object
+     */
+    public RemoteRepository(Credential key, GistService service){
+        if(key != null && "None".equals(key.getUsername())){
+            service.getClient().setCredentials(key.getUsername(), key.getPassword());
+        }
+        this.service    = service;
+        this.credential = key;
+    }
+
+    @Override public CommitStatus publish(CommitRequest request) {
+        if(!request.isValid()) return request.getStatus();
+
+        final Source updatedSource = request.getUpdatedSource();
+        Gist gist = new GistBuilder(service)
+                .content(updatedSource.getContents())
+                .file(updatedSource)
+                .build();
+
+
+        try {
+            ((AbstractCommitRequest)request).updateSource(sync(updatedSource, gist));
+
+            // fill out the `more` information
+            final Name info = ((AbstractCommitRequest)request).getChange().getCause().getName();
+
+            ((AbstractCommitRequest)request).updateStatus(
+                    CommitStatus.succeededStatus(
+                            new CommitInformation()
+                                    .commit(gist.getId())
+                                    .author(getUser())
+                                    .date(gist.getCreatedAt())
+                                    .comment(info.getKey(), info.getSummary())
+                    )
+            );
+
+            return request.getStatus();
+        } catch (Throwable ex){
+            ((AbstractCommitRequest)request).updateStatus(
+                    CommitStatus.failedStatus(
+                            new CommitInformation()
+                                    .error(ex.getMessage())
+                    ));
+
+            return request.getStatus();
+        }
+
+    }
+
+    private static Source sync(Source src, Gist gist) throws IOException {
         final String        id           = gist.getId();
         final String        description  = gist.getDescription();
-        final List<Comment> comments     = service.getComments(id);
 
         String name     = null;
         String content  = null;
@@ -50,87 +102,26 @@ public final class GistCommitRequest extends AbstractCommitRequest {
             content = gist.getFiles().get(eachKey).getContent();
         }
 
+        Preconditions.checkNotNull(name);
+        Preconditions.checkNotNull(content);
+        Preconditions.checkNotNull(description);
+        Preconditions.checkArgument(src.getName().equals(name), "name mismatch");
+        Preconditions.checkArgument(description.equals(src.getDescription()), "description mismatch");
+
         assert name     != null;
         assert content  != null;
 
-        final Source updatedSource = new Source(name, content, description);
-        updatedSource.setId(id);
+        src.setId(id);
 
-        for(Comment eachComment : comments){
-
-            final String noteId         = String.valueOf(eachComment.getId());
-            final String user           = eachComment.getUser().getName();
-            final String noteContent    = eachComment.getBody();
-
-            final Note note = new Note(
-                    noteId,
-                    user,
-                    noteContent
-            );
-
-            updatedSource.addNote(note);
-        }
-
-        return updatedSource;
+        return src;
     }
 
-    @Override public CommitStatus commit(Upstream to) throws RuntimeException {
-        final Source            current             = getLoad().peek().getSource();
-        final GistService       service             = (GistService) to.get();
-        final boolean           isAboutToBeUpdated  = !getLoad().isEmpty();
+    Credential getCredential(){
+        return credential;
+    }
 
-        if(!isAboutToBeUpdated){ return CommitStatus.nothingStatus(); }
-
-        final String            username            = to.getUser();
-        final String            fileName            = StringUtil.extractName(current.getName());
-        final ASTNode           node                = getChange().getCause().getAffectedNodes().get(0); // never null
-
-        try {
-            Gist local = new GistBuilder(service)
-                    .content(squashedDeltas(fileName, getLoad(), node))
-                    .file(current)
-                    .user(username)
-                    .build();
-
-            updateSource(createSource(service, local));
-
-
-            // fill out the `more` information
-            final Name info = getChange().getCause().getName();
-
-            final boolean updatedDate = local.getUpdatedAt() != null;
-            final boolean createdDate = local.getCreatedAt() != null;
-
-            final Date date = createdDate
-                                ? (updatedDate ? local.getUpdatedAt() : local.getCreatedAt())
-                                : (updatedDate ? local.getUpdatedAt() : new Date());
-
-
-            updateStatus(
-                    CommitStatus.succeededStatus(
-                            new CommitInformation()
-                                    .commit(local.getId())
-                                    .author(username)
-                                    .date(date)
-                                    .comment(info.getKey(), info.getSummary()
-                                    )
-                    )
-            );
-
-            return getStatus();
-
-        } catch (Throwable ex) {
-            updateStatus(
-                    CommitStatus.failedStatus(
-                            new CommitInformation()
-                                    .error(ex.getMessage()
-                                    )
-                    ));
-
-            LOGGER.throwing("unable to commit change", "commit(Upstream)", ex);
-             throw new RuntimeException(ex);
-        }
-
+    public String getUser() {
+        return getCredential().getUsername();
     }
 
 
@@ -146,7 +137,6 @@ public final class GistCommitRequest extends AbstractCommitRequest {
         String description;
         String content;
         Source code;
-        String username;
 
         /**
          * Construct a builder with {@code GistService} and whether
@@ -159,7 +149,6 @@ public final class GistCommitRequest extends AbstractCommitRequest {
             this.description        = null;
             this.content            = null;
             this.code               = null;
-            this.username           = null;
         }
 
         GistBuilder description(String description) {
@@ -185,17 +174,12 @@ public final class GistCommitRequest extends AbstractCommitRequest {
             return this;
         }
 
-        GistBuilder user(String username){
-            this.username = username;
-            return this;
-        }
-
         public Gist build() throws RuntimeException {
             Gist result = null;
             try {
                 final Gist remote = (this.code.getId() != null
-                                        ? service.getGist(this.code.getId())
-                                        : null);
+                        ? service.getGist(this.code.getId())
+                        : null);
                 if(remote == null){
                     Gist brandNew = new Gist().setDescription(this.description);
 

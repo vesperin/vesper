@@ -94,7 +94,7 @@ public abstract class AbstractCommitRequest implements CommitRequest {
     protected Change getChange() { return this.change; }
 
 
-    protected CommitStatus getStatus() { return this.status; }
+    @Override public CommitStatus getStatus() { return this.status; }
 
 
     @Override public String more() { return status.more(); }

@@ -5,7 +5,6 @@ import edu.ucsc.refactor.Note;
 import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.spi.CommitStatus;
 import edu.ucsc.refactor.spi.Name;
-import edu.ucsc.refactor.spi.Upstream;
 import edu.ucsc.refactor.util.CommitInformation;
 import edu.ucsc.refactor.util.StringUtil;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -31,7 +30,7 @@ public class LocalCommitRequest extends AbstractCommitRequest {
     }
 
 
-    @Override public CommitStatus commit(Upstream to) throws RuntimeException {
+    @Override public CommitStatus commit() throws RuntimeException {
         final Source    current             = getLoad().peek().getSource();
         final boolean   isAboutToBeUpdated  = !getLoad().isEmpty();
 
@@ -39,7 +38,7 @@ public class LocalCommitRequest extends AbstractCommitRequest {
         if(!isAboutToBeUpdated){ return CommitStatus.nothingStatus(); }
 
 
-        final String    username            = to.getUser();
+        final String    username            = System.getProperty("user.name");
         final String    fileName            = StringUtil.extractName(current.getName());
         final ASTNode   node                = getChange().getCause().getAffectedNodes().get(0); // never null
 

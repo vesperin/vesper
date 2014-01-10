@@ -33,7 +33,7 @@ public interface Changer {
      * @param change The {@code Change} to be committed.
      * @return The Commit Request.
      */
-    CommitRequest commitChange(Change change, boolean offline);
+    CommitRequest commitChange(Change change);
 
     /**
      * getContext().locate(ASTNode): Location
