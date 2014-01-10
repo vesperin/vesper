@@ -30,6 +30,17 @@ public class CommitStatus {
         return new CommitStatus(Status.FAILED, builder.toString());
     }
 
+
+    /**
+     * @return The nothing status.
+     */
+    public static CommitStatus nothingStatus(){
+        return new CommitStatus(
+                Status.NOTHING,
+                "there is nothing to commit"
+        );
+    }
+
     /**
      * Creates a succeeded commit status.
      * @param builder  The CommitInformation.
@@ -78,7 +89,9 @@ public class CommitStatus {
         /** Succeeded commit **/
         SUCCEEDED("Succeeded"),
         /** Unknown status; i.e., no commit yet **/
-        UNKNOWN("Unknown");
+        UNKNOWN("Unknown"),
+        /** There is nothing to commit **/
+        NOTHING("Nothing");
 
         private String key;
 

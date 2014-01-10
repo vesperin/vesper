@@ -1,6 +1,9 @@
 package edu.ucsc.refactor;
 
-import edu.ucsc.refactor.spi.*;
+import edu.ucsc.refactor.spi.IssueDetector;
+import edu.ucsc.refactor.spi.JavaParser;
+import edu.ucsc.refactor.spi.SourceChanger;
+import edu.ucsc.refactor.spi.Upstream;
 
 import java.util.List;
 
@@ -94,6 +97,20 @@ public interface Host {
      * Installs a configuration that automatically configures this host.
      */
     void install(Configuration configuration);
+
+    /**
+     * @return {@code true} if changes will be
+     *      committed locally, {@code false} otherwise (i.e., remotely)
+     */
+    boolean isCommittedLocally();
+
+    /**
+     * Sets offline mode.
+     *
+     * @param mode {@code true} if changes should be
+     *             committed locally. {@code false} if changes will be committed remotely.
+     */
+    void commitLocally(boolean mode);
 
     /**
      * Throws a {@code CreationException} if any exception has been

@@ -88,7 +88,12 @@ public abstract class AbstractConfiguration implements Configuration {
      * @see {@link Host#addCredentials(Credential)}}
      */
     protected void addCredentials(Credential credential){
-        this.host.addCredentials(credential);
+        if(credential == null){
+            commitLocally();
+            this.host.addCredentials(Credential.none());
+        } else {
+            this.host.addCredentials(credential);
+        }
     }
 
     /**
@@ -110,6 +115,13 @@ public abstract class AbstractConfiguration implements Configuration {
      */
     protected void addSourceChanger(SourceChanger changer){
        this.host.addSourceChanger(changer);
+    }
+
+    /**
+     * @see {@link Host#commitLocally(boolean)}
+     */
+    protected void commitLocally(){
+        this.host.commitLocally(true);
     }
 
 

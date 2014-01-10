@@ -50,7 +50,8 @@ public class JavaRefactorer implements Refactorer {
             );
         }
 
-        final CommitRequest applied = change.perform();
+        final boolean locally = this.host.isCommittedLocally();
+        final CommitRequest applied = change.perform(locally);
 
         if(applied == null) { return null; }
 

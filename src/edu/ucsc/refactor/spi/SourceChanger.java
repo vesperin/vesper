@@ -1,10 +1,7 @@
 package edu.ucsc.refactor.spi;
 
 import edu.ucsc.refactor.*;
-import edu.ucsc.refactor.internal.GistCommitRequest;
-import edu.ucsc.refactor.internal.Delta;
-import edu.ucsc.refactor.internal.SourceFormatter;
-import edu.ucsc.refactor.internal.SourceLocation;
+import edu.ucsc.refactor.internal.*;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
@@ -35,9 +32,9 @@ public abstract class SourceChanger implements Changer {
      *
      * @param change The {@link Change} object.
      */
-    public CommitRequest applyChange(Change change){
+    public CommitRequest applyChange(Change change, boolean offline){
         LOGGER.fine("Applying change " + change);
-        final CommitRequest request = commitChange(change);
+        final CommitRequest request = commitChange(change, offline);
         LOGGER.fine("Commit request created: " + request.more());
         return request;
     }
@@ -60,8 +57,8 @@ public abstract class SourceChanger implements Changer {
     }
 
 
-    @Override public CommitRequest commitChange(Change change) {
-        return new GistCommitRequest(change);
+    @Override public CommitRequest commitChange(Change change, boolean offline) {
+        return offline ? new LocalCommitRequest(change) : new GistCommitRequest(change);
     }
 
     /**

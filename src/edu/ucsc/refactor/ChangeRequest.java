@@ -101,6 +101,42 @@ public class ChangeRequest {
 
 
     /**
+     * Delete a class change request with selection.
+     *
+     * @see {@link SingleEdit#deleteClass(SourceSelection)}
+     */
+    public static ChangeRequest deleteClass(SourceSelection selection){
+        return ChangeRequest.forEdit(
+                SingleEdit.deleteClass(selection)
+        );
+    }
+
+
+    /**
+     * Delete a method change request with selection.
+     *
+     * @see {@link SingleEdit#deleteMethod(SourceSelection)}
+     */
+    public static ChangeRequest deleteMethod(SourceSelection selection){
+        return ChangeRequest.forEdit(
+                SingleEdit.deleteMethod(selection)
+        );
+    }
+
+
+    /**
+     * Delete a field change request with selection.
+     *
+     * @see {@link SingleEdit#deleteField(SourceSelection)}
+     */
+    public static ChangeRequest deleteField(SourceSelection selection){
+        return ChangeRequest.forEdit(
+                SingleEdit.deleteField(selection)
+        );
+    }
+
+
+    /**
      * Rename a class/interface change request with selection and newName as values.
      *
      * @see {@link SingleEdit#renameMethod(SourceSelection)}

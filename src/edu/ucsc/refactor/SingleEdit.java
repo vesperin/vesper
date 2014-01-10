@@ -35,6 +35,20 @@ public class SingleEdit extends AbstractCauseOfChange {
         );
     }
 
+
+    /**
+     * Deletes a class, which location can be inferred from {@code SourceSelection}
+     *
+     * Note: this edit can be performed only if this class is not the main class covering
+     * the whole code snippet. If it is, then it will fail.
+     *
+     * @param selection The selected field
+     * @return The {@code SingleEdit}.
+     */
+    public static SingleEdit deleteClass(SourceSelection selection){
+        return new SingleEdit(Refactoring.DELETE_CLASS, selection);
+    }
+
     /**
      * Deletes a method, which location can be inferred from {@code SourceSelection}
      *
@@ -44,6 +58,29 @@ public class SingleEdit extends AbstractCauseOfChange {
     public static SingleEdit deleteMethod(SourceSelection selection){
         return new SingleEdit(Refactoring.DELETE_METHOD, selection);
     }
+
+
+    /**
+     * Deletes a field, which location can be inferred from {@code SourceSelection}
+     *
+     * @param selection The selected field
+     * @return The {@code SingleEdit}.
+     */
+    public static SingleEdit deleteField(SourceSelection selection){
+        return new SingleEdit(Refactoring.DELETE_FIELD, selection);
+    }
+
+
+    /**
+     * Deletes a method parameter, which location can be inferred from {@code SourceSelection}
+     *
+     * @param selection The selected method parameter
+     * @return The {@code SingleEdit}.
+     */
+    public static SingleEdit deleteParameter(SourceSelection selection){
+        return new SingleEdit(Refactoring.DELETE_PARAMETER, selection);
+    }
+
 
     /**
      * Renames a class or interface, which location can be inferred from {@code SourceSelection}
