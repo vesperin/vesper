@@ -79,7 +79,7 @@ public final class Vesper {
     public static Refactorer createRefactorer(Source... sources){
         return createRefactorer(
                 DEFAULT_CONFIG,
-                Arrays.asList(sources)
+                sources
         );
     }
 
@@ -129,6 +129,27 @@ public final class Vesper {
                 configuration,
                 new HostImpl(),
                 sources
+        );
+    }
+
+
+    /**
+     * Creates a refactorer for the given set of sources using
+     * {@link Vesper}'s main configuration object.
+     *
+     * @param configuration The current configuration
+     * @param sources The array of sources.
+     *
+     * @return a new Refactorer
+     */
+    public static Refactorer createRefactorer(
+            Configuration configuration,
+            Source... sources
+    ){
+
+        return createRefactorer(
+                configuration,
+                Arrays.asList(sources)
         );
     }
 
