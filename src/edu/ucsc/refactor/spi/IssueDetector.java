@@ -54,9 +54,9 @@ public abstract class IssueDetector implements SourceScanner {
     public Set<Issue> detectIssues(Context context) {
         resetThisDetector();
 
-        LOGGER.info("Searching for issues...");
+        LOGGER.fine("Searching for issues...");
         scanJava(context);
-        LOGGER.info("Found " + issues.size() + " issue(s).");
+        LOGGER.fine("Found " + issues.size() + " issue(s).");
 
         // once creating issues, add their location in the file
         return Collections.unmodifiableSet(issues);

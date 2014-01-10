@@ -285,7 +285,7 @@ public class JavaRefactorer implements Refactorer {
             }
 
             context.setScope(selection);
-            LOGGER.info("Detecting issues...");
+            LOGGER.fine("Detecting issues...");
 
             Set<Issue> issues = new HashSet<Issue>();
 
@@ -373,7 +373,7 @@ public class JavaRefactorer implements Refactorer {
             LOGGER.fine("Looking for suitable source changers");
             for (SourceChanger solver : getChangers()) {
                 if (solver.canHandle(issue)) {
-                    LOGGER.info(solver + " found!");
+                    LOGGER.fine(solver + " found!");
                     return solver;
                 }
             }

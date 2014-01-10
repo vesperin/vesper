@@ -65,6 +65,7 @@ public class LocalCommitRequest extends AbstractCommitRequest {
             updateStatus(
                     CommitStatus.succeededStatus(
                             new CommitInformation()
+                                    .commit("")
                                     .author(username)
                                     .date(date)
                                     .comment(info.getKey(), info.getSummary())
