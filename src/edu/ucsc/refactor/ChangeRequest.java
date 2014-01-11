@@ -137,6 +137,18 @@ public class ChangeRequest {
 
 
     /**
+     * Delete a parameter change request with selection.
+     *
+     * @see {@link SingleEdit#deleteParameter(SourceSelection)}
+     */
+    public static ChangeRequest deleteParameter(SourceSelection selection){
+        return ChangeRequest.forEdit(
+                SingleEdit.deleteParameter(selection)
+        );
+    }
+
+
+    /**
      * Rename a class/interface change request with selection and newName as values.
      *
      * @see {@link SingleEdit#renameMethod(SourceSelection)}
