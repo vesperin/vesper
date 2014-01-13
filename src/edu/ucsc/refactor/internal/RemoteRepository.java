@@ -54,14 +54,13 @@ public class RemoteRepository implements Upstream {
     @Override public CommitStatus publish(CommitRequest request) {
         if(!request.isValid()) return request.getStatus();
 
-        final Source updatedSource = request.getUpdatedSource();
-        Gist gist = new GistBuilder(service)
-                .content(updatedSource.getContents())
-                .file(updatedSource)
-                .build();
-
-
         try {
+            final Source updatedSource = request.getUpdatedSource();
+            Gist gist = new GistBuilder(service)
+                    .content(updatedSource.getContents())
+                    .file(updatedSource)
+                    .build();
+
             ((AbstractCommitRequest)request).updateSource(sync(updatedSource, gist));
 
             // fill out the `more` information
@@ -72,6 +71,7 @@ public class RemoteRepository implements Upstream {
                             new CommitInformation()
                                     .commit(gist.getId())
                                     .author(getUser())
+                                    .url(gist.getUrl())
                                     .date(gist.getCreatedAt())
                                     .comment(info.getKey(), info.getSummary())
                     )
