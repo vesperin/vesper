@@ -6,6 +6,7 @@ import edu.ucsc.refactor.cli.Result;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.List;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -65,7 +66,7 @@ public class Cli {
                 continue;
             }
 
-            if(line.equals("more")){
+            if(line.equals("log")){
                 if(result != null){
                    if(result.isCommitRequest()){
                       printResult(result.getCommitRequest().more());
@@ -77,12 +78,19 @@ public class Cli {
                 continue;
             }
 
-            result = interpreter.eval("vesper " + line);
+            result = interpreter.evaluateAndReturn(line);
 
             if(result.isError()){
                 printError(result.getErrorMessage());
             } else if (result.isInfo()){
                print("= " + result.getInfo());
+            } else if (result.isIssuesList()){
+                final List<Issue> issues = result.getIssuesList();
+                for(int i = 0; i < issues.size(); i++){
+                    print(String.valueOf(i));
+                    print(issues.get(i).getName().getKey());
+                    print("\n");
+                }
             }
         }
 
@@ -101,20 +109,24 @@ public class Cli {
     }
 
     private static void printUsage() {
+        System.out.println();
         System.out.println("Usage: Vesper ");
         System.out.println();
         System.out.println("vesper> <<commands>|q|help|>");
         System.out.println("  <commands>:");
-        System.out.println("      add <source_code> <file_name_with_extension>");
-        System.out.println("      trash <origin|file_name_with_extension>");
+        System.out.println("      add <source_code> <file_name_with_extension>");    //DONE
+        System.out.println("      delete <origin|file_name_with_extension>");        //DONE
         System.out.println();
-        System.out.println("      rename <member>(start_offset, end_offset) \"new_name\"");
-        System.out.println("      delete <member>(start_offset, end_offset)");
-        System.out.println("             <member>: <class|method|param|field>");
+        System.out.println("      fix <name_of_issue>");
+        System.out.println("          Fixes a detected source code issue (e.g., Code smell)");
+        System.out.println("      ren <member>(start_offset, end_offset) \"new_name\"");
+        System.out.println("      rm <member>(start_offset, end_offset)");
+        System.out.println("         <member>: <class|method|param|field>");
         System.out.println();
-        System.out.println("      move <class|method|methods>(start_offset, end_offset) <file_name_with_extension>");
+        System.out.println("      checkout <class|method|selection>(start_offset, end_offset) <file_name_with_extension>");
+        System.out.println("         Checkout a class, method, or methods to a new empty class");
         System.out.println();
-        System.out.println("      health:");
+        System.out.println("      status");                                                           //DONE
         System.out.println("        This command checks whether the source code (i.e., the origin)");
         System.out.println("        has issues (e.g., code smells). And then it recommends changes");
         System.out.println("        that can be made to the origin.");
@@ -122,13 +134,18 @@ public class Cli {
         System.out.println("        (after committing change) will re-inspect the file and recommends ");
         System.out.println("        new changes.");
         System.out.println();
-        System.out.println("      annotate \"Some Description of Source Code\"");
+        System.out.println("      publish");
+        System.out.println("          Publishes all collected changes to a remote repository");
+        System.out.println("      format");
+        System.out.println("          Formats the entire source code (origin)");
+        System.out.println("      tag \"Some Description of Source Code\"");           // DONE
         System.out.println("         Describes the origin. Each time this command is invoked, a  ");
         System.out.println("         a new comment will be recorded.");
         System.out.println();
         System.out.println("  q: exits Vesper's little REPL");
-        System.out.println("  q: exits Vesper's little REPL");
-        System.out.println("  q: exits Vesper's little REPL");
+        System.out.println("  clear: clears REPL screen");
+        System.out.println("  help: shows more information on how to use Vesper's little REPL");
+        System.out.println("  log:  Show commit logs or Origin (if we have not performed any refactoring)");
         System.out.println();
     }
 }

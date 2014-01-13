@@ -1,8 +1,12 @@
 package edu.ucsc.refactor.cli;
 
 import com.google.common.base.Preconditions;
+import edu.ucsc.refactor.Issue;
 import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.spi.CommitRequest;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -47,10 +51,19 @@ public class Result {
      * object and no error message.
      *
      * @param request The Source
-     * @return a new failed Result
+     * @return a new source Result
      */
     public static Result sourcePackage(Source request){
         return new Result(Content.SOURCE, request);
+    }
+
+    /**
+     * Creates a nothing-to-report Result.
+     *
+     * @return a new nothing-to-report Result
+     */
+    public static Result nothing(){
+        return infoPackage("");
     }
 
     /**
@@ -58,10 +71,20 @@ public class Result {
      * object and no error message.
      *
      * @param request The Info message
-     * @return a new failed Result
+     * @return a new info Result
      */
     public static Result infoPackage(String request){
         return new Result(Content.INFO, request);
+    }
+
+    /**
+     * Creates a Issues List Result.
+     *
+     * @param issues THe list of detected issues.
+     * @return a new issues list Result
+     */
+    public static Result issuesListPackage(List<Issue> issues){
+        return new Result(Content.ISSUES, issues);
     }
 
     /**
@@ -76,6 +99,13 @@ public class Result {
      */
     public boolean isInfo(){
         return type.isSame(Content.INFO);
+    }
+
+    /**
+     * @return {@code true} if this is a 'list of issues' result package, false otherwise.
+     */
+    public boolean isIssuesList(){
+        return type.isSame(Content.ISSUES);
     }
 
 
@@ -119,6 +149,16 @@ public class Result {
     }
 
     /**
+     * @return The list of detected issues in the Source file.
+     */
+    public List<Issue> getIssuesList(){
+        //noinspection unchecked
+        return isIssuesList()
+                ? Collections.unmodifiableList(((List<Issue>)data)) // unchecked warning
+                : null;
+    }
+
+    /**
      * @return The message stored in Result, null if it is not a message
      *      Result.
      */
@@ -131,7 +171,10 @@ public class Result {
                 ? getErrorMessage() :
                 (isInfo() ?
                         getInfo()
-                        : getCommitRequest()
+                        : (isCommitRequest()
+                             ? getCommitRequest().more()
+                             : getIssuesList()
+                          )
                 )
         );
     }
@@ -142,6 +185,8 @@ public class Result {
     enum Content {
         /** Info Content **/
         INFO,
+        /** List of detected issues **/
+        ISSUES,
         /** Error Content **/
         ERROR,
         /** Commit Request Content **/

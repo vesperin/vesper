@@ -5,6 +5,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.spi.CommitRequest;
+import edu.ucsc.refactor.spi.Smell;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -23,20 +24,29 @@ public class Interpreter {
     static final String VESPER                          = "vesper";
 
 
-    final AtomicReference<Refactorer> core;
-    final AtomicReference<Source>     origin;
-    final StringParser parser;
+    final AtomicReference<Refactorer>       core;
+    final AtomicReference<Source>           origin;
+    final StringParser                      parser;
+    final AtomicReference<Configuration>    remoteConfig;
+
+    final Queue<CommitRequest>        checkpoints;
 
     /**
-     * s
+     * Construct Vesper's basic CLI Interpreter.
      */
     public Interpreter(){
-        core   = new AtomicReference<Refactorer>();
-        origin = new AtomicReference<Source>();
-        parser = new StringParser();
+        core            = new AtomicReference<Refactorer>();
+        origin          = new AtomicReference<Source>();
+        remoteConfig    = new AtomicReference<Configuration>();
+        parser          = new StringParser();
+        checkpoints     = new LinkedList<CommitRequest>();
     }
 
-    public Result eval(String statement){
+    public Result evaluateAndReturn(String command){
+        return eval(VESPER + " " + command);
+    }
+
+    Result eval(String statement){
         final Iterable<String> args = parser.parse(statement);
         final String 		   head = args.iterator().next();
 
@@ -46,8 +56,8 @@ public class Interpreter {
 
         try {
             return eval(Iterables.skip(args, 1)/*tail*/);
-        } catch (NoSuchElementException ex){
-            return Result.failedPackage("Unknown command given");
+        } catch (Throwable ex){
+            return Result.failedPackage(ex.getMessage());
         }
     }
 
@@ -57,21 +67,33 @@ public class Interpreter {
 
         switch(VesperCommand.from(head)){
             // assuming we have added a Source and we have an active refactorer
-            case ADD:       // add <code_snippet> <file_name_with_extension>
-                return fork(tail);
-            case TRASH:    // trash <origin|file_name_with_extension>
-                return trash(tail);
+            case ADD:  // done
+                return add(tail);
+            case DELETE: // done
+                return delete(tail);
+            case CONFIG:
+                return config(tail);
+            case CHECKOUT:
+                return checkout(tail);
+            case FIX: // done
+                return fixIssue(tail);
+            case PUBLISH:
+                return publish(tail);
             case RENAME:
                 return rename(tail);
-            case DELETE:
-                return delete(tail);
-            case REFORMAT:
+            case REMOVE:
+                return remove(tail);
+            case FORMAT:
                 return reformat(tail);
-            default: throw new NoSuchElementException();
+            case STATUS:
+                return status(tail);
+            case TAG:
+                return tag(tail);
+            default: throw new NoSuchElementException("Unknown command given");
         }
     }
 
-    private Result fork(Iterable<String> args){
+    private Result add(Iterable<String> args){
         ensureValidArgs(args);
 
         final String head = args.iterator().next();
@@ -81,24 +103,29 @@ public class Interpreter {
         final Source src  = new Source(tail, head);
 
         if(origin.compareAndSet(origin.get(), src)){
-            core.set(Vesper.createRefactorer(origin.get()));
+            final Configuration remote      = remoteConfig.get();
+            final Refactorer    refactorer  = remote == null
+                    ? Vesper.createRefactorer(getOrigin())
+                    : Vesper.createRefactorer(remote, getOrigin());
+
+            core.set(refactorer);
             return Result.sourcePackage(origin.get());
         }
 
-        return Result.infoPackage(tail + " is already added!");
+        return Result.nothing();
     }
 
     private static void ensureValidArgs(Iterable<String> args){
-        Preconditions.checkNotNull(args);
-        Preconditions.checkArgument(!Iterables.isEmpty(args));
+        Preconditions.checkNotNull(args, "command was given no arguments");
+        Preconditions.checkArgument(!Iterables.isEmpty(args), "command was given no arguments");
     }
 
     private static void ensureValidState(Source origin, Refactorer refactorer){
-        Preconditions.checkNotNull(origin);
-        Preconditions.checkNotNull(refactorer);
+        Preconditions.checkNotNull(origin, "No source code available");
+        Preconditions.checkNotNull(refactorer, "No refactorer available");
     }
 
-    private Result trash(Iterable<String> args){
+    private Result delete(Iterable<String> args){
         ensureValidArgs(args);
 
         Preconditions.checkArgument(Iterables.size(args) == 1);
@@ -110,11 +137,60 @@ public class Interpreter {
         if("origin".equals(head) || src.getName().equals(head)){
             origin.set(null);
             core.set(null);
-            return Result.infoPackage(head + " was removed!");
+            return Result.infoPackage(head + " was deleted!");
         }
 
 
         return Result.failedPackage(head + "was not found!");
+    }
+
+
+    private Result config(Iterable<String> args){
+        ensureValidArgs(args);
+
+        // user.name
+        final String username  = Preconditions.checkNotNull(args.iterator().next(), "user.name is missing");
+        Preconditions.checkArgument("user.name".equals(username), "unable to recognize " + username + " param.");
+        final String userValue = Preconditions.checkNotNull(Iterables.get(args, 1, null), "user.name.value is missing");
+        final String password  = Preconditions.checkNotNull(Iterables.get(args, 2, null), "user.password is missing");
+        Preconditions.checkArgument("user.password".equals(password), "unable to recognize " + password + " param.");
+        final String passValue = Preconditions.checkNotNull(Iterables.get(args, 3, null), "user.password.value is missing");
+
+        if(remoteConfig.get() == null){
+            remoteConfig.set(new AbstractConfiguration() {
+                @Override protected void configure() {
+                    installDefaultSettings();
+                    addCredentials(new Credential(userValue, passValue));
+                }
+            });
+
+            return Result.infoPackage("Ok, credentials have been set!\n");
+        }
+
+        return Result.nothing();
+    }
+
+
+    private Result checkout(Iterable<String> args){
+        // checkout <class|method|selection>(start_offset, end_offset) <file_name_with_extension>
+        ensureValidArgs(args);
+        ensureValidState(getOrigin(), getRefactorer());
+
+        // command
+        final String            head = args.iterator().next();
+        // (1,2) file_name_with_ext
+        final Iterable<String>  tail = Iterables.skip(args, 1);
+
+        switch (Member.from(head)){
+            case CLASS:
+                return checkoutClassOrInterface(tail);
+            case METHOD:
+                return checkoutMethod(tail);
+            case SELECTION:
+                return checkoutSelection(tail);
+            default: throw new NoSuchElementException();
+        }
+
     }
 
 
@@ -125,6 +201,15 @@ public class Interpreter {
 
     private Refactorer getRefactorer(){
         return core.get();
+    }
+
+    private Result publish(Iterable<String> args){
+        Preconditions.checkArgument(Iterables.isEmpty(args));
+        ensureValidState(getOrigin(), getRefactorer());
+
+
+
+        return null;
     }
 
     private Result rename(Iterable<String> args){
@@ -150,7 +235,7 @@ public class Interpreter {
     }
 
 
-    private Result delete(Iterable<String> args){
+    private Result remove(Iterable<String> args){
         ensureValidArgs(args);
         ensureValidState(getOrigin(), getRefactorer());
 
@@ -172,6 +257,77 @@ public class Interpreter {
 
     }
 
+    private Result fixIssue(Iterable<String> args){
+        ensureValidArgs(args);
+        Preconditions.checkArgument(Iterables.size(args) == 1);
+        // fix <Name Of Issue>
+
+        final String key = args.iterator().next();
+
+        CommitRequest applied = null;
+        for(Issue each : getRefactorer().getIssues(getOrigin())){
+            if(Smell.from(key).isSame(each.getName())){
+                applied = getRefactorer().apply(
+                        getRefactorer().createChange(ChangeRequest.forIssue(each, getOrigin()))
+                );
+
+
+            }
+        }
+
+        return createResultPackage(applied, "unable to commit '" + key + "' change");
+    }
+
+    private Result checkoutClassOrInterface(Iterable<String> args){
+        ensureValidArgs(args);
+        ensureValidState(getOrigin(), getRefactorer());
+
+        // (1,2) Test
+        final String head = args.iterator().next().replace("(", "").replace(")", "");
+        final String tail = Iterables.skip(args, 1).iterator().next();
+
+        final SourceSelection selection = createSelection(head);
+
+        final ChangeRequest   request   = ChangeRequest.renameClassOrInterface(selection, tail);
+        final CommitRequest   applied   = commitChange(request);
+
+        return createResultPackage(applied, "unable to commit 'rename class' change");
+    }
+
+
+    private Result checkoutMethod(Iterable<String> args){
+        ensureValidArgs(args);
+        ensureValidState(getOrigin(), getRefactorer());
+
+        // 1:2 newName
+        final String head = args.iterator().next().replace("(", "").replace(")", "");
+        final String tail = Iterables.skip(args, 1).iterator().next();
+
+        final SourceSelection selection = createSelection(head);
+
+        final ChangeRequest   request   = ChangeRequest.renameMethod(selection, tail);
+        final CommitRequest   applied   = commitChange(request);
+
+        return createResultPackage(applied, "unable to commit 'rename method' change");
+    }
+
+
+    private Result checkoutSelection(Iterable<String> args){
+        ensureValidArgs(args);
+        ensureValidState(getOrigin(), getRefactorer());
+
+        // 1:2 newName
+        final String head = args.iterator().next().replace("(", "").replace(")", "");
+        final String tail = Iterables.skip(args, 1).iterator().next();
+
+        final SourceSelection selection = createSelection(head);
+
+        final ChangeRequest   request   = ChangeRequest.renameMethod(selection, tail);
+        final CommitRequest   applied   = commitChange(request);
+
+        return createResultPackage(applied, "unable to commit 'rename method' change");
+    }
+
 
     private Result renameClassOrInterface(Iterable<String> args){
         ensureValidArgs(args);
@@ -186,7 +342,7 @@ public class Interpreter {
         final ChangeRequest   request   = ChangeRequest.renameClassOrInterface(selection, tail);
         final CommitRequest   applied   = commitChange(request);
 
-        return createResultPackage(applied, "unable to commit rename class change");
+        return createResultPackage(applied, "unable to commit 'rename class' change");
     }
 
 
@@ -203,7 +359,7 @@ public class Interpreter {
         final ChangeRequest   request   = ChangeRequest.renameParameter(selection, tail);
         final CommitRequest   applied   = commitChange(request);
 
-        return createResultPackage(applied, "unable to commit rename parameter change");
+        return createResultPackage(applied, "unable to commit 'rename parameter' change");
     }
 
     private Result renameField(Iterable<String> args){
@@ -219,7 +375,7 @@ public class Interpreter {
         final ChangeRequest   request   = ChangeRequest.renameField(selection, tail);
         final CommitRequest   applied   = commitChange(request);
 
-        return createResultPackage(applied, "unable to commit rename class change");
+        return createResultPackage(applied, "unable to commit 'rename class' change");
     }
 
 
@@ -236,7 +392,7 @@ public class Interpreter {
         final ChangeRequest   request   = ChangeRequest.renameMethod(selection, tail);
         final CommitRequest   applied   = commitChange(request);
 
-        return createResultPackage(applied, "unable to commit rename method change");
+        return createResultPackage(applied, "unable to commit 'rename method' change");
     }
 
 
@@ -314,7 +470,32 @@ public class Interpreter {
         final ChangeRequest request = ChangeRequest.reformatSource(getOrigin());
 
         final CommitRequest   applied   = commitChange(request);
-        return createResultPackage(applied, "unable to commit rename method change");
+        return createResultPackage(applied, "unable to commit 'rename method' change");
+    }
+
+
+    private Result status(Iterable<String> args){
+        Preconditions.checkArgument(args == null || Iterables.isEmpty(args));
+        ensureValidState(getOrigin(), getRefactorer());
+
+        final List<Issue> issues = getRefactorer().getIssues(getOrigin());
+        if(issues.isEmpty()){
+            return Result.infoPackage("there is nothing to show.");
+        }
+
+        return Result.issuesListPackage(issues);
+    }
+
+
+    private Result tag(Iterable<String> args){
+        ensureValidArgs(args);
+        ensureValidState(getOrigin(), getRefactorer());
+
+        final String head = args.iterator().next();
+
+        getOrigin().addNote(new Note(head));
+
+        return Result.infoPackage(head);
     }
 
     private Result createResultPackage(CommitRequest applied, String message){
@@ -343,12 +524,17 @@ public class Interpreter {
      * Represents a supported Vesper command
      */
     private enum VesperCommand {
+        FIX("apply"),
         ADD("add"),
-        TRASH("trash"),
-        RENAME("rename"),
         DELETE("delete"),
-        REFORMAT("format"),
-        STATUS("status");
+        CONFIG("config"),
+        CHECKOUT("checkout"),
+        FORMAT("format"),
+        PUBLISH("publish"),
+        RENAME("ren"),
+        REMOVE("rm"),
+        STATUS("status"),
+        TAG("tag");
 
         private final String keyword;
 
@@ -371,7 +557,8 @@ public class Interpreter {
         CLASS("class"),
         PARAMETER("param"),
         FIELD("field"),
-        METHOD("method");
+        METHOD("method"),
+        SELECTION("selection");
 
         private final String keyword;
 
