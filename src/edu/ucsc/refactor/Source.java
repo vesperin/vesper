@@ -1,5 +1,6 @@
 package edu.ucsc.refactor;
 
+import com.google.common.base.Objects;
 import edu.ucsc.refactor.util.Notes;
 import edu.ucsc.refactor.util.StringUtil;
 import edu.ucsc.refactor.util.ToStringBuilder;
@@ -73,6 +74,18 @@ public class Source {
     }
 
 
+    @Override public boolean equals(Object o) {
+        if(!(o instanceof Source)){
+            return false;
+        }
+
+        final Source that      = (Source)o;
+        final boolean sameName = that.getName().equals(getName());
+        final boolean sameCont = that.getContents().equals(getContents());
+
+        return sameName && sameCont;
+    }
+
     private static String generateDescription(String fromName){
         return "Java: " + StringUtil.splitCamelCase(StringUtil.extractName(fromName));
     }
@@ -121,6 +134,11 @@ public class Source {
      * @return The content's length.
      */
     public int getLength()      { return getContents().length(); }
+
+
+    @Override public int hashCode() {
+        return Objects.hashCode(getName(), getContents());
+    }
 
     /**
      * Removes a note from symbol table.
