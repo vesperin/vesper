@@ -65,6 +65,37 @@ public class CommitStatus {
         return new CommitStatus(status.type, status.message);
     }
 
+    /**
+     * @return {@code true} if this is a failed status.
+     */
+    public boolean isFailed(){
+        return this.type.isSame(Status.FAILED);
+    }
+
+    /**
+     * @return {@code true} if this is a succeeded status.
+     */
+    public boolean isSucceeded(){
+        return this.type.isSame(Status.SUCCEEDED);
+    }
+
+
+    /**
+     * @return {@code true} if this is a nothing status.
+     */
+    public boolean isNothing(){
+        return this.type.isSame(Status.NOTHING);
+    }
+
+
+
+    /**
+     * @return {@code true} if this is an unknown status.
+     */
+    public boolean isUnknown(){
+        return this.type.isSame(Status.UNKNOWN);
+    }
+
 
     /**
      * Displays the contents of the change; e.g., time stamp, # of trials, number of errors.
@@ -97,6 +128,11 @@ public class CommitStatus {
 
         Status(String key){
             this.key = key;
+        }
+
+
+        boolean isSame(Status that){
+            return this == that;
         }
 
         @Override public String toString() {
