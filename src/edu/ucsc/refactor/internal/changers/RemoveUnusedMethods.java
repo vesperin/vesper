@@ -5,10 +5,14 @@ import edu.ucsc.refactor.Change;
 import edu.ucsc.refactor.Parameter;
 import edu.ucsc.refactor.internal.Delta;
 import edu.ucsc.refactor.internal.SourceChange;
+import edu.ucsc.refactor.spi.Names;
+import edu.ucsc.refactor.spi.Refactoring;
 import edu.ucsc.refactor.spi.Smell;
 import edu.ucsc.refactor.spi.SourceChanger;
+import edu.ucsc.refactor.util.AstUtil;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 
 import java.util.List;
@@ -28,7 +32,8 @@ public class RemoveUnusedMethods extends SourceChanger {
     }
 
     @Override public boolean canHandle(CauseOfChange cause) {
-        return cause.getName().isSame(Smell.UNUSED_METHOD);
+        return cause.getName().isSame(Smell.UNUSED_METHOD)
+                || Names.from(Smell.UNUSED_METHOD).isSame(Refactoring.DELETE_METHOD);
     }
 
     @Override protected Change initChanger(CauseOfChange cause,
@@ -48,7 +53,13 @@ public class RemoveUnusedMethods extends SourceChanger {
     }
 
     private static MethodDeclaration getMethodDeclaration(List<ASTNode> nodes){
-        return (MethodDeclaration) nodes.get(METHOD_DECLARATION);
+        final ASTNode node = nodes.get(METHOD_DECLARATION);
+
+        if(node instanceof SimpleName){
+            return AstUtil.parent(MethodDeclaration.class, node);
+        }
+
+        return (MethodDeclaration) node;
     }
 
 

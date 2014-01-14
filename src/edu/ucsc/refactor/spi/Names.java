@@ -1,5 +1,7 @@
 package edu.ucsc.refactor.spi;
 
+import com.google.common.collect.Maps;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -8,7 +10,7 @@ import java.util.NoSuchElementException;
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public class Names {
-    private static final Map<Name, Name>  WARNING_RESPONSE_MAP  = new HashMap<Name, Name>();
+    private static final Map<Smell, Refactoring>  WARNING_RESPONSE_MAP  = Maps.newEnumMap(Smell.class);
 
     static {
         WARNING_RESPONSE_MAP.put(Smell.UNFORMATTED_CODE, Refactoring.REFORMAT_CODE);
