@@ -16,6 +16,13 @@ public interface CommitRequest {
      */
     CommitStatus commit() throws RuntimeException ;
 
+
+    /**
+     * @return the time of commit in milliseconds,
+     *      Long.MIN_VALUE if it has not been committed.
+     */
+    long committedAt();
+
     /**
      * @return {@code true} if the changes this commit
      * contains NO errors {@code false} otherwise.

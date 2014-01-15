@@ -10,6 +10,7 @@ import edu.ucsc.refactor.util.StringUtil;
 import org.eclipse.jdt.core.dom.ASTNode;
 
 import java.util.Date;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 
 /**
@@ -20,6 +21,8 @@ import java.util.logging.Logger;
 public class LocalCommitRequest extends AbstractCommitRequest {
     private static final Logger LOGGER  = Logger.getLogger(LocalCommitRequest.class.getName());
 
+    private final AtomicLong timeOfCommit;
+
     /**
      * Instantiates a new {@link LocalCommitRequest}
      *
@@ -27,6 +30,8 @@ public class LocalCommitRequest extends AbstractCommitRequest {
      */
     public LocalCommitRequest(Change change) {
         super(change);
+
+        this.timeOfCommit = new AtomicLong(Long.MIN_VALUE);
     }
 
 
@@ -44,7 +49,7 @@ public class LocalCommitRequest extends AbstractCommitRequest {
 
         try {
             final String    updatedSourceContent = squashedDeltas(fileName, getLoad(), node);
-            final Date      date                 = new Date();
+
             final Source    updatedSource        = new Source(
                     current.getName(),
                     updatedSourceContent,
@@ -61,6 +66,11 @@ public class LocalCommitRequest extends AbstractCommitRequest {
 
             // fill out the `more` information
             final Name info = getChange().getCause().getName();
+
+
+            tick();
+
+            final Date  date  = new Date(committedAt());
 
             updateStatus(
                     CommitStatus.succeededStatus(
@@ -87,5 +97,13 @@ public class LocalCommitRequest extends AbstractCommitRequest {
             throw new RuntimeException(ex);
         }
 
+    }
+
+    private void tick(){
+        timeOfCommit.set(System.currentTimeMillis());
+    }
+
+    @Override public long committedAt() {
+        return timeOfCommit.get();
     }
 }
