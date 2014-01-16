@@ -1,10 +1,10 @@
 package edu.ucsc.refactor.internal;
 
+import com.google.common.base.Objects;
 import edu.ucsc.refactor.Credential;
 import edu.ucsc.refactor.spi.CommitRequest;
 import edu.ucsc.refactor.spi.CommitStatus;
 import edu.ucsc.refactor.spi.Upstream;
-import edu.ucsc.refactor.util.ToStringBuilder;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -35,7 +35,7 @@ public class LocalRepository implements Upstream {
     }
 
     @Override public String toString() {
-        return new ToStringBuilder("LocalRepository")
+        return Objects.toStringHelper("LocalRepository")
                 .add("credential", getCredential())
                 .toString();
     }

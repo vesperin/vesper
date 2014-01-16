@@ -49,7 +49,9 @@ public class LocalCommitRequest extends AbstractCommitRequest {
 
         try {
             final String    updatedSourceContent = squashedDeltas(fileName, getLoad(), node);
-
+            // todo(Huascar) since we already set the updated source into the compilation unit,
+            // I wonder weather we can just call Source.from(node) and get the latest version of
+            // the Source instead of doing this:
             final Source    updatedSource        = new Source(
                     current.getName(),
                     updatedSourceContent,
@@ -57,6 +59,7 @@ public class LocalCommitRequest extends AbstractCommitRequest {
             );
 
             updatedSource.setId(current.getId());
+            updatedSource.setSignature(current.getUniqueSignature());
 
             for(Note each : current.getNotes()){
                 updatedSource.addNote(each);
@@ -67,10 +70,9 @@ public class LocalCommitRequest extends AbstractCommitRequest {
             // fill out the `more` information
             final Name info = getChange().getCause().getName();
 
-
             tick();
 
-            final Date  date  = new Date(committedAt());
+            final Date  date  = new Date(commitTimestamp());
 
             updateStatus(
                     CommitStatus.succeededStatus(
@@ -103,7 +105,7 @@ public class LocalCommitRequest extends AbstractCommitRequest {
         timeOfCommit.set(System.currentTimeMillis());
     }
 
-    @Override public long committedAt() {
+    @Override public long commitTimestamp() {
         return timeOfCommit.get();
     }
 }

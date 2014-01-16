@@ -4,6 +4,8 @@ import edu.ucsc.refactor.CauseOfChange;
 import edu.ucsc.refactor.Change;
 import edu.ucsc.refactor.Parameter;
 import edu.ucsc.refactor.internal.SourceChange;
+import edu.ucsc.refactor.spi.Names;
+import edu.ucsc.refactor.spi.Refactoring;
 import edu.ucsc.refactor.spi.Smell;
 import edu.ucsc.refactor.spi.SourceChanger;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -17,7 +19,8 @@ import java.util.Map;
 public class RemoveUnusedImports extends SourceChanger {
 
     @Override public boolean canHandle(CauseOfChange cause) {
-        return cause.getName().isSame(Smell.UNUSED_IMPORTS);
+        return cause.getName().isSame(Smell.UNUSED_IMPORTS)
+                || Names.from(Smell.UNUSED_METHOD).isSame(Refactoring.DELETE_UNUSED_IMPORTS);
     }
 
     @Override protected Change initChanger(CauseOfChange cause,

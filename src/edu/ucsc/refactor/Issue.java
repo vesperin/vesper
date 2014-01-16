@@ -1,9 +1,9 @@
 package edu.ucsc.refactor;
 
+import com.google.common.base.Objects;
 import edu.ucsc.refactor.spi.IssueDetector;
 import edu.ucsc.refactor.spi.Smell;
 import edu.ucsc.refactor.util.Locations;
-import edu.ucsc.refactor.util.ToStringBuilder;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -37,7 +37,7 @@ public class Issue extends AbstractCauseOfChange {
     }
 
     @Override public String more() {
-        final ToStringBuilder builder = new ToStringBuilder("Issue");
+        final Objects.ToStringHelper builder = Objects.toStringHelper(getClass());
         builder.add("name", getName().getKey());
         builder.add("summary", getName().getSummary());
         if(!getAffectedNodes().isEmpty()){

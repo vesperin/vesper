@@ -21,7 +21,7 @@ public interface CommitRequest {
      * @return the time of commit in milliseconds,
      *      Long.MIN_VALUE if it has not been committed.
      */
-    long committedAt();
+    long commitTimestamp();
 
     /**
      * @return {@code true} if the changes this commit

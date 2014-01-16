@@ -1,7 +1,7 @@
 package edu.ucsc.refactor;
 
+import com.google.common.base.Objects;
 import edu.ucsc.refactor.spi.Refactoring;
-import edu.ucsc.refactor.util.ToStringBuilder;
 
 /**
  * A user-triggered change
@@ -139,7 +139,7 @@ public class SingleEdit extends AbstractCauseOfChange {
     }
 
     @Override public String more() {
-        final ToStringBuilder builder = new ToStringBuilder("SingleEdit");
+        final Objects.ToStringHelper builder = Objects.toStringHelper(getClass());
         final boolean isNodesEmpty = getAffectedNodes().isEmpty();
 
         if(isNodesEmpty){ builder.add("scope", getSourceSelection()); } else {

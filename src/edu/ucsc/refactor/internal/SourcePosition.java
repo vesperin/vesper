@@ -1,7 +1,7 @@
 package edu.ucsc.refactor.internal;
 
+import com.google.common.base.Objects;
 import edu.ucsc.refactor.Position;
-import edu.ucsc.refactor.util.ToStringBuilder;
 
 import java.util.Arrays;
 
@@ -62,7 +62,7 @@ public final class SourcePosition implements Position {
     @Override public int getColumn() { return column; }
 
     @Override public String toString() {
-        final ToStringBuilder builder = new ToStringBuilder("Position");
+        final Objects.ToStringHelper builder = Objects.toStringHelper(getClass());
         builder.add("offset", getOffset());
         builder.add("line", getLine() + 1);
         builder.add("column", getColumn() + 1);

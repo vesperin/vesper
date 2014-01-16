@@ -1,11 +1,14 @@
 package edu.ucsc.refactor.internal;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.visitors.MethodDeclarationVisitor;
 import edu.ucsc.refactor.internal.visitors.SelectedASTNodeVisitor;
 import edu.ucsc.refactor.spi.*;
-import edu.ucsc.refactor.util.ToStringBuilder;
+import edu.ucsc.refactor.util.ChangeHistory;
+import edu.ucsc.refactor.util.Checkpoint;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
@@ -18,13 +21,16 @@ import java.util.logging.Logger;
 public class JavaRefactorer implements Refactorer {
     private static final Logger LOGGER = Logger.getLogger(JavaRefactorer.class.getName());
 
-    private final HostImpl host;
+    private final HostImpl                  host;
     private final Map<Source, List<Issue>>  findings;
-    private final Map<String, List<Record>> history;
     private final Map<Source, Context>      cachedContexts;
 
     private final SourceChecking inspector;
     private final SourceChanging changer;
+
+
+    // todo(Huascar) make it work for multiple sources; now it only works for one code
+    private final Map<String, ChangeHistory> timeline;
 
 
 
@@ -34,12 +40,12 @@ public class JavaRefactorer implements Refactorer {
      */
     public JavaRefactorer(Host host) {
         this.host           = (HostImpl) host;
-        this.findings       = new HashMap<Source, List<Issue>>();
-        this.history        = new HashMap<String, List<Record>>();
-        this.cachedContexts = new HashMap<Source, Context>();
+        this.findings       = Maps.newHashMap();
+        this.cachedContexts = Maps.newHashMap();
 
         this.inspector  = new SourceChecking(host.getIssueDetectors());
         this.changer    = new SourceChanging(host.getSourceChangers());
+        this.timeline   = Maps.newHashMap();
     }
 
     @Override public CommitRequest apply(Change change) {
@@ -55,10 +61,12 @@ public class JavaRefactorer implements Refactorer {
 
         if(applied.isValid()){
             try {
+                final Source before = change.getSource();
+                beforeCommit(before);
                 applied.commit();
-                final Source updated = applied.getUpdatedSource();
-                checkpoint(change, updated);
-                detectIssues(updated);
+                final Source after = applied.getUpdatedSource();
+                afterCommit(change.getCause().getName(), before, after);
+                detectIssues(after);
                 return applied;
             } catch (RuntimeException ex){
                 LOGGER.throwing("Unable to commit change", "apply()", ex);
@@ -70,22 +78,34 @@ public class JavaRefactorer implements Refactorer {
     }
 
 
-    private void checkpoint(Change change, Source after){
-        final Record record = new Record();
-        record.before = change.getSource();
-        record.after  = after;
-        record.change = change;
+    private void beforeCommit(Source before){
+        if(!timeline.containsKey(before.getUniqueSignature())){  // the signature should have been generated during compilation.
+            this.timeline.put(before.getUniqueSignature(), new ChangeHistory());
+        }
+    }
+
+
+    private void afterCommit(Name name, Source before, Source after){
+        final Checkpoint checkpoint = Checkpoint.createCheckpoint(
+                Preconditions.checkNotNull(name),
+                Preconditions.checkNotNull(before),
+                Preconditions.checkNotNull(after)
+        );
+
+
 
         // clear current issue registry for source
-        getIssueRegistry().remove(record.before);
-        getValidContexts().remove(record.before);
+        getIssueRegistry().remove(checkpoint.getSourceBeforeChange());
+        getValidContexts().remove(checkpoint.getSourceBeforeChange());
 
-        final String name = after.getName();
+        final String key = checkpoint.getUniqueSignature();
 
-        if(history.containsKey(name)) { history.get(name).add(record); } else {
-            history.put(name, new ArrayList<Record>());
-            history.get(name).add(record);
-        }
+        Preconditions.checkState(
+                timeline.containsKey(key),
+                "At this point the Source unique signature should have been recorded."
+        );
+
+        timeline.get(key).add(checkpoint);
     }
 
     @Override public Change createChange(ChangeRequest request) {
@@ -205,6 +225,10 @@ public class JavaRefactorer implements Refactorer {
         return Collections.emptyList();
     }
 
+    @Override public ChangeHistory getChangeHistory(Source src) {
+        return timeline.get(Preconditions.checkNotNull(src).getUniqueSignature());
+    }
+
     @Override public boolean hasIssues(Source code) {
         return !getIssues(code).isEmpty();
     }
@@ -243,19 +267,11 @@ public class JavaRefactorer implements Refactorer {
 
 
     @Override public String toString() {
-        final ToStringBuilder builder = new ToStringBuilder("Refactorer");
+        final Objects.ToStringHelper builder = Objects.toStringHelper(getClass());
         builder.add("known files", getVisibleSources());
         return builder.toString();
     }
 
-    /**
-     * A record of changes made to a {@link Source}.
-     */
-    static class Record {
-        public Source before;
-        public Source after;
-        public Change change;
-    }
 
     /**
      * Helper class that allow {@code Refactorer} to scan the given
