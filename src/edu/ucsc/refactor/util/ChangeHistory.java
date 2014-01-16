@@ -79,13 +79,16 @@ public class ChangeHistory implements Iterable<Checkpoint> {
     }
 
     /**
-     * Resets the change history, going back to the HEAD checkpoint.
+     * Slice the change history, going back ALL THE WAY to the HEAD checkpoint.
      *
      * @return a new ChangeHistory having ONLY the HEAD checkpoint
-     * @throws NullPointerException if first checkpoint is null.
      */
-    public ChangeHistory reset(){
-        return reset(first());
+    public ChangeHistory slice(){
+        try {
+            return slice(first());
+        } catch (NoSuchElementException e){
+            return new ChangeHistory();
+        }
     }
 
     /**
@@ -94,12 +97,12 @@ public class ChangeHistory implements Iterable<Checkpoint> {
      * @throws NullPointerException if fromElement or toElement is null and this
      *      set uses natural ordering, or its comparator does not permit null elements
      */
-    public ChangeHistory reset(final Checkpoint checkpoint/*end*/){
+    public ChangeHistory slice(final Checkpoint upto/*checkpoint*/){
         // 1, 2, 3, 4
         // reset(0) => 1
         // reset(2) => 1, 2
         final Checkpoint from = Preconditions.checkNotNull(first());
-        final Checkpoint to   = Preconditions.checkNotNull(checkpoint);
+        final Checkpoint to   = Preconditions.checkNotNull(upto);
 
         final ChangeHistory sliced = new ChangeHistory(from);
 

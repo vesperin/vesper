@@ -51,8 +51,8 @@ public class RemoteRepository implements Upstream {
         this.credential = key;
     }
 
-    @Override public CommitStatus publish(CommitRequest request) {
-        if(!request.isValid()) return request.getStatus();
+    @Override public CommitRequest publish(CommitRequest request) {
+        if(!request.isValid()) return request;
 
         try {
             final Source updatedSource = request.getUpdatedSource();
@@ -77,7 +77,7 @@ public class RemoteRepository implements Upstream {
                     )
             );
 
-            return request.getStatus();
+            return request;
         } catch (Throwable ex){
             ((AbstractCommitRequest)request).updateStatus(
                     CommitStatus.failedStatus(
@@ -85,7 +85,7 @@ public class RemoteRepository implements Upstream {
                                     .error(ex.getMessage())
                     ));
 
-            return request.getStatus();
+            return request;
         }
 
     }

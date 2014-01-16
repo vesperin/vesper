@@ -3,7 +3,6 @@ package edu.ucsc.refactor;
 import edu.ucsc.refactor.internal.HostImpl;
 import edu.ucsc.refactor.internal.RemoteRepository;
 import edu.ucsc.refactor.spi.CommitRequest;
-import edu.ucsc.refactor.spi.CommitStatus;
 import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.Gist;
 import org.eclipse.egit.github.core.GistFile;
@@ -14,9 +13,7 @@ import java.io.IOException;
 import java.util.*;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -78,16 +75,16 @@ public class VesperTest {
         final CommitRequest applied = refactorer.apply(first);
         assertNotNull(applied);
 
-        final CommitStatus status = refactorer.publish(applied);
-        assertEquals(status, applied.getStatus());
+        final CommitRequest published = refactorer.publish(applied);
+        assertEquals(published.getStatus(), applied.getStatus());
 
-        final CommitStatus anotherStatus = refactorer.publish(
+        final CommitRequest anotherPublished = refactorer.publish(
                 applied,
                 new RemoteRepository(new Credential("lala", "lala"), new LocalGistService())
         );
 
-        assertNotNull(anotherStatus);
-        System.out.println(anotherStatus.more());
+        assertNotNull(anotherPublished);
+        System.out.println(anotherPublished.more());
 
     }
 

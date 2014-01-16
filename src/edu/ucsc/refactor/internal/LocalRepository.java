@@ -3,7 +3,6 @@ package edu.ucsc.refactor.internal;
 import com.google.common.base.Objects;
 import edu.ucsc.refactor.Credential;
 import edu.ucsc.refactor.spi.CommitRequest;
-import edu.ucsc.refactor.spi.CommitStatus;
 import edu.ucsc.refactor.spi.Upstream;
 
 /**
@@ -25,9 +24,9 @@ public class LocalRepository implements Upstream {
         return key == null ? defaultValue : key;
     }
 
-    @Override public CommitStatus publish(CommitRequest request) {
+    @Override public CommitRequest publish(CommitRequest request) {
         // do not publish anything, just return its current status.
-        return request.getStatus();
+        return request;
     }
 
     public Credential getCredential() {

@@ -28,8 +28,6 @@ public class JavaRefactorer implements Refactorer {
     private final SourceChecking inspector;
     private final SourceChanging changer;
 
-
-    // todo(Huascar) make it work for multiple sources; now it only works for one code
     private final Map<String, ChangeHistory> timeline;
 
 
@@ -171,6 +169,33 @@ public class JavaRefactorer implements Refactorer {
         }
     }
 
+    @Override public Source rewriteChangeHistory(Source current, ChangeHistory draft) {
+
+        final ChangeHistory rewrite = Preconditions.checkNotNull(draft);
+        final Source        from    = Preconditions.checkNotNull(current);
+        final Source        to      = Preconditions.checkNotNull(draft.last().getSourceAfterChange());
+
+        Preconditions.checkArgument(
+                from.getUniqueSignature().equals(to.getUniqueSignature()),
+                "rewriteChangeHistory() is dealing with sources that not part of the same history"
+        );
+
+        final String signature = current.getUniqueSignature();
+
+        if(timeline.containsKey(signature)){
+            getIssueRegistry().remove(from);
+
+            timeline.remove(signature);
+            timeline.put(signature, rewrite);
+
+            detectIssues(to);
+
+        }
+
+        return to;
+    }
+
+
     private Map<Source, Context> getValidContexts(){
         return cachedContexts;
     }
@@ -214,7 +239,7 @@ public class JavaRefactorer implements Refactorer {
     }
 
     @Override public List<Source> getVisibleSources() {
-        return new ArrayList<Source>(getIssueRegistry().keySet());
+        return new ArrayList<Source>(getValidContexts().keySet());
     }
 
     @Override public List<Issue> getIssues(Source key) {
@@ -226,14 +251,19 @@ public class JavaRefactorer implements Refactorer {
     }
 
     @Override public ChangeHistory getChangeHistory(Source src) {
-        return timeline.get(Preconditions.checkNotNull(src).getUniqueSignature());
+        final ChangeHistory result = timeline.get(Preconditions.checkNotNull(src).getUniqueSignature());
+        if(result == null){
+            return new ChangeHistory();
+        }
+
+        return result;
     }
 
     @Override public boolean hasIssues(Source code) {
         return !getIssues(code).isEmpty();
     }
 
-    @Override public CommitStatus publish(CommitRequest localCommit){
+    @Override public CommitRequest publish(CommitRequest localCommit){
         final Upstream upstream = (this.host.isRemoteUpstreamEnabled()
                 ? new RemoteRepository(this.host.getStorageKey())
                 : new LocalRepository(this.host.getStorageKey())
@@ -245,7 +275,7 @@ public class JavaRefactorer implements Refactorer {
         );
     }
 
-    @Override public CommitStatus publish(CommitRequest request, Upstream upstream) {
+    @Override public CommitRequest publish(CommitRequest request, Upstream upstream) {
         return Preconditions.checkNotNull(upstream).publish(
                 Preconditions.checkNotNull(request)
         );

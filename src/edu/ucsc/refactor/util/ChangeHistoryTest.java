@@ -82,14 +82,17 @@ public class ChangeHistoryTest {
         history.add(c3);
         history.add(c4);
 
-        final ChangeHistory v1 = history.reset();
+        final ChangeHistory v1 = history.slice();
         assertThat(v1.size(), is(1));
 
-        final ChangeHistory v2 = history.reset(c2);
+        final ChangeHistory v2 = history.slice(c2);
         assertThat(v2.size(), is(2));
 
         assertEquals(c1, v2.first());
         assertEquals(c2, v2.last());
+
+        history.clear();
+        assertThat(history.isEmpty(), is(true));
 
     }
 }
