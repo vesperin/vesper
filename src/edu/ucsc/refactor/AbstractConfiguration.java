@@ -1,5 +1,6 @@
 package edu.ucsc.refactor;
 
+import com.google.common.base.Objects;
 import edu.ucsc.refactor.internal.EclipseJavaParser;
 import edu.ucsc.refactor.internal.changers.*;
 import edu.ucsc.refactor.internal.detectors.MagicNumber;
@@ -9,7 +10,6 @@ import edu.ucsc.refactor.internal.detectors.UnusedParameters;
 import edu.ucsc.refactor.spi.IssueDetector;
 import edu.ucsc.refactor.spi.JavaParser;
 import edu.ucsc.refactor.spi.SourceChanger;
-import edu.ucsc.refactor.util.ToStringBuilder;
 
 /**
  * A support class for {@link Configuration} which reduces repetition and results in
@@ -114,7 +114,7 @@ public abstract class AbstractConfiguration implements Configuration {
 
 
     @Override public String toString() {
-        return new ToStringBuilder("Configuration")
+        return Objects.toStringHelper("Configuration")
                .add("host", this.host)
                .toString();
     }
