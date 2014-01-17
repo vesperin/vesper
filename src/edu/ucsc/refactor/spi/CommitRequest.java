@@ -8,14 +8,20 @@ import edu.ucsc.refactor.Source;
  */
 public interface CommitRequest {
     /**
-     * commit changes to some external service, such as
-     * Gist or Pastie.
+     * Abort a request.
      *
-     * @return A {@code CommitStatus}.
+     * @param reason THe reason why this request was aborted.
+     * @return An aborted {@code CommitRequest}
+     */
+    CommitRequest abort(String reason);
+
+    /**
+     * Commit changes locally.
+     *
+     * @return A committed {@code CommitRequest}.
      * @throws RuntimeException if unable to commit changes.
      */
-    CommitStatus commit() throws RuntimeException ;
-
+    CommitRequest commit() throws RuntimeException ;
 
     /**
      * @return the time of commit in milliseconds,
@@ -34,7 +40,7 @@ public interface CommitRequest {
      *
      * @return The updated source code, or <tt>null</tt> if we could not commit anything.
      */
-    Source getUpdatedSource();
+    Source getSource();
 
     /**
      * @return The issued status; after committing change.

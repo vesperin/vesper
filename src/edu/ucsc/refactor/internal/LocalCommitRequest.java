@@ -3,6 +3,7 @@ package edu.ucsc.refactor.internal;
 import edu.ucsc.refactor.Change;
 import edu.ucsc.refactor.Note;
 import edu.ucsc.refactor.Source;
+import edu.ucsc.refactor.spi.CommitRequest;
 import edu.ucsc.refactor.spi.CommitStatus;
 import edu.ucsc.refactor.spi.Name;
 import edu.ucsc.refactor.util.CommitInformation;
@@ -34,13 +35,17 @@ public class LocalCommitRequest extends AbstractCommitRequest {
         this.timeOfCommit = new AtomicLong(Long.MIN_VALUE);
     }
 
+    @Override public CommitRequest abort(String reason) {
+        updateStatus(CommitStatus.abortedStatus(reason));
+        return this;
+    }
 
-    @Override public CommitStatus commit() throws RuntimeException {
+    @Override public CommitRequest commit() throws RuntimeException {
         final Source    current             = getLoad().peek().getSource();
         final boolean   isAboutToBeUpdated  = !getLoad().isEmpty();
 
 
-        if(!isAboutToBeUpdated){ return CommitStatus.nothingStatus(); }
+        if(!isAboutToBeUpdated){ return abort("There is nothing to commit!"); }
 
 
         final String    username            = System.getProperty("user.name");
@@ -77,24 +82,17 @@ public class LocalCommitRequest extends AbstractCommitRequest {
             updateStatus(
                     CommitStatus.succeededStatus(
                             new CommitInformation()
-                                    .commit("")
+                                    .commit("(local)")
                                     .author(username)
                                     .date(date)
                                     .comment(info.getKey(), info.getSummary())
                     )
             );
 
-            return getStatus();
+            return this;
         } catch (Throwable ex){
-            updateStatus(
-                    CommitStatus.failedStatus(
-                            new CommitInformation()
-                                    .error(ex.getMessage()
-                                    )
-                    )
-            );
-
-            LOGGER.throwing("unable to commit change", "commit(Upstream)", ex);
+            abort(ex.getMessage());
+            LOGGER.throwing("unable to commit change", "commit()", ex);
 
             throw new RuntimeException(ex);
         }
@@ -102,7 +100,7 @@ public class LocalCommitRequest extends AbstractCommitRequest {
     }
 
     private void tick(){
-        timeOfCommit.set(System.currentTimeMillis());
+        timeOfCommit.set(System.nanoTime());
     }
 
     @Override public long commitTimestamp() {

@@ -1,10 +1,13 @@
 package edu.ucsc.refactor.util;
 
+import edu.ucsc.refactor.Context;
 import edu.ucsc.refactor.Location;
 import edu.ucsc.refactor.Source;
+import edu.ucsc.refactor.internal.visitors.SelectedASTNodeVisitor;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -36,7 +39,15 @@ public class AstUtil {
      */
     @SuppressWarnings("unchecked")
     public static <T extends ASTNode> T parent(final Class<T> thatClass, final ASTNode node) {
+
         ASTNode parent = node;
+
+        if(parent.getClass() == thatClass) {
+            // if both classes are the same, then no point on
+            // executing the do-while code.
+            return (T) parent;
+        }
+
         do {
             parent = parent.getParent();
             if (parent == null) {
@@ -73,6 +84,20 @@ public class AstUtil {
             final SingleVariableDeclaration param = AstUtil.copySubtree(SingleVariableDeclaration.class, dst.getAST(), next);
             dst.parameters().add(param);
         }
+    }
+
+
+    public static List<ASTNode> astNodeFrom(Context context, String word){
+        final List<Location> locations = Locations.locateWord(context.getSource(), word);
+        final List<ASTNode>  nodes     = new ArrayList<ASTNode>();
+
+        for(Location each : locations){
+            final SelectedASTNodeVisitor visitor = new SelectedASTNodeVisitor(each);
+            context.accept(visitor);
+
+        }
+
+        return nodes;
     }
 
 

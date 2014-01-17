@@ -1,5 +1,6 @@
 package edu.ucsc.refactor;
 
+import edu.ucsc.refactor.spi.UnitLocator;
 import edu.ucsc.refactor.spi.CommitRequest;
 import edu.ucsc.refactor.spi.Upstream;
 import edu.ucsc.refactor.util.ChangeHistory;
@@ -93,6 +94,15 @@ public interface Refactorer {
      * @return {@code true} if the {@code Source} has issues. {@code false} otherwise.
      */
     boolean hasIssues(Source code);
+
+    /**
+     * Returns a locator of any structural unit of a base {@code Source} (class, member, ...).
+     * Units exclude the code. Units include nodes in a AST.
+     *
+     * @param src The current {@code Source}
+     * @return The locator that corresponds to this {@code Source}
+     */
+    UnitLocator getUnitLocator(Source src);
 
     /**
      * Commit local changes to a remote upstream.

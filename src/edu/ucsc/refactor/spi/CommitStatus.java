@@ -1,5 +1,6 @@
 package edu.ucsc.refactor.spi;
 
+import com.google.common.base.Preconditions;
 import edu.ucsc.refactor.util.CommitInformation;
 
 /**
@@ -20,24 +21,14 @@ public class CommitStatus {
         this.message = message;
     }
 
-    /**
-     * Creates a failed commit status.
-     *
-     * @param builder The CommitInformation.
-     * @return A failed commit status.
-     */
-    public static CommitStatus failedStatus(CommitInformation builder){
-        return new CommitStatus(Status.FAILED, builder.toString());
-    }
-
 
     /**
-     * @return The nothing status.
+     * @return The aborted status.
      */
-    public static CommitStatus nothingStatus(){
+    public static CommitStatus abortedStatus(String reason){
         return new CommitStatus(
-                Status.NOTHING,
-                "there is nothing to commit"
+                Status.ABORTED,
+                Preconditions.checkNotNull(reason)
         );
     }
 
@@ -47,7 +38,7 @@ public class CommitStatus {
      * @return A succeeded commit status.
      */
     public static CommitStatus succeededStatus(CommitInformation builder){
-        return new CommitStatus(Status.SUCCEEDED, builder.toString());
+        return new CommitStatus(Status.COMMITTED, builder.toString());
     }
 
     /**
@@ -65,28 +56,21 @@ public class CommitStatus {
         return new CommitStatus(status.type, status.message);
     }
 
-    /**
-     * @return {@code true} if this is a failed status.
-     */
-    public boolean isFailed(){
-        return this.type.isSame(Status.FAILED);
-    }
 
     /**
      * @return {@code true} if this is a succeeded status.
      */
-    public boolean isSucceeded(){
-        return this.type.isSame(Status.SUCCEEDED);
+    public boolean isCommitted(){
+        return this.type.isSame(Status.COMMITTED);
     }
 
 
     /**
      * @return {@code true} if this is a nothing status.
      */
-    public boolean isNothing(){
-        return this.type.isSame(Status.NOTHING);
+    public boolean isAborted(){
+        return this.type.isSame(Status.ABORTED);
     }
-
 
 
     /**
@@ -115,14 +99,12 @@ public class CommitStatus {
      * The status
      */
     private static enum Status {
-        /** Failed commit **/
-        FAILED("Failed"),
-        /** Succeeded commit **/
-        SUCCEEDED("Succeeded"),
-        /** Unknown status; i.e., no commit yet **/
-        UNKNOWN("Unknown"),
         /** There is nothing to commit **/
-        NOTHING("Nothing");
+        ABORTED("Aborted"),
+        /** Succeeded commit **/
+        COMMITTED("Committed"),
+        /** Unknown status; i.e., no commit yet **/
+        UNKNOWN("Unknown");
 
         private String key;
 

@@ -31,6 +31,18 @@ public class FieldDeclarationVisitor extends ASTVisitor {
         return fieldDeclarations;
     }
 
+    public final List<FieldDeclaration> getMatchingFieldDeclaration(String name){
+        final List<FieldDeclaration> declarations = new ArrayList<FieldDeclaration>();
+        for (FieldDeclaration fieldDeclaration : getFieldDeclarations()) {
+            VariableDeclaration variableDeclaration = (VariableDeclaration) fieldDeclaration.fragments().get(0);
+            if (variableDeclaration.getName().toString().equalsIgnoreCase(name)) {
+                declarations.add(fieldDeclaration);
+            }
+        }
+
+        return declarations;
+    }
+
     public boolean hasFieldName(String name) {
         for (FieldDeclaration fieldDeclaration : getFieldDeclarations()) {
             VariableDeclaration variableDeclaration = (VariableDeclaration) fieldDeclaration.fragments().get(0);

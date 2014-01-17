@@ -12,7 +12,7 @@ public class InternalUtil {
 
 
     public static Location locateWord(Source code, String word){
-        return Locations.locateWord(code, word);
+        return Locations.locateWord(code, word).get(0);
     }
 
     public static Source createSourceForRenamingStuff(){

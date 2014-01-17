@@ -1,5 +1,7 @@
 package edu.ucsc.refactor;
 
+import edu.ucsc.refactor.spi.SearchHint;
+import edu.ucsc.refactor.spi.UnitLocator;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -86,6 +88,18 @@ public class RefactorerTest {
 
         assertThat(recommendedChanges.isEmpty(), is(false));
         assertThat(recommendedChanges.size(), is(2));
+    }
+
+    @Test public void testRefactorerUnitLocator() {
+        final Refactorer refactorer = Vesper.createRefactorer(SRC);
+        final UnitLocator locator = refactorer.getUnitLocator(SRC);
+
+        final List<Location> params = locator.locate("message", SearchHint.PARAM);
+        assertThat(params.isEmpty(), is(false));
+
+        final List<Location> methods = locator.locate("check", SearchHint.METHOD);
+        assertThat(methods.isEmpty(), is(false));
+
     }
 
 

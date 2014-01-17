@@ -55,7 +55,7 @@ public class RemoteRepository implements Upstream {
         if(!request.isValid()) return request;
 
         try {
-            final Source updatedSource = request.getUpdatedSource();
+            final Source updatedSource = request.getSource();
             Gist gist = new GistBuilder(service)
                     .content(updatedSource.getContents())
                     .file(updatedSource)
@@ -79,12 +79,7 @@ public class RemoteRepository implements Upstream {
 
             return request;
         } catch (Throwable ex){
-            ((AbstractCommitRequest)request).updateStatus(
-                    CommitStatus.failedStatus(
-                            new CommitInformation()
-                                    .error(ex.getMessage())
-                    ));
-
+            request.abort(ex.getMessage());
             return request;
         }
 

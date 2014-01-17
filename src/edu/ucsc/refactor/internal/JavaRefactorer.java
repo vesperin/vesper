@@ -2,7 +2,9 @@ package edu.ucsc.refactor.internal;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.visitors.MethodDeclarationVisitor;
@@ -63,8 +65,8 @@ public class JavaRefactorer implements Refactorer {
                 final Source before = change.getSource();
                 beforeCommit(before);
                 applied.commit();
-                final Source after = applied.getUpdatedSource();
-                afterCommit(change.getCause().getName(), before, after);
+                final Source after = applied.getSource();
+                afterCommit(change.getCause().getName(), before, after, applied.commitTimestamp());
                 detectIssues(after);
                 return applied;
             } catch (RuntimeException ex){
@@ -84,11 +86,12 @@ public class JavaRefactorer implements Refactorer {
     }
 
 
-    private void afterCommit(Name name, Source before, Source after){
+    private void afterCommit(Name name, Source before, Source after, long timestamp){
         final Checkpoint checkpoint = Checkpoint.createCheckpoint(
-                Preconditions.checkNotNull(name),
-                Preconditions.checkNotNull(before),
-                Preconditions.checkNotNull(after)
+                name,
+                before,
+                after,
+                timestamp
         );
 
 
@@ -191,8 +194,8 @@ public class JavaRefactorer implements Refactorer {
         }
 
         // todo(Huascar) needs optimization
-        int fromIndex = ChangeHistory.index(first, entire);
-        int toIndex   = ChangeHistory.index(last, entire);
+        int fromIndex = index(first, entire);
+        int toIndex   = index(last, entire);
 
         final Iterable<Checkpoint> sandwiched = FluentIterable
                 .from(entire)
@@ -218,6 +221,16 @@ public class JavaRefactorer implements Refactorer {
         }
 
         throw new NoSuchElementException("rewrite() was unable to find " + from);
+    }
+
+    private static int index(final Checkpoint point, Iterable<Checkpoint> iterable){
+        final Predicate<Checkpoint> match = new Predicate<Checkpoint>() {
+            @Override public boolean apply(Checkpoint that) {
+                return point.equals(that);
+            }
+        };
+
+        return Iterables.indexOf(iterable, match);
     }
 
 
@@ -330,6 +343,11 @@ public class JavaRefactorer implements Refactorer {
 
     @Override public boolean hasIssues(Source code) {
         return !getIssues(code).isEmpty();
+    }
+
+    @Override public UnitLocator getUnitLocator(Source src) {
+        Preconditions.checkState(!getValidContexts().isEmpty(), "unknown Source");
+        return new ProgramUnitLocator(getValidContexts().get(src));
     }
 
     @Override public CommitRequest publish(CommitRequest localCommit){

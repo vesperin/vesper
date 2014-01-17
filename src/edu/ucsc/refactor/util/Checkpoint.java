@@ -12,6 +12,7 @@ public class Checkpoint implements Comparable <Checkpoint> {
     private final Name   name;
     private final Source before;
     private final Source after;
+    private final long   timeStamp;
 
     /**
      * Constructs a new Checkpoint.
@@ -19,12 +20,15 @@ public class Checkpoint implements Comparable <Checkpoint> {
      * @param name THe name of the source change.
      * @param before THe source code before the change
      * @param after  THe source code after the change
+     * @param timeStamp The commit timestamp
      */
-    Checkpoint(Name name, Source before, Source after){
-        this.name   = Preconditions.checkNotNull(name);
-        this.before = Preconditions.checkNotNull(before);
-        this.after  = Preconditions.checkNotNull(after);
+    Checkpoint(Name name, Source before, Source after, long timeStamp){
+        this.name       = Preconditions.checkNotNull(name);
+        this.before     = Preconditions.checkNotNull(before);
+        this.after      = Preconditions.checkNotNull(after);
+        this.timeStamp  = timeStamp;
     }
+
 
     /**
      * Creates a new checkpoint.
@@ -33,9 +37,29 @@ public class Checkpoint implements Comparable <Checkpoint> {
      * @param before THe source code before the change
      * @param after  THe source code after the change
      * @return the new Checkpoint object
+     * @throws java.lang.NullPointerException if any of the given param is null.
      */
     public static Checkpoint createCheckpoint(Name name, Source before, Source after){
-        return new Checkpoint(name, before, after);
+        return createCheckpoint(name, before, after, System.nanoTime());
+    }
+
+    /**
+     * Creates a new checkpoint.
+     *
+     * @param name THe name of the source change.
+     * @param before THe source code before the change
+     * @param after  THe source code after the change
+     * @param timeStamp The commit timestamp
+     * @return the new Checkpoint object
+     * @throws java.lang.NullPointerException if any of the given param is null.
+     */
+    public static Checkpoint createCheckpoint(Name name, Source before, Source after, long timeStamp){
+        return new Checkpoint(
+                Preconditions.checkNotNull(name),
+                Preconditions.checkNotNull(before),
+                Preconditions.checkNotNull(after),
+                Preconditions.checkNotNull(timeStamp)
+        );
     }
 
     /**
@@ -45,12 +69,17 @@ public class Checkpoint implements Comparable <Checkpoint> {
      */
     @Override public int compareTo(Checkpoint that) {
         Preconditions.checkNotNull(that);
-
+        final int BEFORE = -1;
         final int EQUAL  = 0;
+        final int AFTER = 1;
 
         //this optimization is usually worthwhile, and can
         //always be added
         if (this == that) return EQUAL;
+
+        //primitive numbers follow this form
+        if (getTimestamp() < that.getTimestamp()) return BEFORE;
+        if (getTimestamp() > that.getTimestamp()) return AFTER;
 
 
         //objects, including type-safe enums, follow this form
@@ -104,6 +133,15 @@ public class Checkpoint implements Comparable <Checkpoint> {
         return after;
     }
 
+
+    /**
+     * @return the time of commit in milliseconds,
+     *      Long.MIN_VALUE if it has not been committed.
+     */
+    public long getTimestamp(){
+        return timeStamp;
+    }
+
     /**
      * @return The unique (and stable) Source code signature.
      */
@@ -125,6 +163,7 @@ public class Checkpoint implements Comparable <Checkpoint> {
                 .add("ChangeName", getNameOfChange())
                 .add("Before", getSourceBeforeChange())
                 .add("After", getSourceAfterChange())
+                .add("when", getTimestamp())
                 .toString();
     }
 }

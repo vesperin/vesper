@@ -83,7 +83,7 @@ public abstract class AbstractCommitRequest implements CommitRequest {
 
     @Override public boolean isValid() { return this.change.isValid(); }
 
-    @Override public Source getUpdatedSource() {
+    @Override public Source getSource() {
         assert this.fileMatchingLastDelta.get() != null;
 
         return this.fileMatchingLastDelta.get();
