@@ -2,6 +2,7 @@ package edu.ucsc.refactor.internal;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Maps;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.visitors.MethodDeclarationVisitor;
@@ -169,30 +170,98 @@ public class JavaRefactorer implements Refactorer {
         }
     }
 
-    @Override public Source rewriteChangeHistory(Source current, ChangeHistory draft) {
+    // forward
+    @Override public Source rewrite(Source current) {
 
-        final ChangeHistory rewrite = Preconditions.checkNotNull(draft);
-        final Source        from    = Preconditions.checkNotNull(current);
-        final Source        to      = Preconditions.checkNotNull(draft.last().getSourceAfterChange());
+        final Source        from   = Preconditions.checkNotNull(current);
+        final ChangeHistory entire = getChangeHistory(from);
 
-        Preconditions.checkArgument(
-                from.getUniqueSignature().equals(to.getUniqueSignature()),
-                "rewriteChangeHistory() is dealing with sources that not part of the same history"
-        );
+        if(entire.isEmpty()) { return current; }
 
-        final String signature = current.getUniqueSignature();
+        final Checkpoint    first  = entire.first();
+        final Checkpoint    last   = entire.last();
+
+
+        if(first.getSourceBeforeChange().equals(from)) { // base case
+            return rewritingHistory(from, entire.slice());
+        }
+
+        if(last.getSourceAfterChange().equals(from)) {  // base case
+            return from;
+        }
+
+        // todo(Huascar) needs optimization
+        int fromIndex = ChangeHistory.index(first, entire);
+        int toIndex   = ChangeHistory.index(last, entire);
+
+        final Iterable<Checkpoint> sandwiched = FluentIterable
+                .from(entire)
+                .skip(fromIndex)
+                .limit(toIndex)
+                .toList();
+
+
+        for(Checkpoint each : sandwiched){
+
+            if(each.getSourceAfterChange().equals(from)){
+                final ChangeHistory sliced = entire.slice(each);
+
+                Preconditions.checkArgument(
+                        from.getUniqueSignature().equals(sliced.last().getUniqueSignature()),
+                        "rewrite() is dealing with sources that are not part "
+                        + "of the same change history"
+                );
+
+                return rewritingHistory(from, sliced);
+
+            }
+        }
+
+        throw new NoSuchElementException("rewrite() was unable to find " + from);
+    }
+
+
+    private Source rewritingHistory(Source from, ChangeHistory sliced){
+        final String signature = from.getUniqueSignature();
 
         if(timeline.containsKey(signature)){
             getIssueRegistry().remove(from);
 
             timeline.remove(signature);
-            timeline.put(signature, rewrite);
+            timeline.put(signature, sliced);
 
-            detectIssues(to);
+            detectIssues(from);
 
         }
 
-        return to;
+        return from;
+    }
+
+    @Override public Source rollforward(Source current) {
+        final ChangeHistory history = getChangeHistory(current);
+
+        for(Checkpoint each : history){
+            if(each.getSourceBeforeChange().equals(current)){
+                return each.getSourceAfterChange();
+            }
+        }
+
+        // otherwise, there is nothing to rollforward (i.e., current is the latest version)
+        return current;
+    }
+
+    // backwards
+    @Override public Source rollback(Source current) {
+        final ChangeHistory history = getChangeHistory(current);
+
+        for(Checkpoint each : history){
+            if(each.getSourceAfterChange().equals(current)){
+                return each.getSourceBeforeChange();
+            }
+        }
+
+        return current; // nothing to roll back
+
     }
 
 

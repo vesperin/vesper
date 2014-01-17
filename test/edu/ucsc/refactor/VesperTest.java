@@ -115,6 +115,7 @@ public class VesperTest {
             gist.setId(String.valueOf(new Random().nextLong()));
             gist.setFiles(Collections.singletonMap("Name.java", file));
             gist.setCreatedAt(new Date());
+            gist.setUrl("http://gist.github.com/lala/123456");
             return gist;
         }
 

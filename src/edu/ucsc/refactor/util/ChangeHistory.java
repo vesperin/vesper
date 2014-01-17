@@ -6,17 +6,17 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
+import com.google.common.collect.Lists;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Set;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public class ChangeHistory implements Iterable<Checkpoint> {
-    private final Set<Checkpoint> storage;
+    private final List<Checkpoint> storage;
 
     /**
      * Creates a change history
@@ -30,7 +30,7 @@ public class ChangeHistory implements Iterable<Checkpoint> {
      * @param head ThE HEAD checkpoint.
      */
     public ChangeHistory(Checkpoint head){
-        this.storage  = Sets.newLinkedHashSet();
+        this.storage  = Lists.newArrayList();
         if(head != null){
             add(head);
         }
@@ -107,14 +107,16 @@ public class ChangeHistory implements Iterable<Checkpoint> {
         final ChangeHistory sliced = new ChangeHistory(from);
 
         if(!from.equals(to)) {
-
-            int fromIndex = index(from, this);
+            //
+            // 0, 1, 2, 3, 4, 5
+            // 1, 2, 3, 4, 5, 6
+            int fromIndex = index(from, this) + 1;
             int toIndex   = index(to, this);
 
             final ImmutableList<Checkpoint> rest = FluentIterable
                     .from(this)
                     .skip(fromIndex)
-                    .limit(toIndex + 1)
+                    .limit((toIndex - fromIndex) + 1)
                     .toList();
 
             for(Checkpoint each : rest){
@@ -126,7 +128,7 @@ public class ChangeHistory implements Iterable<Checkpoint> {
         return sliced;
     }
 
-    private static int index(final Checkpoint point, Iterable<Checkpoint> iterable){
+    public static int index(final Checkpoint point, Iterable<Checkpoint> iterable){
         final Predicate<Checkpoint> match = new Predicate<Checkpoint>() {
             @Override public boolean apply(Checkpoint that) {
                 return point.equals(that);
