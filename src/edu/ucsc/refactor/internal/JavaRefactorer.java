@@ -237,7 +237,7 @@ public class JavaRefactorer implements Refactorer {
         return from;
     }
 
-    @Override public Source rollforward(Source current) {
+    @Override public Source forward(Source current) {
         final ChangeHistory history = getChangeHistory(current);
 
         for(Checkpoint each : history){
@@ -246,12 +246,12 @@ public class JavaRefactorer implements Refactorer {
             }
         }
 
-        // otherwise, there is nothing to rollforward (i.e., current is the latest version)
+        // otherwise, there is nothing to forward (i.e., current is the latest version)
         return current;
     }
 
     // backwards
-    @Override public Source rollback(Source current) {
+    @Override public Source rewind(Source current) {
         final ChangeHistory history = getChangeHistory(current);
 
         for(Checkpoint each : history){

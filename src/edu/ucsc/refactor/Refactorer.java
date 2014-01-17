@@ -44,6 +44,19 @@ public interface Refactorer {
     void detectIssues(Source code);
 
     /**
+     * It is nothing but re-doing the changes made by the {@code Refactorer}; i.e., move to a
+     * newer and <strong>existing</strong> version of the {@code current} {@code Source}.
+     * History is not rewritten yet, all we are doing is walking the time arrow.
+     *
+     * To rewrite history, the caller should used the {@code Source} return by this method
+     * as an input to the {@link Refactorer#rewrite(Source)}.
+     *
+     * @param current The current Source.
+     * @return The Source, after the forward
+     */
+    Source forward(Source current);
+
+    /**
      * @return a map representing the analysis result
      *      the refactorer will use to create adequate changes
      *      that may fix issues in the source.
@@ -126,26 +139,13 @@ public interface Refactorer {
      * {@code 100%} sure about using it.
      *
      * @param current THe current Source. This Source can be the same as the indexed Source, or
-     *    a Source product of the methods {@link Refactorer#rollback(Source)} or
-     *    {@link Refactorer#rollforward(Source)}.
+     *    a Source product of the methods {@link Refactorer#rewind(Source)} or
+     *    {@link Refactorer#forward(Source)}.
      *
      * @return the indexed Source, after the rewrite.
      * @throws java.util.NoSuchElementException if unable to find {@code current} {@code Source}.
      */
     Source rewrite(Source current);
-
-    /**
-     * It is nothing but re-doing the changes made by the {@code Refactorer}; i.e., move to a
-     * newer and <strong>existing</strong> version of the {@code current} {@code Source}.
-     * History is not rewritten yet, all we are doing is walking the time arrow.
-     *
-     * To rewrite history, the caller should used the {@code Source} return by this method
-     * as an input to the {@link Refactorer#rewrite(Source)}.
-     *
-     * @param current The current Source.
-     * @return The Source, after the rollforward
-     */
-    Source rollforward(Source current);
 
     /**
      * Un-does the changes made by the {@code Refactorer}. History is not rewritten yet,
@@ -155,7 +155,7 @@ public interface Refactorer {
      * as an input to the {@link Refactorer#rewrite(Source)}.
      *
      * @param current The current Source.
-     * @return The Source, after the rollback
+     * @return The Source, after the rewind
      */
-    Source rollback(Source current);
+    Source rewind(Source current);
 }
