@@ -1,7 +1,9 @@
 package edu.ucsc.refactor.cli;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -17,90 +19,334 @@ import io.airlift.airline.Cli;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Logger;
 
+import static com.google.common.base.Objects.firstNonNull;
 import static io.airlift.airline.OptionType.COMMAND;
+import static io.airlift.airline.OptionType.GLOBAL;
 
 /**
- * A very basic CLI Interpreter.
+ * Vesper's very own CLI; i.e., Chilled
  *
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public class Interpreter {
+public class Chilled {
+    static final int EXIT_PERMANENT = 100;
 
-    final Cli<VesperCommand> parser;
-    final Environment        environment;
-    final StringReader       reader;
+    static Logger logger = null;
 
-    static final String VERSION = "Vesper v0.0.0";
+    public static void main(String[] args) throws Exception {
+        final Interpreter singleCommand = new Interpreter();
 
-    public Interpreter(){
-        Cli.CliBuilder<VesperCommand> builder = Cli.<VesperCommand>builder("vesper")
-                .withDescription("the nice CLI for Vesper")
-                .withDefaultCommand(HelpCommand.class)
-                .withCommand(HelpCommand.class)
-                .withCommand(ResetCommand.class)
-                .withCommand(InspectCommand.class)
-                .withCommand(ReplCommand.class)
-                .withCommand(ConfigCommand.class)
-                .withCommand(AddCommand.class)
-                .withCommand(OriginShow.class)
-                .withCommand(RemoveCommand.class)
-                .withCommand(PublishCommand.class)
-                .withCommand(FormatCommand.class);
-
-        builder.withGroup("rename")
-                .withDescription("Manage set of renaming commands")
-                .withDefaultCommand(RenameClass.class)
-                .withCommand(RenameClass.class)
-                .withCommand(RenameMethod.class)
-                .withCommand(RenameParameter.class)
-                .withCommand(RenameField.class);
-
-        builder.withGroup("chomp")
-                .withDescription("munch noises (irrelevant code) from SOURCE")
-                .withDefaultCommand(ChompClass.class)
-                .withCommand(ChompClass.class)
-                .withCommand(ChompMethod.class)
-                .withCommand(ChompParam.class)
-                .withCommand(ChompField.class);
-
-        builder.withGroup("chop")
-                .withDescription("cut specific code sections from SOURCE")
-                .withDefaultCommand(ChopClass.class)
-                .withCommand(ChopClass.class);
-
-        builder.withGroup("notes")
-                .withDescription("Manage set of notes about SOURCE")
-                .withDefaultCommand(NotesShow.class)
-                .withCommand(NotesShow.class)
-                .withCommand(NoteAdd.class);
-
-        reader      = new StringReader();
-        parser      = builder.build();
-        environment = new Environment();
+        try {
+            final Result result = singleCommand.eval(args);
+            if(result.isError()){
+                printError(result.getErrorMessage());
+            } else if (result.isInfo()){
+                if(!result.getInfo().isEmpty()){
+                    print("= " + result.getInfo() + "\n");
+                }
+            } else if (result.isIssuesList()){
+                final List<Issue> issues = result.getIssuesList();
+                for(int i = 1; i <= issues.size(); i++){
+                    print(String.valueOf(i) + ". ");
+                    print(issues.get(i).getName().getKey() + ".");
+                    print("\n");
+                }
+            } else if(result.isSource()){
+                printResult(result.getSource().getContents());
+            }
+        } catch (Throwable e) {
+            System.out.println(firstNonNull(e.getMessage(), "Unknown command line parser error"));
+            System.exit(EXIT_PERMANENT);
+        }
     }
 
-    public Result evaluateAndReturn(String statement) throws RuntimeException {
-        final Iterable<String> args = reader.process(statement);
-        if(Iterables.isEmpty(args)){
+    /**
+     * {@code Vesper CLI}'s global options
+     */
+    static class GlobalOptions {
+        @Option(type = GLOBAL, name = {"-v", "--verbose"}, description = "Verbose mode")
+        public boolean verbose = false;
+
+        @Override public String toString() {
+            return Objects.toStringHelper("GlobalOptions")
+                    .add("verbose", verbose)
+                    .toString();
+        }
+    }
+
+
+    static class Interpreter {
+        final Cli<VesperCommand> parser;
+        final Environment        environment;
+        final StringReader       reader;
+
+        Interpreter(){
+            Cli.CliBuilder<VesperCommand> builder = Cli.<VesperCommand>builder("vesper")
+                    .withDescription("the nice CLI for Vesper")
+                    .withDefaultCommand(HelpCommand.class)
+                    .withCommand(HelpCommand.class)
+                    .withCommand(ResetCommand.class)
+                    .withCommand(InspectCommand.class)
+                    .withCommand(ReplCommand.class)
+//                    .withCommand(ConfigCommand.class)
+                    .withCommand(AddCommand.class)
+//                    .withCommand(OriginShow.class)
+//                    .withCommand(RemoveCommand.class)
+//                    .withCommand(PublishCommand.class)
+                    .withCommand(FormatCommand.class);
+
+            builder.withGroup("rename")
+                    .withDescription("Manage set of renaming commands")
+                    .withDefaultCommand(RenameClass.class)
+                    .withCommand(RenameClass.class)
+                    .withCommand(RenameMethod.class)
+                    .withCommand(RenameParameter.class)
+                    .withCommand(RenameField.class);
+
+            builder.withGroup("chomp")
+                    .withDescription("munch noises (irrelevant code) from SOURCE")
+                    .withDefaultCommand(ChompClass.class)
+                    .withCommand(ChompClass.class)
+                    .withCommand(ChompMethod.class)
+                    .withCommand(ChompParam.class)
+                    .withCommand(ChompField.class);
+
+            builder.withGroup("chop")
+                    .withDescription("cut specific code sections from SOURCE")
+                    .withDefaultCommand(ChopClass.class)
+                    .withCommand(ChopClass.class);
+
+            builder.withGroup("notes")
+                    .withDescription("Manage set of notes about SOURCE")
+                    .withDefaultCommand(NotesShow.class)
+                    .withCommand(NotesShow.class)
+                    .withCommand(NoteAdd.class);
+
+            reader      = new StringReader();
+            parser      = builder.build();
+            environment = new Environment();
+        }
+
+        Result evaluateAndReturn(String statement) throws RuntimeException {
+            final Iterable<String> args = reader.process(statement);
+            if(Iterables.isEmpty(args)){
+                return Result.nothing();
+            }
+
+            return eval(Iterables.toArray(args, String.class));
+        }
+
+        Result eval(String... args) throws RuntimeException {
+           return parser.parse(args).call(environment);
+        }
+
+        public void clears() {
+            environment.clears();
+        }
+
+        Environment getEnvironment(){
+            return environment;
+        }
+    }
+
+
+    static class Environment {
+
+        final AtomicReference<Refactorer>       refactorer;
+        final AtomicReference<Source>           origin;
+        final AtomicReference<Configuration>    remoteConfig;
+
+        final Queue<CommitRequest>              checkpoints;
+
+        Environment(){
+            refactorer      = new AtomicReference<Refactorer>();
+            origin          = new AtomicReference<Source>();
+            remoteConfig    = new AtomicReference<Configuration>();
+            checkpoints     = new LinkedList<CommitRequest>();
+        }
+
+
+        Result unit(){
             return Result.nothing();
         }
 
-        return eval(Iterables.toArray(args, String.class));
+        boolean containsOrigin() {
+            return this.origin.get() != null;
+        }
+
+        void setOrigin(Source origin) {
+            updateOrigin(origin);
+
+            if(origin != null){
+                final Configuration remote      = remoteConfig.get();
+                final Refactorer    refactorer  = remote == null
+                        ? Vesper.createRefactorer(getOrigin())
+                        : Vesper.createRefactorer(remote, getOrigin());
+
+                this.refactorer.set(refactorer);
+            } else {
+                this.refactorer.set(null);
+            }
+        }
+
+        Source getOrigin() {
+            return origin.get();
+        }
+
+        boolean setCredential(final String username, final String password) {
+
+            return !(Strings.isNullOrEmpty(username) || Strings.isNullOrEmpty(password))
+                    && setCredential(new Credential(username, password));
+
+        }
+
+        boolean setCredential(final Credential credential){
+            remoteConfig.set(new AbstractConfiguration() {
+                @Override protected void configure() {
+                    installDefaultSettings();
+                    addCredentials(credential);
+                }
+            });
+
+            return true;
+        }
+
+        Refactorer getRefactorer() {
+            return refactorer.get();
+        }
+
+        void put(CommitRequest request){
+            checkpoints.add(request);
+        }
+
+
+        Queue<CommitRequest> getRequests(){
+            return checkpoints;
+        }
+
+        void clears() {
+            setCredential(null);
+            setOrigin(null);
+        }
+
+        public void updateOrigin(Source updatedSource) {
+            // if origin != null, then refactorer.source === origin
+            this.origin.set(updatedSource);
+            assert knows(getOrigin());
+        }
+
+        /**
+         * Checks whether this {@code Refactorer} knows its seed (i.e., the one for which it was
+         * created).
+         *
+         * @param code The The {@code Source}
+         * @return {@code true} if it knows, {@code false} otherwise.
+         */
+        boolean knows(Source code) {
+            for(Source each : getRefactorer().getVisibleSources()){
+                if(each.equals(code)){ return true; }
+            }
+
+            return false;
+        }
+
+        public void reset() {
+            reset(getOrigin().getName());
+        }
+
+        public Source reset(String name) {
+            Preconditions.checkNotNull(name);
+
+            final List<Source> all = getRefactorer().getVisibleSources();
+
+            for(Source each : all){
+                if(each.getName().equals(name)){
+
+                    final boolean isOrigin = each.equals(getOrigin());
+
+                    final Source to         = getRefactorer().rewind(each);
+                    final Source indexed    = getRefactorer().rewrite(to);
+
+                    final boolean isUpdateNeeded = !each.equals(indexed);
+
+                    if(isOrigin && isUpdateNeeded){
+                        updateOrigin(indexed);
+                    }
+
+                    return each;
+                }
+            }
+
+            throw new NoSuchElementException("Source with the name = " + name + " was not found.");
+        }
     }
 
-    public Result eval(String... args) throws RuntimeException {
-        return parser.parse(args).call(environment);
-    }
 
-    public void clears() {
-        environment.clears();
-    }
+    static abstract class VesperCommand {
+        @Inject
+        public GlobalOptions globalOptions = new GlobalOptions();
 
-    public Environment getEnvironment(){
-        return environment;
+        protected AskQuestion askQuestion  = new AskQuestion();
+
+
+        @VisibleForTesting
+        public Result result = null;
+
+        public boolean ask(String question, boolean defaultValue) {
+            return askQuestion.ask(question, defaultValue);
+        }
+
+        public Result call(Environment environment) throws RuntimeException {
+            try {
+                initializeLogging(globalOptions.verbose);
+                result = execute(environment);
+            } catch (Throwable ex){
+                if(globalOptions.verbose){
+                    throw new RuntimeException(ex);
+                } else {
+                    return Result.failedPackage(firstNonNull(ex.getMessage(), "Unknown error"));
+                }
+            }
+
+            return firstNonNull(result, Result.nothing());
+        }
+
+        protected CommitRequest commitChange(Environment environment, ChangeRequest request){
+            final CommitRequest applied = environment.getRefactorer().apply(environment.getRefactorer().createChange(request));
+            environment.updateOrigin(applied.getSource());
+            return applied;
+        }
+
+        protected static void ensureValidState(Environment environment){
+            Preconditions.checkNotNull(environment, "No environment available");
+            Preconditions.checkNotNull(environment.getOrigin(), "No source code available");
+            Preconditions.checkNotNull(environment.getRefactorer(), "No refactorer available");
+        }
+
+
+        protected Result createResultPackage(CommitRequest applied, String message){
+            if(applied == null){
+                return Result.failedPackage(message);
+            }
+
+            return Result.committedPackage(applied);
+        }
+
+        protected SourceSelection createSelection(Environment environment, String head){
+            final Iterable<String> rangeSplit = Splitter.on(',').split(head);
+
+            final int start = Integer.valueOf(rangeSplit.iterator().next());
+            final int end   = Integer.valueOf(Iterables.getLast(rangeSplit));
+
+            return new SourceSelection(environment.getOrigin(), start, end);
+        }
+
+
+        public abstract Result execute(Environment environment) throws Exception;
     }
 
 
@@ -204,12 +450,11 @@ public class Interpreter {
 
     @Command(name = "help", description = "Display help information about airship")
     public static class HelpCommand extends VesperCommand {
-        @Inject
-        public Help help;
+        @Inject public Help help;
 
         @Override public Result execute(Environment environment) throws RuntimeException {
             help.call();
-            return Environment.unit(); // nothing to show
+            return environment.unit(); // nothing to show
         }
 
         @Override public String toString() {
@@ -387,7 +632,7 @@ public class Interpreter {
 
                 if(runRepl(credential, environment)){
                     // todo(Huascar) think of a better strategy of how to return things...
-                    System.out.println("quitting " + VERSION + " Good bye!");
+                    System.out.println("quitting ivr. Good bye!");
                     return Result.sourcePackage(environment.getOrigin());
                 }
 
@@ -395,18 +640,20 @@ public class Interpreter {
                 throw new RuntimeException(ex);
             }
 
-            return Environment.unit();
+            return environment.unit();
         }
 
         private static boolean runRepl(Credential credential, Environment global) throws IOException {
             System.out.println();
-            System.out.println(VERSION);
+            System.out.println("Vesper v0.0.0");
             System.out.println("-----------");
             System.out.println("Type 'q' and press Enter to quit.");
 
 
             InputStreamReader converter = new InputStreamReader(System.in);
             BufferedReader in = new BufferedReader(converter);
+
+            AskQuestion quitQuestion  = new AskQuestion();
 
             Interpreter repl = new Interpreter();
 
@@ -424,7 +671,7 @@ public class Interpreter {
 
                 if (line.equals("q")) {
                     // ask to continue
-                    if (!AskQuestion.ask("Are you sure you would like to quit " + VERSION, false)) {
+                    if (!quitQuestion.ask("Are you sure you would like to quit IVR?", false)) {
                         continue;
                     } else {
                         // bubble up changes done in REPL mode to the global
@@ -443,7 +690,7 @@ public class Interpreter {
                 }
 
                 if(line.equals("repl")){
-                    repl.print(VERSION + ", yeah! that's me.\n");
+                    print("Vesper v0.0.0, yeah! that's me.\n");
                     continue; // no need to call it again
                 }
 
@@ -451,9 +698,9 @@ public class Interpreter {
                 if(line.equals("log")){
                     if(result != null){
                         if(result.isCommitRequest()){
-                            repl.printResult(result.getCommitRequest().more());
+                            printResult(result.getCommitRequest().more());
                         } else if(result.isSource()){
-                            repl.printResult(result.getSource().getContents());
+                            printResult(result.getSource().getContents());
                         }
                     }
 
@@ -463,25 +710,25 @@ public class Interpreter {
                 try {
                     result = repl.evaluateAndReturn(line);
                 } catch (ParseException ex){
-                    repl.printError("Unknown command");
+                    printError("Unknown command");
                     continue;
                 }
 
                 if(result.isError()){
-                    repl.printError(result.getErrorMessage());
+                    printError(result.getErrorMessage());
                 } else if (result.isInfo()){
                     if(!result.getInfo().isEmpty()){
-                        repl.print("= " + result.getInfo());
+                        print("= " + result.getInfo());
                     }
                 } else if (result.isIssuesList()){
                     final List<Issue> issues = result.getIssuesList();
                     for(int i = 0; i < issues.size(); i++){
-                        repl.print(String.valueOf(i + 1) + ". ");
-                        repl.print(issues.get(i).getName().getKey() + ".");
-                        repl.print("\n");
+                        print(String.valueOf(i + 1) + ". ");
+                        print(issues.get(i).getName().getKey() + ".");
+                        print("\n");
                     }
                 }  else if(result.isSource()){
-                    repl.printResult(result.getSource().getContents());
+                    printResult(result.getSource().getContents());
                 }
             }
 
@@ -533,11 +780,11 @@ public class Interpreter {
         @Override public Result execute(Environment environment) throws RuntimeException {
             ensureValidState(environment);
 
-            final Notes notes   = environment.getOrigin().getNotes();
+            final Notes         notes   = environment.getOrigin().getNotes();
             final StringBuilder text    = new StringBuilder();
 
             for(Note each : notes){
-                text.append(each.getContent()).append("\n");
+               text.append(each.getContent()).append("\n");
             }
 
             return Result.infoPackage(text.toString());
@@ -564,7 +811,7 @@ public class Interpreter {
                     new Note(/*[1,2]*/noteToAdd)
             );
 
-            return Environment.unit();
+            return environment.unit();
         }
     }
 
@@ -611,7 +858,7 @@ public class Interpreter {
             final StringBuilder details = new StringBuilder();
             while(!requests.isEmpty()){
                 final CommitRequest request = requests.remove();
-                final CommitStatus status  = environment.getRefactorer().publish(request).getStatus();
+                final CommitStatus  status  = environment.getRefactorer().publish(request).getStatus();
 
                 if(status.isAborted()){
                     skipped.add(request);
@@ -633,11 +880,11 @@ public class Interpreter {
                     environment.put(skipped.remove());
                 }
 
-                return Result.infoPackage(
-                        "A total of "
-                                + environment.getRequests().size()
-                                + " commits were not published. Tried again later."
-                );
+               return Result.infoPackage(
+                       "A total of "
+                               + environment.getRequests().size()
+                               + " commits were not published. Tried again later."
+               );
             }
         }
 
@@ -665,6 +912,11 @@ public class Interpreter {
         }
     }
 
+    public static void initializeLogging(boolean debug) throws IOException {
+        if (debug) {
+            logger = Logger.getLogger(Vesper.class.getPackage().getName());
+        }
+    }
 
     @Command(name = "class", description = "Chop a class from the recorded SOURCE")
     public static class ChopClass extends VesperCommand {
@@ -742,20 +994,155 @@ public class Interpreter {
     }
 
 
+    private static class AskQuestion {
+        boolean ask(String question, boolean defaultValue){
+            final BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
-    public void print(String text) {
+            try {
+                while (true) {
+                    System.out.print(question + (defaultValue ? " [Y/n] " : " [y/N] "));
+                    String line = null;
+                    try {
+                        line = reader.readLine();
+                    } catch (IOException ignored) {
+                    }
+
+                    if (line == null) {
+                        throw new IllegalArgumentException("Error reading from standard in");
+                    }
+
+                    line = line.trim().toLowerCase();
+                    if (line.isEmpty()) {
+                        return defaultValue;
+                    }
+                    if ("y".equalsIgnoreCase(line) || "yes".equalsIgnoreCase(line)) {
+                        return true;
+                    }
+                    if ("n".equalsIgnoreCase(line) || "no".equalsIgnoreCase(line)) {
+                        return false;
+                    }
+                }
+            } finally {
+                System.out.println();
+            }
+        }
+    }
+
+    static void print(String text) {
         System.out.print(text);
     }
 
 
-    public void printResult(String result) {
+    static void printResult(String result) {
         System.out.print("= ");
         System.out.println(result);
     }
 
-    public void printError(String message) {
+    static void printError(String message) {
         System.out.println("! " + message);
     }
 
+
+    /**
+     * Parses a string that corresponds to a Vesper command
+     */
+    private static class StringReader {
+
+        static final String WHITESPACE_AND_QUOTES_DELIMITER = " \t\r\n\"[],";
+        static final String QUOTES_ONLY_DELIMITER           = "\"";
+        static final String DOUBLE_QUOTE                    = "\"";
+        static final String NOTHING                         = "";
+
+        private final StringBuilder parentheses = new StringBuilder();
+
+        Iterable<String> process(String statement){
+            final Set<String> result = new LinkedHashSet<String>();
+
+            String  delimiter = WHITESPACE_AND_QUOTES_DELIMITER;
+
+            final StringTokenizer parser = new StringTokenizer(
+                    statement,
+                    delimiter,
+                    true/*=>return Tokens*/
+            );
+
+            while (parser.hasMoreTokens()) {
+
+                String token = process(parser.nextToken(delimiter), delimiter, parser);
+
+                if(!isDoubleQuote(token)){ addNonTrivialWordToResult(token, result); } else {
+                    delimiter = flipDelimiters(delimiter);
+                }
+            }
+
+
+            return result;
+        }
+
+        private String process(String token, String delimiter, StringTokenizer parser){
+            String curatedToken;
+            if("[".equals(token)){
+                cacheContentInParen(token);
+                do {
+                    token = parser.nextToken(delimiter);
+                    cacheContentInParen(token);
+                    curatedToken = releaseContentInParen(token);
+                } while(!isParenGone() && curatedToken == null);
+                return curatedToken;
+            } else {
+                return token;
+            }
+
+
+        }
+
+        private boolean isParenGone(){
+            return parentheses.toString().isEmpty();
+        }
+
+        private void cacheContentInParen(String left){
+            if(textHasContent(left)){
+                if("[".equals(left)) {
+                    parentheses.append(left);
+                } else if(!isParenGone()){
+                    parentheses.append(left);
+                }
+            }
+        }
+
+        private String releaseContentInParen(String text){
+            if("]".equals(text)){
+                return popContent();
+            }
+
+            return null;
+        }
+
+        private String popContent(){
+            return parentheses.toString();
+        }
+
+        private String flipDelimiters(String currentDelimiter){
+            return (currentDelimiter.equals(WHITESPACE_AND_QUOTES_DELIMITER)
+                    ? QUOTES_ONLY_DELIMITER
+                    : WHITESPACE_AND_QUOTES_DELIMITER
+            );
+        }
+
+        private boolean isDoubleQuote(String token){
+            return token.equals(DOUBLE_QUOTE);
+        }
+
+
+        private boolean textHasContent(String text){
+            return (text != null) && (!text.trim().equals(NOTHING));
+        }
+
+        private void addNonTrivialWordToResult(String token, Set<String> result){
+            if (textHasContent(token)) {
+                result.add(token.trim());
+            }
+        }
+    }
 
 }
