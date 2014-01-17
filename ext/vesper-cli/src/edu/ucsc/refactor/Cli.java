@@ -8,6 +8,7 @@ import java.util.List;
 import static com.google.common.base.Objects.firstNonNull;
 
 /**
+ * Vesper's very own CLI
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public class Cli {
