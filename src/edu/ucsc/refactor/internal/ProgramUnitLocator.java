@@ -39,14 +39,14 @@ public class ProgramUnitLocator implements UnitLocator {
         this.record     = new Record();
     }
 
-    @Override public List<Location> locate(String key, SearchHint hint) {
-        track(key, hint);
+    @Override public List<Location> locate(String unit, SearchHint hint) {
+        track(unit, hint);
 
         switch (hint){
-           case INNER_CLASS:  return locateInnerClass(key);
-           case METHOD:       return locateMethod(key);
-           case PARAM:        return locateParam(key);
-           case FIELD:        return locateField(key);
+           case INNER_CLASS:  return locateInnerClass(unit);
+           case METHOD:       return locateMethod(unit);
+           case PARAM:        return locateParam(unit);
+           case FIELD:        return locateField(unit);
         }
 
         return ImmutableList.of();
