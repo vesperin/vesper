@@ -17,25 +17,27 @@ public class Cli {
     private Cli(){}
 
     public static void main(String[] args) {
-        final Interpreter singleCommand = new Interpreter();
+        final Interpreter interpreter = new Interpreter();
 
         try {
-            final Result result = singleCommand.eval(args);
+            final Result result = interpreter.eval(args);
             if(result.isError()){
-                singleCommand.printError(result.getErrorMessage());
+                interpreter.printError(result.getErrorMessage());
             } else if (result.isInfo()){
                 if(!result.getInfo().isEmpty()){
-                    singleCommand.print("= " + result.getInfo() + "\n");
+                    interpreter.print("= " + result.getInfo() + "\n");
                 }
             } else if (result.isIssuesList()){
                 final List<Issue> issues = result.getIssuesList();
                 for(int i = 1; i <= issues.size(); i++){
-                    singleCommand.print(String.valueOf(i) + ". ");
-                    singleCommand.print(issues.get(i).getName().getKey() + ".");
-                    singleCommand.print("\n");
+                    interpreter.print(String.valueOf(i) + ". ");
+                    interpreter.print(issues.get(i).getName().getKey() + ".");
+                    interpreter.print("\n");
                 }
             } else if(result.isSource()){
-                singleCommand.printResult(result.getSource().getContents());
+                interpreter.printResult(result.getSource().getContents());
+            } else {  // is a commit
+                interpreter.printResult(result.getCommitRequest().more());
             }
         } catch (Throwable e) {
             System.out.println(firstNonNull(e.getMessage(), "Unknown command line parser error"));
