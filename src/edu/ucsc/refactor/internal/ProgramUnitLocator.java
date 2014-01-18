@@ -64,7 +64,7 @@ public class ProgramUnitLocator implements UnitLocator {
             final TypeDeclaration declaration = AstUtil.parent(TypeDeclaration.class, visitor.getMatchedNode());
 
             if(declaration != null){
-                locations.add(new UnitSourceLocation(declaration, each));
+                locations.add(new ProgramUnitLocation(declaration, each));
             }
 
         }
@@ -83,7 +83,7 @@ public class ProgramUnitLocator implements UnitLocator {
         final List<MethodDeclaration> methods = visitor.getMethodDeclarations();
         for(MethodDeclaration each : methods){
             if(each.getName().getIdentifier().equalsIgnoreCase(key)){
-               locations.add(new UnitSourceLocation(each, Locations.locate(each)));
+               locations.add(new ProgramUnitLocation(each, Locations.locate(each)));
             }
         }
 
@@ -99,7 +99,7 @@ public class ProgramUnitLocator implements UnitLocator {
 
             final SingleVariableDeclaration variable = AstUtil.parent(SingleVariableDeclaration.class, visitor.getMatchedNode());
             if(variable != null){
-                locations.add(new UnitSourceLocation(variable, each));
+                locations.add(new ProgramUnitLocation(variable, each));
             }
         }
 
@@ -115,7 +115,7 @@ public class ProgramUnitLocator implements UnitLocator {
 
         if(visitor.hasFieldName(key)){
             for(FieldDeclaration each : visitor.getMatchingFieldDeclaration(key)){
-               locations.add(new UnitSourceLocation(each, Locations.locate(each)));
+               locations.add(new ProgramUnitLocation(each, Locations.locate(each)));
             }
         }
 

@@ -10,18 +10,18 @@ import org.eclipse.jdt.core.dom.ASTNode;
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public class UnitSourceLocation implements Location {
+public class ProgramUnitLocation implements Location {
 
     private final ASTNode           node;
     private final Location          location;
 
     /**
-     * Construct a new UnitSourceLocation
+     * Construct a new ProgramUnitLocation
      *
      * @param node the actual ASTNode
      * @param location the ASTNode location
      */
-    public UnitSourceLocation(ASTNode node, Location location){
+    public ProgramUnitLocation(ASTNode node, Location location){
         this.node       = Preconditions.checkNotNull(node);
         this.location   = Preconditions.checkNotNull(location);
     }
