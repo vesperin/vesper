@@ -193,16 +193,8 @@ public class JavaRefactorer implements Refactorer {
             return from;
         }
 
-        // todo(Huascar) needs optimization
-        int fromIndex = index(first, entire);
-        int toIndex   = index(last, entire);
 
-        final Iterable<Checkpoint> sandwiched = FluentIterable
-                .from(entire)
-                .skip(fromIndex)
-                .limit(toIndex)
-                .toList();
-
+        final ChangeHistory sandwiched = entire.slice(first, false, last, false);
 
         for(Checkpoint each : sandwiched){
 

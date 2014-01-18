@@ -90,22 +90,31 @@ public class ChangeHistory implements Iterable<Checkpoint> {
     }
 
     /**
-     * Resets the change history, going back to the given checkpoint.
-     * @return a new ChangeHistory containing all checkpoints until the given checkpoint.
-     * @throws NullPointerException if fromElement or toElement is null and this
-     *      set uses natural ordering, or its comparator does not permit null elements
+     * Slices some part of history between the {@code fromElement} and the {@code toElement}.
+     *
+     * @param fromElement The left end point
+     * @param fromInclusive {@code true} if the left point should be included in sliced
+     *        history, {@code false} otherwise.
+     * @param toElement The right end point
+     * @param toInclusive {@code true} if the right point should be included in sliced
+     *        history, {@code false} otherwise.
+     * @return a sliced history
      */
-    public ChangeHistory slice(final Checkpoint upto/*checkpoint*/){
-        // 1, 2, 3, 4
-        // reset(0) => 1
-        // reset(2) => 1, 2
-        final Checkpoint from = Preconditions.checkNotNull(first());
-        final Checkpoint to   = Preconditions.checkNotNull(upto);
+    public ChangeHistory slice(final Checkpoint fromElement, boolean fromInclusive,
+                               final Checkpoint toElement, boolean toInclusive){
+
+        final Checkpoint from = Preconditions.checkNotNull(fromElement);
+        final Checkpoint to   = Preconditions.checkNotNull(toElement);
 
         final ChangeHistory sliced = new ChangeHistory(from);
 
         if(!from.equals(to)) {
-            final NavigableSet<Checkpoint> rest = storage.subSet(from, false, to, true);
+            final NavigableSet<Checkpoint> rest = storage.subSet(
+                    from,
+                    fromInclusive,
+                    to,
+                    toInclusive
+            );
 
             for(Checkpoint each : rest){
                 sliced.add(each);
@@ -114,6 +123,16 @@ public class ChangeHistory implements Iterable<Checkpoint> {
         }
 
         return sliced;
+    }
+
+    /**
+     * Resets the change history, going back to the given checkpoint.
+     * @return a new ChangeHistory containing all checkpoints until the given checkpoint.
+     * @throws NullPointerException if fromElement or toElement is null and this
+     *      set uses natural ordering, or its comparator does not permit null elements
+     */
+    public ChangeHistory slice(final Checkpoint upto/*checkpoint*/){
+        return slice(first(), false, upto, true);
     }
 
 
