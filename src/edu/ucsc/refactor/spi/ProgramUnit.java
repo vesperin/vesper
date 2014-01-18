@@ -8,7 +8,7 @@ import java.util.NoSuchElementException;
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public enum SearchHint {
+public enum ProgramUnit {
     /** **/
     METHOD("method"),
     /** **/
@@ -20,11 +20,11 @@ public enum SearchHint {
     /** none **/
     NONE("none");
 
-    private static final Map<String, SearchHint> LOOK_UP = new HashMap<String, SearchHint>();
+    private static final Map<String, ProgramUnit> LOOK_UP = new HashMap<String, ProgramUnit>();
 
     static {
         // Populate the lookup table on loading time
-        for(SearchHint each : EnumSet.allOf(SearchHint.class)){
+        for(ProgramUnit each : EnumSet.allOf(ProgramUnit.class)){
             LOOK_UP.put(each.key, each);
         }
     }
@@ -32,11 +32,11 @@ public enum SearchHint {
 
     private final String key;
 
-    SearchHint(String key){
+    ProgramUnit(String key){
         this.key = key;
     }
 
-    public static SearchHint from(String key){
+    public static ProgramUnit from(String key){
         if(LOOK_UP.containsKey(key)){
             return LOOK_UP.get(key);
         }
@@ -45,7 +45,7 @@ public enum SearchHint {
     }
 
 
-    public boolean isSame(SearchHint that){
+    public boolean isSame(ProgramUnit that){
         return this == that;
     }
 

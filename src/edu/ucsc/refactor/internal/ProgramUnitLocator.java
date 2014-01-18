@@ -9,7 +9,7 @@ import edu.ucsc.refactor.Location;
 import edu.ucsc.refactor.internal.visitors.FieldDeclarationVisitor;
 import edu.ucsc.refactor.internal.visitors.MethodDeclarationVisitor;
 import edu.ucsc.refactor.internal.visitors.SelectedASTNodeVisitor;
-import edu.ucsc.refactor.spi.SearchHint;
+import edu.ucsc.refactor.spi.ProgramUnit;
 import edu.ucsc.refactor.spi.UnitLocator;
 import edu.ucsc.refactor.util.AstUtil;
 import edu.ucsc.refactor.util.Locations;
@@ -39,14 +39,14 @@ public class ProgramUnitLocator implements UnitLocator {
         this.record     = new Record();
     }
 
-    @Override public List<Location> locate(String unit, SearchHint hint) {
-        track(unit, hint);
+    @Override public List<Location> locate(String name, ProgramUnit unit) {
+        track(name, unit);
 
-        switch (hint){
-           case INNER_CLASS:  return locateInnerClass(unit);
-           case METHOD:       return locateMethod(unit);
-           case PARAM:        return locateParam(unit);
-           case FIELD:        return locateField(unit);
+        switch (unit){
+           case INNER_CLASS:  return locateInnerClass(name);
+           case METHOD:       return locateMethod(name);
+           case PARAM:        return locateParam(name);
+           case FIELD:        return locateField(name);
         }
 
         return ImmutableList.of();
@@ -123,20 +123,20 @@ public class ProgramUnitLocator implements UnitLocator {
     }
 
 
-    private void track(String key, SearchHint hint){
+    private void track(String key, ProgramUnit hint){
         record.key  = Preconditions.checkNotNull(key);
         record.hint = Preconditions.checkNotNull(hint);
     }
 
     @Override public String toString() {
         final String        target = record.key == null ? ".." : record.key;
-        final SearchHint    hint   = record.hint == null ? SearchHint.NONE : record.hint;
+        final ProgramUnit hint   = record.hint == null ? ProgramUnit.NONE : record.hint;
         return "Search for " + target + " " + hint + " in " + context;
     }
 
 
     static class Record {
         String      key;
-        SearchHint  hint;
+        ProgramUnit hint;
     }
 }

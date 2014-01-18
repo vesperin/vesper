@@ -1,6 +1,6 @@
 package edu.ucsc.refactor;
 
-import edu.ucsc.refactor.spi.SearchHint;
+import edu.ucsc.refactor.spi.ProgramUnit;
 import edu.ucsc.refactor.spi.UnitLocator;
 import org.junit.Test;
 
@@ -94,10 +94,10 @@ public class RefactorerTest {
         final Refactorer refactorer = Vesper.createRefactorer(SRC);
         final UnitLocator locator = refactorer.getUnitLocator(SRC);
 
-        final List<Location> params = locator.locate("message", SearchHint.PARAM);
+        final List<Location> params = locator.locate("message", ProgramUnit.PARAM);
         assertThat(params.isEmpty(), is(false));
 
-        final List<Location> methods = locator.locate("check", SearchHint.METHOD);
+        final List<Location> methods = locator.locate("check", ProgramUnit.METHOD);
         assertThat(methods.isEmpty(), is(false));
 
     }
