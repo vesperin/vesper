@@ -20,7 +20,7 @@ public class RemoveUnusedImports extends SourceChanger {
 
     @Override public boolean canHandle(CauseOfChange cause) {
         return cause.getName().isSame(Smell.UNUSED_IMPORTS)
-                || Names.from(Smell.UNUSED_METHOD).isSame(Refactoring.DELETE_UNUSED_IMPORTS);
+                || Names.from(Smell.UNUSED_IMPORTS).isSame(cause.getName());
     }
 
     @Override protected Change initChanger(CauseOfChange cause,

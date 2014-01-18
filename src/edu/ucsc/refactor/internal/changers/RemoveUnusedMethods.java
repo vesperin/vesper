@@ -33,7 +33,7 @@ public class RemoveUnusedMethods extends SourceChanger {
 
     @Override public boolean canHandle(CauseOfChange cause) {
         return cause.getName().isSame(Smell.UNUSED_METHOD)
-                || Names.from(Smell.UNUSED_METHOD).isSame(Refactoring.DELETE_METHOD);
+                || Names.from(Smell.UNUSED_METHOD).isSame(cause.getName());
     }
 
     @Override protected Change initChanger(CauseOfChange cause,
