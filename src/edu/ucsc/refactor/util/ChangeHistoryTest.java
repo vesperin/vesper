@@ -1,6 +1,7 @@
 package edu.ucsc.refactor.util;
 
 import edu.ucsc.refactor.Source;
+import edu.ucsc.refactor.spi.CommitStatus;
 import edu.ucsc.refactor.spi.Refactoring;
 import org.junit.Before;
 import org.junit.Test;
@@ -57,7 +58,7 @@ public class ChangeHistoryTest {
 
     @Test public void testCreateHistory() throws Exception {
 
-        final Checkpoint checkpoint = Checkpoint.createCheckpoint(Refactoring.DELETE_PARAMETER, BEFORE, AFTER);
+        final Checkpoint checkpoint = new Checkpoint(Refactoring.DELETE_PARAMETER, BEFORE, AFTER, System.nanoTime(), CommitStatus.succeededStatus(new CommitInformation().commit("yeah")));
         final ChangeHistory history = new ChangeHistory(checkpoint);
 
         assertThat(history.first() != null, is(true));
@@ -71,10 +72,10 @@ public class ChangeHistoryTest {
     }
 
     @Test public void testResetHistory() throws Exception {
-        final Checkpoint c1 = Checkpoint.createCheckpoint(Refactoring.DELETE_PARAMETER, BEFORE, AFTER);
-        final Checkpoint c2 = Checkpoint.createCheckpoint(Refactoring.DELETE_UNUSED_IMPORTS, AFTER, WAY_AFTER);
-        final Checkpoint c3 = Checkpoint.createCheckpoint(Refactoring.RENAME_METHOD, WAY_AFTER, WAY_WAY_AFTER);
-        final Checkpoint c4 = Checkpoint.createCheckpoint(Refactoring.DELETE_METHOD, WAY_WAY_AFTER, WAY_WAY_WAY_AFTER);
+        final Checkpoint c1 = new Checkpoint(Refactoring.DELETE_PARAMETER, BEFORE, AFTER, System.nanoTime(), CommitStatus.succeededStatus(new CommitInformation().commit("yeah")));
+        final Checkpoint c2 = new Checkpoint(Refactoring.DELETE_UNUSED_IMPORTS, AFTER, WAY_AFTER, System.nanoTime(), CommitStatus.succeededStatus(new CommitInformation().commit("yeah")));
+        final Checkpoint c3 = new Checkpoint(Refactoring.RENAME_METHOD, WAY_AFTER, WAY_WAY_AFTER, System.nanoTime(), CommitStatus.succeededStatus(new CommitInformation().commit("yeah")));
+        final Checkpoint c4 = new Checkpoint(Refactoring.DELETE_METHOD, WAY_WAY_AFTER, WAY_WAY_WAY_AFTER, System.nanoTime(), CommitStatus.succeededStatus(new CommitInformation().commit("yeah")));
 
 
         final ChangeHistory history = new ChangeHistory(c1);

@@ -63,7 +63,7 @@ public class JavaRefactorer implements Refactorer {
                 beforeCommit(before);
                 applied.commit();
                 final Source after = applied.getSource();
-                afterCommit(change.getCause().getName(), before, after, applied.commitTimestamp());
+                afterCommit(change.getCause().getName(), before, applied);
                 detectIssues(after);
                 return applied;
             } catch (RuntimeException ex){
@@ -83,15 +83,8 @@ public class JavaRefactorer implements Refactorer {
     }
 
 
-    private void afterCommit(Name name, Source before, Source after, long timestamp){
-        final Checkpoint checkpoint = Checkpoint.createCheckpoint(
-                name,
-                before,
-                after,
-                timestamp
-        );
-
-
+    private void afterCommit(Name name, Source before, CommitRequest applied){
+        final Checkpoint checkpoint = Checkpoint.createCheckpoint(name, before, applied);
 
         // clear current issue registry for source
         getIssueRegistry().remove(checkpoint.getSourceBeforeChange());

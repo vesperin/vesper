@@ -6,7 +6,7 @@ import edu.ucsc.refactor.util.CommitInformation;
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public class CommitStatus {
+public class CommitStatus implements Comparable <CommitStatus> {
     private final Status type;
     private final String message;
 
@@ -80,6 +80,10 @@ public class CommitStatus {
         return this.type.isSame(Status.UNKNOWN);
     }
 
+    @Override public int compareTo(CommitStatus that) {
+        Preconditions.checkNotNull(that);
+        return this.type.compareTo(that.type);
+    }
 
     /**
      * Displays the contents of the change; e.g., time stamp, # of trials, number of errors.

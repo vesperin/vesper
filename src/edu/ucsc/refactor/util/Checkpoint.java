@@ -3,30 +3,51 @@ package edu.ucsc.refactor.util;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import edu.ucsc.refactor.Source;
+import edu.ucsc.refactor.spi.CommitRequest;
+import edu.ucsc.refactor.spi.CommitStatus;
 import edu.ucsc.refactor.spi.Name;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public class Checkpoint implements Comparable <Checkpoint> {
-    private final Name   name;
-    private final Source before;
-    private final Source after;
-    private final long   timeStamp;
+    private final Name          name;
+    private final Source        before;
+    private final Source        after;
+    private final long          timeStamp;
+    private final CommitStatus  status;
+
 
     /**
      * Constructs a new Checkpoint.
      *
      * @param name THe name of the source change.
      * @param before THe source code before the change
-     * @param after  THe source code after the change
-     * @param timeStamp The commit timestamp
+     * @param applied  THe applied CommitRequest.
      */
-    Checkpoint(Name name, Source before, Source after, long timeStamp){
+    private Checkpoint(Name name, Source before, CommitRequest applied){
+        this.name       = Preconditions.checkNotNull(name);
+        this.before     = Preconditions.checkNotNull(before);
+        this.after      = Preconditions.checkNotNull(applied.getSource());
+        this.timeStamp  = Preconditions.checkNotNull(applied.commitTimestamp());
+        this.status     = Preconditions.checkNotNull(applied.getStatus());
+    }
+
+    /**
+     * Constructs a new Checkpoint. This constructor is visible for testing.
+     *
+     * @param name THe name of the source change.
+     * @param before THe source code before the change
+     * @param after  The Source after the change
+     * @param timeStamp  The commit timestamp
+     * @param status  The commit status.
+     */
+    Checkpoint(Name name, Source before, Source after, long timeStamp, CommitStatus status){
         this.name       = Preconditions.checkNotNull(name);
         this.before     = Preconditions.checkNotNull(before);
         this.after      = Preconditions.checkNotNull(after);
-        this.timeStamp  = timeStamp;
+        this.timeStamp  = Preconditions.checkNotNull(timeStamp);
+        this.status     = Preconditions.checkNotNull(status);
     }
 
 
@@ -35,30 +56,15 @@ public class Checkpoint implements Comparable <Checkpoint> {
      *
      * @param name THe name of the source change.
      * @param before THe source code before the change
-     * @param after  THe source code after the change
+     * @param applied  THe applied CommitRequest.
      * @return the new Checkpoint object
      * @throws java.lang.NullPointerException if any of the given param is null.
      */
-    public static Checkpoint createCheckpoint(Name name, Source before, Source after){
-        return createCheckpoint(name, before, after, System.nanoTime());
-    }
-
-    /**
-     * Creates a new checkpoint.
-     *
-     * @param name THe name of the source change.
-     * @param before THe source code before the change
-     * @param after  THe source code after the change
-     * @param timeStamp The commit timestamp
-     * @return the new Checkpoint object
-     * @throws java.lang.NullPointerException if any of the given param is null.
-     */
-    public static Checkpoint createCheckpoint(Name name, Source before, Source after, long timeStamp){
+    public static Checkpoint createCheckpoint(Name name, Source before, CommitRequest applied){
         return new Checkpoint(
                 Preconditions.checkNotNull(name),
                 Preconditions.checkNotNull(before),
-                Preconditions.checkNotNull(after),
-                Preconditions.checkNotNull(timeStamp)
+                Preconditions.checkNotNull(applied)
         );
     }
 
@@ -91,6 +97,9 @@ public class Checkpoint implements Comparable <Checkpoint> {
         if (comparison != EQUAL) return comparison;
 
         comparison = this.getNameOfChange().getKey().compareTo(that.getNameOfChange().getKey());
+        if (comparison != EQUAL) return comparison;
+
+        comparison = this.getCommitStatus().compareTo(that.getCommitStatus());
         if (comparison != EQUAL) return comparison;
 
         //all comparisons have yielded equality
@@ -133,6 +142,13 @@ public class Checkpoint implements Comparable <Checkpoint> {
         return after;
     }
 
+    /**
+     * @return The commit status
+     */
+    public CommitStatus getCommitStatus(){
+        return status;
+    }
+
 
     /**
      * @return the time of commit in milliseconds,
@@ -164,6 +180,7 @@ public class Checkpoint implements Comparable <Checkpoint> {
                 .add("Before", getSourceBeforeChange())
                 .add("After", getSourceAfterChange())
                 .add("when", getTimestamp())
+                .add("isCommitted", getCommitStatus().isCommitted())
                 .toString();
     }
 }
