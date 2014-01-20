@@ -7,7 +7,7 @@ import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.visitors.MethodDeclarationVisitor;
 import edu.ucsc.refactor.internal.visitors.SelectedASTNodeVisitor;
 import edu.ucsc.refactor.spi.*;
-import edu.ucsc.refactor.util.ChangeHistory;
+import edu.ucsc.refactor.util.CommitHistory;
 import edu.ucsc.refactor.util.Checkpoint;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -28,7 +28,7 @@ public class JavaRefactorer implements Refactorer {
     private final SourceChecking inspector;
     private final SourceChanging changer;
 
-    private final Map<String, ChangeHistory> timeline;
+    private final Map<String, CommitHistory> timeline;
 
 
 
@@ -78,7 +78,7 @@ public class JavaRefactorer implements Refactorer {
 
     private void beforeCommit(Source before){
         if(!timeline.containsKey(before.getUniqueSignature())){  // the signature should have been generated during compilation.
-            this.timeline.put(before.getUniqueSignature(), new ChangeHistory());
+            this.timeline.put(before.getUniqueSignature(), new CommitHistory());
         }
     }
 
@@ -167,7 +167,7 @@ public class JavaRefactorer implements Refactorer {
     @Override public Source rewrite(Source current) {
 
         final Source        from   = Preconditions.checkNotNull(current);
-        final ChangeHistory entire = getHistory(from);
+        final CommitHistory entire = getHistory(from);
 
         if(entire.isEmpty()) { return current; }
 
@@ -184,12 +184,12 @@ public class JavaRefactorer implements Refactorer {
         }
 
 
-        final ChangeHistory sandwiched = entire.slice(first, false, last, false);
+        final CommitHistory sandwiched = entire.slice(first, false, last, false);
 
         for(Checkpoint each : sandwiched){
 
             if(each.getSourceAfterChange().equals(from)){
-                final ChangeHistory sliced = entire.slice(each);
+                final CommitHistory sliced = entire.slice(each);
 
                 Preconditions.checkArgument(
                         from.getUniqueSignature().equals(sliced.last().getUniqueSignature()),
@@ -206,7 +206,7 @@ public class JavaRefactorer implements Refactorer {
     }
 
 
-    private Source rewritingHistory(Source from, ChangeHistory sliced){
+    private Source rewritingHistory(Source from, CommitHistory sliced){
         final String signature = from.getUniqueSignature();
 
         if(timeline.containsKey(signature)){
@@ -223,7 +223,7 @@ public class JavaRefactorer implements Refactorer {
     }
 
     @Override public Source forward(Source current) {
-        final ChangeHistory history = getHistory(current);
+        final CommitHistory history = getHistory(current);
 
         for(Checkpoint each : history){
             if(each.getSourceBeforeChange().equals(current)){
@@ -237,7 +237,7 @@ public class JavaRefactorer implements Refactorer {
 
     // backwards
     @Override public Source rewind(Source current) {
-        final ChangeHistory history = getHistory(current);
+        final CommitHistory history = getHistory(current);
 
         for(Checkpoint each : history){
             if(each.getSourceAfterChange().equals(current)){
@@ -304,10 +304,10 @@ public class JavaRefactorer implements Refactorer {
         return Collections.emptyList();
     }
 
-    @Override public ChangeHistory getHistory(Source src) {
-        final ChangeHistory result = timeline.get(Preconditions.checkNotNull(src).getUniqueSignature());
+    @Override public CommitHistory getHistory(Source src) {
+        final CommitHistory result = timeline.get(Preconditions.checkNotNull(src).getUniqueSignature());
         if(result == null){
-            return new ChangeHistory();
+            return new CommitHistory();
         }
 
         return result;

@@ -3,7 +3,7 @@ package edu.ucsc.refactor;
 import edu.ucsc.refactor.spi.CommitRequest;
 import edu.ucsc.refactor.spi.UnitLocator;
 import edu.ucsc.refactor.spi.Upstream;
-import edu.ucsc.refactor.util.ChangeHistory;
+import edu.ucsc.refactor.util.CommitHistory;
 
 import java.util.List;
 
@@ -74,11 +74,11 @@ public interface Refactorer {
     List<Issue> getIssues(Source key);
 
     /**
-     * Gets the change history of a given {@code Source}.
+     * Gets the commit history of a given {@code Source}.
      *
      * @return the compiled changed history, or empty history if none is available.
      */
-    ChangeHistory getHistory(Source src);
+    CommitHistory getHistory(Source src);
 
     /**
      * Checks whether a given source code has issues.

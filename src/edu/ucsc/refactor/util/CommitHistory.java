@@ -13,21 +13,21 @@ import java.util.TreeSet;
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public class ChangeHistory implements Iterable<Checkpoint> {
+public class CommitHistory implements Iterable<Checkpoint> {
     private final TreeSet<Checkpoint> storage;
 
     /**
-     * Creates a change history
+     * Creates a commit history
      */
-    public ChangeHistory(){
+    public CommitHistory(){
         this(null);
     }
 
     /**
-     * Creates a change history
+     * Creates a commit history
      * @param head ThE HEAD checkpoint.
      */
-    public ChangeHistory(Checkpoint head){
+    public CommitHistory(Checkpoint head){
         this.storage  = Sets.newTreeSet();
         if(head != null){
             add(head);
@@ -81,11 +81,11 @@ public class ChangeHistory implements Iterable<Checkpoint> {
      *
      * @return a new ChangeHistory having ONLY the HEAD checkpoint
      */
-    public ChangeHistory slice(){
+    public CommitHistory slice(){
         try {
             return slice(first());
         } catch (NoSuchElementException e){
-            return new ChangeHistory();
+            return new CommitHistory();
         }
     }
 
@@ -100,13 +100,13 @@ public class ChangeHistory implements Iterable<Checkpoint> {
      *        history, {@code false} otherwise.
      * @return a sliced history
      */
-    public ChangeHistory slice(final Checkpoint fromElement, boolean fromInclusive,
+    public CommitHistory slice(final Checkpoint fromElement, boolean fromInclusive,
                                final Checkpoint toElement, boolean toInclusive){
 
         final Checkpoint from = Preconditions.checkNotNull(fromElement);
         final Checkpoint to   = Preconditions.checkNotNull(toElement);
 
-        final ChangeHistory sliced = new ChangeHistory(from);
+        final CommitHistory sliced = new CommitHistory(from);
 
         if(!from.equals(to)) {
             final NavigableSet<Checkpoint> rest = storage.subSet(
@@ -131,7 +131,7 @@ public class ChangeHistory implements Iterable<Checkpoint> {
      * @throws NullPointerException if fromElement or toElement is null and this
      *      set uses natural ordering, or its comparator does not permit null elements
      */
-    public ChangeHistory slice(final Checkpoint upto/*checkpoint*/){
+    public CommitHistory slice(final Checkpoint upto/*checkpoint*/){
         return slice(first(), false, upto, true);
     }
 

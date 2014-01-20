@@ -15,7 +15,7 @@ import org.junit.runners.Suite;
         ASTUtilTest.class,
         IoTest.class,
         NotesTest.class,
-        ChangeHistoryTest.class
+        CommitHistoryTest.class
 })
 public class UtilSuiteTest {
     public static Test suite() {

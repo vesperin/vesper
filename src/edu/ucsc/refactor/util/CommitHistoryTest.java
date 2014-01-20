@@ -13,7 +13,7 @@ import static org.junit.Assert.assertThat;
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public class ChangeHistoryTest {
+public class CommitHistoryTest {
     static final String NAME    = "Name.java";
 
     static final String CONTENT = "import java.util.List; \n"
@@ -64,7 +64,7 @@ public class ChangeHistoryTest {
                 AFTER
         );
 
-        final ChangeHistory history = new ChangeHistory(checkpoint);
+        final CommitHistory history = new CommitHistory(checkpoint);
 
         assertThat(history.first() != null, is(true));
         assertEquals(history.first(), history.last());
@@ -83,15 +83,15 @@ public class ChangeHistoryTest {
         final Checkpoint c4 = createCheckpoint(Refactoring.DELETE_METHOD, WAY_WAY_AFTER, WAY_WAY_WAY_AFTER);
 
 
-        final ChangeHistory history = new ChangeHistory(c1);
+        final CommitHistory history = new CommitHistory(c1);
         history.add(c2);
         history.add(c3);
         history.add(c4);
 
-        final ChangeHistory v1 = history.slice();
+        final CommitHistory v1 = history.slice();
         assertThat(v1.size(), is(1));
 
-        final ChangeHistory v2 = history.slice(c2);
+        final CommitHistory v2 = history.slice(c2);
         assertThat(v2.size(), is(2));
 
         assertEquals(c1, v2.first());
