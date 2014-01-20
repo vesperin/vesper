@@ -58,7 +58,12 @@ public class ChangeHistoryTest {
 
     @Test public void testCreateHistory() throws Exception {
 
-        final Checkpoint checkpoint = new Checkpoint(Refactoring.DELETE_PARAMETER, BEFORE, AFTER, System.nanoTime(), CommitStatus.succeededStatus(new CommitInformation().commit("yeah")));
+        final Checkpoint checkpoint = createCheckpoint(
+                Refactoring.DELETE_PARAMETER,
+                BEFORE,
+                AFTER
+        );
+
         final ChangeHistory history = new ChangeHistory(checkpoint);
 
         assertThat(history.first() != null, is(true));
@@ -72,10 +77,10 @@ public class ChangeHistoryTest {
     }
 
     @Test public void testResetHistory() throws Exception {
-        final Checkpoint c1 = new Checkpoint(Refactoring.DELETE_PARAMETER, BEFORE, AFTER, System.nanoTime(), CommitStatus.succeededStatus(new CommitInformation().commit("yeah")));
-        final Checkpoint c2 = new Checkpoint(Refactoring.DELETE_UNUSED_IMPORTS, AFTER, WAY_AFTER, System.nanoTime(), CommitStatus.succeededStatus(new CommitInformation().commit("yeah")));
-        final Checkpoint c3 = new Checkpoint(Refactoring.RENAME_METHOD, WAY_AFTER, WAY_WAY_AFTER, System.nanoTime(), CommitStatus.succeededStatus(new CommitInformation().commit("yeah")));
-        final Checkpoint c4 = new Checkpoint(Refactoring.DELETE_METHOD, WAY_WAY_AFTER, WAY_WAY_WAY_AFTER, System.nanoTime(), CommitStatus.succeededStatus(new CommitInformation().commit("yeah")));
+        final Checkpoint c1 = createCheckpoint(Refactoring.DELETE_PARAMETER, BEFORE, AFTER);
+        final Checkpoint c2 = createCheckpoint(Refactoring.DELETE_UNUSED_IMPORTS, AFTER, WAY_AFTER);
+        final Checkpoint c3 = createCheckpoint(Refactoring.RENAME_METHOD, WAY_AFTER, WAY_WAY_AFTER);
+        final Checkpoint c4 = createCheckpoint(Refactoring.DELETE_METHOD, WAY_WAY_AFTER, WAY_WAY_WAY_AFTER);
 
 
         final ChangeHistory history = new ChangeHistory(c1);
@@ -95,5 +100,16 @@ public class ChangeHistoryTest {
         history.clear();
         assertThat(history.isEmpty(), is(true));
 
+    }
+
+
+    private static Checkpoint createCheckpoint(Refactoring refactoring, Source before, Source after){
+       return new Checkpoint(
+               refactoring,
+               before,
+               after,
+               System.nanoTime(),
+               CommitStatus.succeededStatus(new CommitInformation().commit("yeah"))
+       );
     }
 }
