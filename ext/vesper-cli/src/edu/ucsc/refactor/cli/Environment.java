@@ -104,7 +104,7 @@ public class Environment {
      * @return {@code true} if it knows, {@code false} otherwise.
      */
     public boolean knows(Source code) {
-        for(Source each : getRefactorer().getVisibleSources()){
+        for(Source each : getRefactorer().getTrackedSources()){
             if(each.equals(code)){ return true; }
         }
 
@@ -112,13 +112,13 @@ public class Environment {
     }
 
     public void reset() {
-        reset(getOrigin().getName());
+        resetSource(getOrigin().getName());
     }
 
-    public Source reset(String name) {
+    public Source resetSource(String name) {
         Preconditions.checkNotNull(name);
 
-        final List<Source> all = getRefactorer().getVisibleSources();
+        final List<Source> all = getRefactorer().getTrackedSources();
 
         for(Source each : all){
             if(each.getName().equals(name)){

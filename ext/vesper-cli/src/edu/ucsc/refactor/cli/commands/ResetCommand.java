@@ -25,7 +25,7 @@ public class ResetCommand extends VesperCommand {
         Preconditions.checkArgument((patterns == null) || (patterns.size() == 1));
 
         if(patterns != null && patterns.size() == 1){
-            final Source indexed = environment.reset(patterns.get(0));
+            final Source indexed = environment.resetSource(patterns.get(0));
             return Result.sourcePackage(indexed);
         } else {
             environment.reset();
