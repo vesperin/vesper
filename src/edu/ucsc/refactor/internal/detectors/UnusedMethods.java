@@ -95,7 +95,7 @@ public class UnusedMethods extends IssueDetector {
             }
 
             if ((!Modifier.isPrivate(modifiers) && !methodDeclaration.isConstructor() && !Modifier.isStatic(modifiers)
-                    && !AstUtil.hasAnnotation(methodDeclaration)
+                    && !AstUtil.isAnnotated(methodDeclaration)
                     && !AstUtil.isMainMethod(methodDeclaration))
                     && !Modifier.isAbstract(AstUtil.parent(TypeDeclaration.class, methodDeclaration).getModifiers())
                     && !AstUtil.parent(TypeDeclaration.class, methodDeclaration).isInterface()) {

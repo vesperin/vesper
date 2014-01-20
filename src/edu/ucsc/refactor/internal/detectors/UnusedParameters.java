@@ -47,7 +47,7 @@ public class UnusedParameters extends IssueDetector {
         // check ALL variables for each method declaration
         for(MethodDeclaration eachMethodDeclaration : methodDeclarations){
             if (!Modifier.isAbstract(eachMethodDeclaration.getModifiers())
-                    && !AstUtil.hasAnnotation(eachMethodDeclaration)
+                    && !AstUtil.isAnnotated(eachMethodDeclaration)
                     && !AstUtil.parent(TypeDeclaration.class, eachMethodDeclaration).isInterface()
                     && !AstUtil.isMainMethod(eachMethodDeclaration) && eachMethodDeclaration.parameters() != null) {
 

@@ -1,9 +1,13 @@
 package edu.ucsc.refactor.util;
 
-import edu.ucsc.refactor.Context;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import edu.ucsc.refactor.Location;
 import edu.ucsc.refactor.Source;
-import edu.ucsc.refactor.internal.visitors.SelectedASTNodeVisitor;
+import edu.ucsc.refactor.internal.visitors.LabelVisitor;
+import edu.ucsc.refactor.internal.visitors.LinkedNodesVisitor;
+import edu.ucsc.refactor.internal.visitors.SideEffectNodesVisitor;
+import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 
@@ -14,9 +18,17 @@ import java.util.List;
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public class AstUtil {
-    private AstUtil(){}
 
-    public static boolean hasAnnotation(MethodDeclaration methodDeclaration) {
+    private static final int FIELD  = 1;
+    private static final int METHOD = 2;
+    private static final int TYPE   = 4;
+    private static final int LABEL  = 8;
+    private static final int NAME   = FIELD | TYPE;
+
+
+    private AstUtil() {}
+
+    public static boolean isAnnotated(MethodDeclaration methodDeclaration) {
         final List modifiers = methodDeclaration.modifiers();
         return !modifiers.isEmpty() && modifiers.get(0) instanceof Annotation;
     }
@@ -24,28 +36,29 @@ public class AstUtil {
 
     public static boolean usesVariable(MethodDeclaration methodDeclaration,
                                        SingleVariableDeclaration variableDeclaration) {
-        String methodBlock = methodDeclaration.getBody().toString();
+        final SideEffectNodesVisitor sideEffect = new SideEffectNodesVisitor();
+        methodDeclaration.accept(sideEffect);
 
-        return methodBlock.contains(variableDeclaration.getName().toString());
+        final String methodBlock = methodDeclaration.getBody().toString();
+        return methodBlock.contains(variableDeclaration.getName().toString()) && !sideEffect.getSideEffectNodes().isEmpty();
     }
 
     /**
      * Find the nearest parent node of a certain type for an {@link org.eclipse.jdt.core.dom.ASTNode}.
      *
      * @param thatClass The type class of the parent node to find. Must be derived from ASTNode.
-     * @param node  The node to find a parent node for.
-     * @param <T>   The ASTNode derived type of the parent node.
+     * @param node      The node to find a parent node for.
+     * @param <T>       The ASTNode derived type of the parent node.
      * @return The found parent, or null if no such parent exists.
      */
-    @SuppressWarnings("unchecked")
     public static <T extends ASTNode> T parent(final Class<T> thatClass, final ASTNode node) {
 
         ASTNode parent = node;
 
-        if(parent.getClass() == thatClass) {
+        if (parent.getClass() == thatClass) {
             // if both classes are the same, then no point on
             // executing the do-while code.
-            return (T) parent;
+            return exactCast(thatClass, parent);
         }
 
         do {
@@ -54,23 +67,23 @@ public class AstUtil {
                 return null;
             }
         } while (parent.getClass() != thatClass);
-        return (T) parent;
+        return exactCast(thatClass, parent);
     }
 
     public static int getAnnotationsSize(IBinding binding) {
-        if (binding.getAnnotations() != null) {
-            return binding.getAnnotations().length;
-        }
-        return 0;
+        return (binding.getAnnotations() != null
+                    ? binding.getAnnotations().length
+                    : 0
+        );
     }
 
-    public static <T extends ASTNode> T copySubtree(final Class<T> thatClass, AST ast, final ASTNode node){
+    public static <T extends ASTNode> T copySubtree(final Class<T> thatClass, AST ast, final ASTNode node) {
         // similar to //(MethodDeclaration)ASTNode.copySubtree(ast, method);
         return thatClass.cast(ASTNode.copySubtree(ast, node));
     }
 
-    public static ASTRewrite createAstRewrite(AST ast){
-        if(ast == null) throw new NullPointerException("createAstRewrite() was given a null AST");
+    public static ASTRewrite createAstRewrite(AST ast) {
+        if (ast == null) throw new NullPointerException("createAstRewrite() was given a null AST");
         //  please remember to avoid creating multiple rewrites, one per affected node...
         //  that will make changes to be out of sync and cause source code overrides; e.g.,
         //  delete method A in Src, rename parameter in Src with method A not deleted.
@@ -78,47 +91,43 @@ public class AstUtil {
     }
 
 
-    public static void copyParameters(List src, MethodDeclaration dst){
-        for(Object eachObj : src){
-            final SingleVariableDeclaration next  = (SingleVariableDeclaration)eachObj;
-            final SingleVariableDeclaration param = AstUtil.copySubtree(SingleVariableDeclaration.class, dst.getAST(), next);
-            dst.parameters().add(param);
+    public static void copyParameters(List src, MethodDeclaration dst) {
+        for (Object eachObj : src) {
+            final SingleVariableDeclaration next  = (SingleVariableDeclaration) eachObj;
+            final SingleVariableDeclaration param = AstUtil.copySubtree(
+                    SingleVariableDeclaration.class,
+                    dst.getAST(),
+                    next
+            );
+
+            //noinspection unchecked
+            dst.parameters().add(param); // unchecked warning
         }
     }
 
 
-    public static List<ASTNode> astNodeFrom(Context context, String word){
-        final List<Location> locations = Locations.locateWord(context.getSource(), word);
-        final List<ASTNode>  nodes     = new ArrayList<ASTNode>();
-
-        for(Location each : locations){
-            final SelectedASTNodeVisitor visitor = new SelectedASTNodeVisitor(each);
-            context.accept(visitor);
-
-        }
-
-        return nodes;
-    }
-
-
-    public static void syncSourceProperty(Source updatedSource, ASTNode node){
-        if(node instanceof CompilationUnit){
+    public static void syncSourceProperty(Source updatedSource, ASTNode node) {
+        if (node instanceof CompilationUnit) {
             node.setProperty(Source.SOURCE_FILE_PROPERTY, updatedSource);
-        }  else {
+        } else {
             // do this after each delta's application
-            AstUtil.parent(CompilationUnit.class, node).setProperty(
+            parent(CompilationUnit.class, node).setProperty(
                     Source.SOURCE_FILE_PROPERTY,
                     updatedSource
             );
         }
     }
 
+    public static <T extends ASTNode> T exactCast(Class<T> targetType, ASTNode object){
+        return targetType.cast(object);
+    }
+
 
     public static String getSimpleNameIdentifier(Name name) {
         if (name.isQualifiedName()) {
-            return ((QualifiedName) name).getName().getIdentifier();
+            return exactCast(QualifiedName.class, name).getName().getIdentifier();
         } else {
-            return ((SimpleName) name).getIdentifier();
+            return exactCast(SimpleName.class, name).getIdentifier();
         }
     }
 
@@ -135,30 +144,26 @@ public class AstUtil {
     public static boolean isNodeWithinSelection(Source src, ASTNode node, Location selection) {
 
         final Location nodeLocation     = Locations.locate(src, node);
-        final Location methodLocation   = selection;
 
-
-        return (Locations.inside(methodLocation, nodeLocation))
-                || (Locations.covers(methodLocation, nodeLocation));
+        return (Locations.inside(selection, nodeLocation))
+                || (Locations.covers(selection, nodeLocation));
     }
 
     public static boolean isNodeEnclosingMethod(Source src, ASTNode node, Location selection) {
 
-        final Location nodeLocation     = Locations.locate(src, node);
-        final Location methodLocation   = selection;
+        final Location nodeLocation = Locations.locate(src, node);
 
         // Is the method completely enclosed by the node?
-        return (Locations.inside(nodeLocation, methodLocation));
+        return (Locations.inside(nodeLocation, selection));
     }
 
 
     public static boolean isNodeExactlyAtLocation(Source src, ASTNode node, Location selection) {
 
-        final Location nodeLocation     = Locations.locate(src, node);
-        final Location methodLocation   = selection;
+        final Location nodeLocation = Locations.locate(src, node);
 
         // Is the method at the same position as the other node?
-        return (Locations.bothSame(nodeLocation, methodLocation));
+        return (Locations.bothSame(nodeLocation, selection));
     }
 
 
@@ -169,13 +174,13 @@ public class AstUtil {
     }
 
     public static VariableDeclaration getVariableDeclaration(Name node) {
-        final IBinding binding  = node.resolveBinding();
+        final IBinding binding = node.resolveBinding();
         if (binding == null && node.getParent() instanceof VariableDeclaration) {
             return (VariableDeclaration) node.getParent();
         }
 
         if (binding != null && binding.getKind() == IBinding.VARIABLE) {
-            final CompilationUnit cu  = parent(CompilationUnit.class, node);
+            final CompilationUnit cu = parent(CompilationUnit.class, node);
             return findVariableDeclaration(((IVariableBinding) binding), cu);
         }
 
@@ -183,9 +188,9 @@ public class AstUtil {
     }
 
     public static ASTNode findDeclaration(IBinding binding, ASTNode root) {
-        root    = root.getRoot();
+        root = root.getRoot();
         if (root instanceof CompilationUnit) {
-            return ((CompilationUnit)root).findDeclaringNode(binding);
+            return exactCast(CompilationUnit.class, root).findDeclaringNode(binding);
         }
 
         return null;
@@ -196,11 +201,162 @@ public class AstUtil {
             return null;
         }
 
-        final ASTNode result    = findDeclaration(binding, root);
+        final ASTNode result = findDeclaration(binding, root);
         if (result instanceof VariableDeclaration) {
-            return (VariableDeclaration)result;
+            return (VariableDeclaration) result;
         }
 
         return null;
+    }
+
+
+    /**
+     * Returns <code>true</code> iff <code>parent</code> is a true ancestor of <code>node</code>
+     * (i.e. returns <code>false</code> if <code>parent == node</code>).
+     *
+     * @param node   node to test
+     * @param parent assumed parent
+     * @return <code>true</code> iff <code>parent</code> is a true ancestor of <code>node</code>
+     */
+    public static boolean isParent(ASTNode node, ASTNode parent) {
+        Preconditions.checkNotNull(parent);
+        do {
+            node = node.getParent();
+            if (node == parent) return true;
+        } while (node != null);
+
+        return false;
+    }
+
+
+    /**
+     * Get all the AST nodes connected to a given binding. e.g. Declaration of a field and all
+     * references. For types, this includes also the constructor declaration. For methods also
+     * overridden methods or methods overriding (if existing in the same AST)
+     *
+     * @param root The root of the AST tree to search; e.g., Type declaration, Method declaration..
+     * @param binding The binding of the searched nodes.
+     * @return The list of nodes linked to a binding; an empty list if there are none.
+     */
+    public static List<SimpleName> findByBinding(ASTNode root, IBinding binding) {
+        final LinkedNodesVisitor linkedBindings = new LinkedNodesVisitor(binding);
+        root.accept(linkedBindings);
+
+        return linkedBindings.getLinkedNodes();
+    }
+
+
+    /**
+     * Get all nodes connected to the given name node. If the node has a binding then all nodes connected
+     * to this binding are returned. If the node has no binding, then all nodes that also miss a binding
+     * and have the same name are returned.
+     *
+     * @param root The root of the AST tree to search
+     * @param name The node to find linked nodes for
+     * @return The list of all nodes that have the same name or are connected to
+     *      name's binding (if binding is available)
+     */
+    public static List<SimpleName> findByNode(ASTNode root, SimpleName name) {
+        final IBinding binding = name.resolveBinding();
+
+        if (binding != null) {
+            return findByBinding(root, binding);
+        }
+
+        final List<SimpleName> names = findByProblems(root, name);
+
+        if (names != null) {
+            return names;
+        }
+
+        int parentKind = name.getParent().getNodeType();
+        if (parentKind == ASTNode.LABELED_STATEMENT
+                || parentKind == ASTNode.BREAK_STATEMENT
+                || parentKind == ASTNode.CONTINUE_STATEMENT) {
+
+            final LabelVisitor labelVisitor = new LabelVisitor(name);
+
+            root.accept(labelVisitor);
+
+            return labelVisitor.getLabels();
+        }
+
+        return ImmutableList.of(name);
+    }
+
+
+    public static List<SimpleName> findByProblems(ASTNode parent, SimpleName nameNode) {
+        final List<SimpleName> result = new ArrayList<SimpleName>();
+
+        final ASTNode astRoot = parent.getRoot();
+
+        if (!(astRoot instanceof CompilationUnit)) {
+            return ImmutableList.of();
+        }
+
+        final IProblem[] problems = exactCast(CompilationUnit.class, astRoot).getProblems();
+
+        int nameNodeKind = getNameNodeProblemKind(problems, nameNode);
+        if (nameNodeKind == 0) { // no problem on node
+            return ImmutableList.of();
+        }
+
+        int bodyStart   = parent.getStartPosition();
+        int bodyEnd     = bodyStart + parent.getLength();
+
+        String name = nameNode.getIdentifier();
+
+        for (IProblem each : problems) {
+            int probStart   = each.getSourceStart();
+            int probEnd     = each.getSourceEnd() + 1;
+
+            if (probStart > bodyStart && probEnd < bodyEnd) {
+                int currKind = getProblemKind(each);
+                if ((nameNodeKind & currKind) != 0) {
+                    ASTNode node = NodeFinder.perform(parent, probStart, (probEnd - probStart));
+                    if (node instanceof SimpleName
+                            && name.equals(exactCast(SimpleName.class, node).getIdentifier())) {
+                        result.add((SimpleName) node);
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+
+    private static int getProblemKind(IProblem problem) {
+        switch (problem.getID()) {
+            case IProblem.UndefinedField:
+                return FIELD;
+            case IProblem.UndefinedMethod:
+                return METHOD;
+            case IProblem.UndefinedLabel:
+                return LABEL;
+            case IProblem.UndefinedName:
+            case IProblem.UnresolvedVariable:
+                return NAME;
+            case IProblem.UndefinedType:
+                return TYPE;
+        }
+        return 0;
+    }
+
+
+    private static int getNameNodeProblemKind(IProblem[] problems, SimpleName nameNode) {
+        final int nameOffset  = nameNode.getStartPosition();
+        final int nameInclEnd = nameOffset + nameNode.getLength() - 1;
+
+        for (IProblem each : problems) {
+            if (each.getSourceStart() == nameOffset && each.getSourceEnd() == nameInclEnd) {
+                int kind = getProblemKind(each);
+                if (kind != 0) {
+                    return kind;
+                }
+            }
+        }
+
+        return 0;
     }
 }

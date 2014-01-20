@@ -59,7 +59,7 @@ public class ASTUtilTest {
 
     @Test public void testMethodHasAnnotations(){
         final MethodDeclaration second = visitor.getMethodDeclarations().get(1);
-        assertThat(AstUtil.hasAnnotation(second), is(true));
+        assertThat(AstUtil.isAnnotated(second), is(true));
     }
 
     @Test public void testIsMainMethod(){
