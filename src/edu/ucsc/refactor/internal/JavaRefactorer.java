@@ -2,9 +2,6 @@ package edu.ucsc.refactor.internal;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.visitors.MethodDeclarationVisitor;
@@ -215,16 +212,6 @@ public class JavaRefactorer implements Refactorer {
         throw new NoSuchElementException("rewrite() was unable to find " + from);
     }
 
-    private static int index(final Checkpoint point, Iterable<Checkpoint> iterable){
-        final Predicate<Checkpoint> match = new Predicate<Checkpoint>() {
-            @Override public boolean apply(Checkpoint that) {
-                return point.equals(that);
-            }
-        };
-
-        return Iterables.indexOf(iterable, match);
-    }
-
 
     private Source rewritingHistory(Source from, ChangeHistory sliced){
         final String signature = from.getUniqueSignature();
@@ -337,9 +324,9 @@ public class JavaRefactorer implements Refactorer {
         return !getIssues(code).isEmpty();
     }
 
-    @Override public UnitLocator getUnitLocator(Source src) {
+    @Override public UnitLocator getUnitLocator(Source readSource) {
         Preconditions.checkState(!getValidContexts().isEmpty(), "unknown Source");
-        return new ProgramUnitLocator(getValidContexts().get(src));
+        return new ProgramUnitLocator(getValidContexts().get(readSource));
     }
 
     @Override public CommitRequest publish(CommitRequest localCommit){
