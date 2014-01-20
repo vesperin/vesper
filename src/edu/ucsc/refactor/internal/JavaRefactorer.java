@@ -174,7 +174,7 @@ public class JavaRefactorer implements Refactorer {
     @Override public Source rewrite(Source current) {
 
         final Source        from   = Preconditions.checkNotNull(current);
-        final ChangeHistory entire = getChangeHistory(from);
+        final ChangeHistory entire = getHistory(from);
 
         if(entire.isEmpty()) { return current; }
 
@@ -230,7 +230,7 @@ public class JavaRefactorer implements Refactorer {
     }
 
     @Override public Source forward(Source current) {
-        final ChangeHistory history = getChangeHistory(current);
+        final ChangeHistory history = getHistory(current);
 
         for(Checkpoint each : history){
             if(each.getSourceBeforeChange().equals(current)){
@@ -244,7 +244,7 @@ public class JavaRefactorer implements Refactorer {
 
     // backwards
     @Override public Source rewind(Source current) {
-        final ChangeHistory history = getChangeHistory(current);
+        final ChangeHistory history = getHistory(current);
 
         for(Checkpoint each : history){
             if(each.getSourceAfterChange().equals(current)){
@@ -295,11 +295,11 @@ public class JavaRefactorer implements Refactorer {
                 && context.getSource() != null;
     }
 
-    @Override public Map<Source, List<Issue>> getIssueRegistry() {
+    public Map<Source, List<Issue>> getIssueRegistry() {
         return findings;
     }
 
-    @Override public List<Source> getVisibleSources() {
+    @Override public List<Source> getTrackedSources() {
         return new ArrayList<Source>(getValidContexts().keySet());
     }
 
@@ -311,7 +311,7 @@ public class JavaRefactorer implements Refactorer {
         return Collections.emptyList();
     }
 
-    @Override public ChangeHistory getChangeHistory(Source src) {
+    @Override public ChangeHistory getHistory(Source src) {
         final ChangeHistory result = timeline.get(Preconditions.checkNotNull(src).getUniqueSignature());
         if(result == null){
             return new ChangeHistory();
@@ -324,7 +324,7 @@ public class JavaRefactorer implements Refactorer {
         return !getIssues(code).isEmpty();
     }
 
-    @Override public UnitLocator getUnitLocator(Source readSource) {
+    @Override public UnitLocator getLocator(Source readSource) {
         Preconditions.checkState(!getValidContexts().isEmpty(), "unknown Source");
         return new ProgramUnitLocator(getValidContexts().get(readSource));
     }
@@ -364,7 +364,7 @@ public class JavaRefactorer implements Refactorer {
 
     @Override public String toString() {
         final Objects.ToStringHelper builder = Objects.toStringHelper(getClass());
-        builder.add("known files", getVisibleSources());
+        builder.add("known files", getTrackedSources());
         return builder.toString();
     }
 

@@ -43,14 +43,14 @@ public class RefactorerTest {
 
     @Test public void testRefactorerInternals(){
         final Refactorer refactorer = Vesper.createRefactorer(SRC);
-        assertThat(refactorer.getIssueRegistry().isEmpty(), is(false));
-        assertThat(refactorer.getIssueRegistry().size(), is(1));
+        assertThat(refactorer.getIssues(SRC).isEmpty(), is(false));
+        assertThat(refactorer.getTrackedSources().size(), is(1));
 
-        assertThat(refactorer.getVisibleSources().isEmpty(), is(false));
-        assertThat(refactorer.getVisibleSources().size(), is(1));
+        assertThat(refactorer.getTrackedSources().isEmpty(), is(false));
+        assertThat(refactorer.getTrackedSources().size(), is(1));
 
-        assertSame(refactorer.getVisibleSources().get(0), SRC);
-        assertThat(refactorer.getIssueRegistry().containsKey(SRC), is(true));
+        assertSame(refactorer.getTrackedSources().get(0), SRC);
+        assertThat(refactorer.getTrackedSources().contains(SRC), is(true));
 
         assertThat(refactorer.hasIssues(SRC), is(true));
     }
@@ -95,7 +95,7 @@ public class RefactorerTest {
 
     @Test public void testRefactorerUnitLocator() {
         final Refactorer refactorer = Vesper.createRefactorer(SRC);
-        final UnitLocator locator = refactorer.getUnitLocator(SRC);
+        final UnitLocator locator = refactorer.getLocator(SRC);
 
         final List<Location> params = locator.locate(new ParameterUnit("message"));
         assertThat(params.isEmpty(), is(false));

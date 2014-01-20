@@ -1,12 +1,11 @@
 package edu.ucsc.refactor;
 
-import edu.ucsc.refactor.spi.UnitLocator;
 import edu.ucsc.refactor.spi.CommitRequest;
+import edu.ucsc.refactor.spi.UnitLocator;
 import edu.ucsc.refactor.spi.Upstream;
 import edu.ucsc.refactor.util.ChangeHistory;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -58,19 +57,12 @@ public interface Refactorer {
     Source forward(Source current);
 
     /**
-     * @return a map representing the analysis result
-     *      the refactorer will use to create adequate changes
-     *      that may fix issues in the source.
-     */
-    Map<Source, List<Issue>> getIssueRegistry();
-
-    /**
      * Returns the list of {@code Source}s  this {@code Refactorer}
      * is aware of.
      *
      * @return The list of {@code Source}s.
      */
-    List<Source> getVisibleSources();
+    List<Source> getTrackedSources();
 
     /**
      * Returns the list of issues for that file. This list can be used
@@ -86,7 +78,7 @@ public interface Refactorer {
      *
      * @return the compiled changed history, or empty history if none is available.
      */
-    ChangeHistory getChangeHistory(Source src);
+    ChangeHistory getHistory(Source src);
 
     /**
      * Checks whether a given source code has issues.
@@ -102,7 +94,7 @@ public interface Refactorer {
      * @param src The current {@code Source}
      * @return The locator that corresponds to this {@code Source}
      */
-    UnitLocator getUnitLocator(Source src);
+    UnitLocator getLocator(Source src);
 
     /**
      * Commit local changes to a remote upstream.
