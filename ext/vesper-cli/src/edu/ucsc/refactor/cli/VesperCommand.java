@@ -58,6 +58,7 @@ public abstract class VesperCommand {
     protected CommitRequest commitChange(Environment environment, ChangeRequest request){
         final CommitRequest applied = environment.getCodeRefactorer().apply(environment.getCodeRefactorer().createChange(request));
         environment.update(applied.getSource());
+        environment.collect(applied);
         return applied;
     }
 
@@ -73,7 +74,7 @@ public abstract class VesperCommand {
             return Result.failedPackage(message);
         }
 
-        return Result.committedPackage(applied.getStatus());
+        return globalOptions.verbose ? Result.committedPackage(applied.getStatus()) : Result.unit();
     }
 
     protected SourceSelection createSelection(Environment environment, String head){

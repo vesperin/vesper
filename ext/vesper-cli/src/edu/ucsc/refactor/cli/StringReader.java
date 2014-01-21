@@ -1,7 +1,8 @@
 package edu.ucsc.refactor.cli;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
+import com.google.common.collect.Lists;
+
+import java.util.List;
 import java.util.StringTokenizer;
 
 /**
@@ -18,7 +19,7 @@ public class StringReader {
     private final StringBuilder parentheses = new StringBuilder();
 
     Iterable<String> process(String statement){
-        final Set<String> result = new LinkedHashSet<String>();
+        final List<String> result = Lists.newArrayList();
 
         String  delimiter = WHITESPACE_AND_QUOTES_DELIMITER;
 
@@ -100,7 +101,7 @@ public class StringReader {
         return (text != null) && (!text.trim().equals(NOTHING));
     }
 
-    private void addNonTrivialWordToResult(String token, Set<String> result){
+    private void addNonTrivialWordToResult(String token, List<String> result){
         if (textHasContent(token)) {
             result.add(token.trim());
         }

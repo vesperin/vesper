@@ -22,7 +22,7 @@ public class ReplCommand extends VesperCommand {
     @Option(name = "-c", description = "Enter remote credentials")
     public boolean config = false;
 
-    @Option(name = "--longer-prompt", description = "Longer prompt")
+    @Option(name = "--simple-prompt", description = "Simple prompt")
     public boolean prompt = false;
 
     @Arguments(description = "Interactive Vesper parameters")
@@ -61,7 +61,7 @@ public class ReplCommand extends VesperCommand {
         return environment.unit();
     }
 
-    private static boolean runRepl(Credential credential, Environment global, boolean longerPrompt) throws IOException {
+    private static boolean runRepl(Credential credential, Environment global, boolean simplePrompt) throws IOException {
         System.out.println();
         System.out.println(Interpreter.VERSION);
         System.out.println("-----------");
@@ -80,7 +80,7 @@ public class ReplCommand extends VesperCommand {
 
         Result result;
 
-        final String prompt = longerPrompt ? Interpreter.VERSION + "> " : "vesper> ";
+        final String prompt = simplePrompt ? "vesper> " : Interpreter.VERSION + "> ";
 
         while (true) {
             System.out.print(prompt);

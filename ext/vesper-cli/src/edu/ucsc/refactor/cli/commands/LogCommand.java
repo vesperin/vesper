@@ -16,14 +16,12 @@ public class LogCommand extends VesperCommand {
     @Override public Result execute(Environment environment) throws Exception {
         Preconditions.checkNotNull(environment);
 
-        final boolean       verboseMode = globalOptions.verbose;
+
         final CommitHistory entire      = environment.getCommitHistory();
         final Result        commits     = Result.empty(Result.Content.COMMIT);
 
-        if(verboseMode) {
-            for(Checkpoint each : entire){
-                commits.add(each.getCommitStatus());
-            }
+        for(Checkpoint each : entire){
+            commits.add(each.getCommitStatus());
         }
 
         return commits;
