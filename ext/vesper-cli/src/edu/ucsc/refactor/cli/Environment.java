@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.spi.CommitRequest;
+import edu.ucsc.refactor.spi.UnitLocator;
 import edu.ucsc.refactor.util.CommitHistory;
 
 import java.util.LinkedList;
@@ -79,6 +80,13 @@ public class Environment {
      */
     public Source getTrackedSource() {
         return origin.get();
+    }
+
+    /**
+     * @return The Unit locator
+     */
+    public UnitLocator getCodeLocator(){
+        return getCodeRefactorer().getLocator(getTrackedSource());
     }
 
     /**
