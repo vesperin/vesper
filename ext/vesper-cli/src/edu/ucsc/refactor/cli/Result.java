@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import edu.ucsc.refactor.Issue;
 import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.spi.CommitStatus;
 
@@ -96,17 +95,6 @@ public class Result {
      */
     public static Result infoPackage(String request){
         return createResult(Content.INFO, request);
-    }
-
-
-    /**
-     * Creates a Issues List Result.
-     *
-     * @param issues THe list of detected issues.
-     * @return a new issues list Result
-     */
-    public static Result issuesListPackage(List<Issue> issues){
-        return createResult(Content.ISSUES, issues);
     }
 
 
@@ -217,10 +205,6 @@ public class Result {
         /** Commit Request Content **/
         COMMIT,
         /** Source file **/
-        SOURCE;
-
-        boolean isSame(Content that){
-            return this == that;
-        }
+        SOURCE
     }
 }
