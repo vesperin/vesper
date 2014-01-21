@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-@Command(name = "inspect", description = "Shows the issues in the Source that should be fixed")
+@Command(name = "inspect", description = "Shows the issues found in the tracked source")
 public class InspectCommand extends VesperCommand {
 
     @Arguments(description = "Source to inspect")

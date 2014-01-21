@@ -11,7 +11,7 @@ import io.airlift.airline.Command;
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-@Command(name = "log", description = " Show commit logs")
+@Command(name = "log", description = "Show commit logs")
 public class LogCommand extends VesperCommand {
     @Override public Result execute(Environment environment) throws Exception {
         Preconditions.checkNotNull(environment);

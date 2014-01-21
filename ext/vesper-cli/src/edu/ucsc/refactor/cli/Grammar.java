@@ -28,7 +28,7 @@ public class Grammar {
                 .withCommand(FormatCommand.class);
 
         builder.withGroup("locate")
-                .withDescription("Locates a program unit found in the tracked Source")
+                .withDescription("Locates a program unit found in the tracked source")
                 .withDefaultCommand(LocateClassCommand.class)
                 .withCommand(LocateClassCommand.class)
                 .withCommand(LocateMethodCommand.class)
@@ -36,7 +36,7 @@ public class Grammar {
                 .withCommand(LocateFieldCommand.class);
 
         builder.withGroup("notes")
-                .withDescription("Manage set of notes describing the tracked Source")
+                .withDescription("Manage set of notes describing the tracked source")
                 .withDefaultCommand(NotesShow.class)
                 .withCommand(NotesShow.class)
                 .withCommand(NoteAdd.class);
@@ -50,7 +50,7 @@ public class Grammar {
                 .withCommand(RenameFieldCommand.class);
 
         builder.withGroup("rm")
-                .withDescription("Remove file contents from the indexed Source")
+                .withDescription("Remove file contents from the tracked Source")
                 .withDefaultCommand(RemoveSourceCommand.class)
                 .withCommand(RemoveSourceCommand.class)
                 .withCommand(RemoveClassCommand.class)

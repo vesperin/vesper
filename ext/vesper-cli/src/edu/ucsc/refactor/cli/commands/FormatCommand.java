@@ -11,7 +11,7 @@ import io.airlift.airline.Command;
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-@Command(name = "format", description = "Formats the tracked Source")
+@Command(name = "format", description = "Formats the tracked source")
 public class FormatCommand extends VesperCommand {
     @Override public Result execute(Environment environment) throws RuntimeException {
         ensureValidState(environment);
