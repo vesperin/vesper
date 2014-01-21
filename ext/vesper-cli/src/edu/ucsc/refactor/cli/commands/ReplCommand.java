@@ -65,7 +65,7 @@ public class ReplCommand extends VesperCommand {
         System.out.println();
         System.out.println(Interpreter.VERSION);
         System.out.println("-----------");
-        System.out.println("Type 'q' and press Enter to quit.");
+        System.out.println("Type 'quit' and press Enter to quit.");
 
 
         InputStreamReader converter = new InputStreamReader(System.in);
