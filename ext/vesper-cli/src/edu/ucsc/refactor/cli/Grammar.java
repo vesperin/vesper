@@ -60,6 +60,7 @@ public class Grammar {
                 .withCommand(RemoveRangeCommand.class);
 
         builder.withGroup("slice")
+                .withDescription("Slice a code section from the tracked source")
                 .withDefaultCommand(SliceClassCommand.class)
                 .withCommand(SliceClassCommand.class)
                 .withCommand(SliceMethodCommand.class)
