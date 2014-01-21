@@ -17,6 +17,7 @@ public class Grammar {
                 .withDescription("the nice CLI for Vesper")
                 .withDefaultCommand(HelpCommand.class)
                 .withCommand(HelpCommand.class)
+                .withCommand(LogCommand.class)
                 .withCommand(ResetCommand.class)
                 .withCommand(InspectCommand.class)
                 .withCommand(ReplCommand.class)

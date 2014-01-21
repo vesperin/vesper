@@ -1,5 +1,10 @@
 package edu.ucsc.refactor.cli;
 
+import edu.ucsc.refactor.Issue;
+import edu.ucsc.refactor.Source;
+
+import java.util.List;
+
 /**
  * A very basic CLI Interpreter.
  *
@@ -73,10 +78,41 @@ public class Interpreter {
      *
      * @param result The text to be printed.
      */
+    public void printResult(Result result) {
+        if(result.isError()){
+            printError(result);
+        } else if (result.isInfo()){
+            printInfo(result);
+        } else if (result.isIssuesList()){
+            printIssueList(result);
+        } else if(result.isSource()){
+            printSource(result);
+        } else if(result.isCommit()){
+            printCommit(result);
+        } else {  // todo(Huascar) should I throw an error instead?
+            printResult("()");
+        }
+    }
+
+
+    /**
+     * Prints a result to the screen.
+     *
+     * @param result The text to be printed.
+     */
     public void printResult(String result) {
         System.out.print("= ");
         System.out.println(result);
     }
+
+    void printCommit(Result result){
+        final List<Object> values = result.getValue();
+
+        for(Object each : values){
+            print(String.valueOf(each));
+        }
+    }
+
 
     /**
      * Prints an error to the screen.
@@ -87,5 +123,40 @@ public class Interpreter {
         System.out.println("! " + message);
     }
 
+    void printError(Result result) {
+        final List<Object> values = result.getValue();
 
+        for(Object each : values){
+            printError(String.valueOf(each));
+        }
+    }
+
+    void printInfo(Result result) {
+        final List<Object> values = result.getValue();
+
+        for(Object each : values){
+            printResult(String.valueOf(each));
+        }
+    }
+
+
+    void printIssueList(Result result){
+        final List<Object> values = result.getValue();
+
+        for(int i = 0; i < values.size(); i++){
+            print(String.valueOf(i + 1) + ". ");
+            final Issue issue = (Issue)values.get(i);
+            print(issue.getName().getKey() + ".");
+            print("\n");
+        }
+    }
+
+    void printSource(Result result){
+        final List<Object> values = result.getValue();
+
+        for(Object each : values){
+            final Source src = (Source) each;
+            printResult(src.getContents());
+        }
+    }
 }

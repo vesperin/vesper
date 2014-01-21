@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.spi.CommitRequest;
+import edu.ucsc.refactor.util.CommitHistory;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -20,6 +21,9 @@ public class Environment {
     final AtomicReference<Configuration>    remoteConfig;
     final Queue<CommitRequest>              checkpoints;
 
+    /**
+     * Constructs a new Interpreter's Environment.
+     */
     public Environment(){
         refactorer      = new AtomicReference<Refactorer>();
         origin          = new AtomicReference<Source>();
@@ -27,15 +31,26 @@ public class Environment {
         checkpoints     = new LinkedList<CommitRequest>();
     }
 
-
+    /**
+     *
+     * @return
+     */
     public static Result unit(){
         return Result.nothing();
     }
 
+    /**
+     *
+     * @return
+     */
     public boolean containsOrigin() {
         return this.origin.get() != null;
     }
 
+    /**
+     *
+     * @param origin
+     */
     public void setOrigin(Source origin) {
         updateOrigin(origin);
 
@@ -51,16 +66,32 @@ public class Environment {
         }
     }
 
+    /**
+     *
+     * @return
+     */
     public Source getOrigin() {
         return origin.get();
     }
 
+    /**
+     *
+     * @param username
+     * @param password
+     * @return
+     */
     public boolean setCredential(final String username, final String password) {
         return !(Strings.isNullOrEmpty(username) || Strings.isNullOrEmpty(password))
                 && setCredential(new Credential(username, password));
 
     }
 
+
+    /**
+     *
+     * @param credential
+     * @return
+     */
     public boolean setCredential(final Credential credential){
         remoteConfig.set(new AbstractConfiguration() {
             @Override protected void configure() {
@@ -72,24 +103,53 @@ public class Environment {
         return true;
     }
 
+    /**
+     *
+     * @return
+     */
+    public CommitHistory getHistory(){
+        return (getRefactorer() == null
+                ? new CommitHistory()
+                : getRefactorer().getHistory(getOrigin())
+        );
+    }
+
+    /**
+     *
+     * @return
+     */
     public Refactorer getRefactorer() {
         return refactorer.get();
     }
 
+    /**
+     *
+     * @param request
+     */
     public void put(CommitRequest request){
         checkpoints.add(request);
     }
 
-
+    /**
+     *
+     * @return
+     */
     public Queue<CommitRequest> getRequests(){
         return checkpoints;
     }
 
+    /**
+     *
+     */
     public void clears() {
         setCredential(null);
         setOrigin(null);
     }
 
+    /**
+     *
+     * @param updatedSource
+     */
     public void updateOrigin(Source updatedSource) {
         // if origin != null, then refactorer.source === origin
         this.origin.set(updatedSource);
@@ -111,10 +171,18 @@ public class Environment {
         return false;
     }
 
+    /**
+     *
+     */
     public void reset() {
         resetSource(getOrigin().getName());
     }
 
+    /**
+     *
+     * @param name
+     * @return
+     */
     public Source resetSource(String name) {
         Preconditions.checkNotNull(name);
 

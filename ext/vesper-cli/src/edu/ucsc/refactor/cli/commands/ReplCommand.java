@@ -3,7 +3,6 @@ package edu.ucsc.refactor.cli.commands;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import edu.ucsc.refactor.Credential;
-import edu.ucsc.refactor.Issue;
 import edu.ucsc.refactor.cli.*;
 import io.airlift.airline.Arguments;
 import io.airlift.airline.Command;
@@ -76,14 +75,14 @@ public class ReplCommand extends VesperCommand {
         }
 
 
-        Result result = null;
+        Result result;
 
         while (true) {
             System.out.print("vesper> ");
 
             String line = in.readLine();
 
-            if (line.equals("q")) {
+            if (line.equals("quit")) {
                 // ask to continue
                 if (!AskQuestion.ask("Are you sure you would like to quit " + Interpreter.VERSION, false)) {
                     continue;
@@ -110,18 +109,6 @@ public class ReplCommand extends VesperCommand {
             }
 
 
-            if(line.equals("log")){
-                if(result != null){
-                    if(result.isCommitRequest()){
-                        interpreter.printResult(result.getCommitRequest().more());
-                    } else if(result.isSource()){
-                        interpreter.printResult(result.getSource().getContents());
-                    }
-                }
-
-                continue;
-            }
-
             try {
                 result = interpreter.evaluateAndReturn(line);
             } catch (ParseException ex){
@@ -129,26 +116,15 @@ public class ReplCommand extends VesperCommand {
                 continue;
             }
 
-            if(result.isError()){
-                interpreter.printError(result.getErrorMessage());
-            } else if (result.isInfo()){
-                if(!result.getInfo().isEmpty()){
-                    interpreter.print("= " + result.getInfo());
-                }
-            } else if (result.isIssuesList()){
-                final List<Issue> issues = result.getIssuesList();
-                for(int i = 0; i < issues.size(); i++){
-                    interpreter.print(String.valueOf(i + 1) + ". ");
-                    interpreter.print(issues.get(i).getName().getKey() + ".");
-                    interpreter.print("\n");
-                }
-            }  else if(result.isSource()){
-                interpreter.printResult(result.getSource().getContents());
+            if("log".equals(line) && result.isCommit()){
+                interpreter.printResult(result);
+                continue;
             }
+
+            interpreter.printResult(result);
         }
 
     }
-
 
 
     @Override public String toString() {

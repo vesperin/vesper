@@ -73,7 +73,7 @@ public abstract class VesperCommand {
             return Result.failedPackage(message);
         }
 
-        return Result.committedPackage(applied);
+        return Result.committedPackage(applied.getStatus());
     }
 
     protected SourceSelection createSelection(Environment environment, String head){
