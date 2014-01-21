@@ -19,13 +19,13 @@ public class PublishCommand extends VesperCommand {
     @Override public Result execute(Environment environment) throws RuntimeException {
         ensureValidState(environment);
 
-        final Queue<CommitRequest> requests = environment.getRequests();
+        final Queue<CommitRequest> requests = environment.getCommittedRequests();
         final Queue<CommitRequest> skipped  = Lists.newLinkedList();
 
         final StringBuilder details = new StringBuilder();
         while(!requests.isEmpty()){
             final CommitRequest request = requests.remove();
-            final CommitStatus status  = environment.getRefactorer().publish(request).getStatus();
+            final CommitStatus status  = environment.getCodeRefactorer().publish(request).getStatus();
 
             if(status.isAborted()){
                 skipped.add(request);
@@ -44,12 +44,12 @@ public class PublishCommand extends VesperCommand {
             );
         } else {
             while(!skipped.isEmpty()){
-                environment.put(skipped.remove());
+                environment.collect(skipped.remove());
             }
 
             return Result.infoPackage(
                     "A total of "
-                            + environment.getRequests().size()
+                            + environment.getCommittedRequests().size()
                             + " commits were not published. Tried again later."
             );
         }

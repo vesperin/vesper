@@ -17,7 +17,7 @@ public class FormatCommand extends VesperCommand {
         ensureValidState(environment);
 
 
-        final ChangeRequest request = ChangeRequest.reformatSource(environment.getOrigin());
+        final ChangeRequest request = ChangeRequest.reformatSource(environment.getTrackedSource());
         final CommitRequest applied = commitChange(environment, request);
 
         return createResultPackage(applied, "unable to commit 'format code' change");

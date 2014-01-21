@@ -52,7 +52,7 @@ public class Interpreter {
      * clears the environment.
      */
     public void clears() {
-        environment.clears();
+        environment.clear();
     }
 
     /**

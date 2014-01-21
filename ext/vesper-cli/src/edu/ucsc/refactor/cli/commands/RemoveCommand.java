@@ -19,10 +19,10 @@ public class RemoveCommand extends RemoveMemberCommand {
         if(file){
             // ask to continue
             if (!ask("Are you sure you would like to remove the origin?", false)) {
-                return Result.nothing();
+                return environment.unit();
             }
 
-            environment.setOrigin(null);
+            environment.track(null);
 
             return Result.infoPackage("origin was removed!\n");
         }

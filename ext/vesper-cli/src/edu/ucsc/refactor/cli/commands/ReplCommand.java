@@ -17,10 +17,13 @@ import java.util.List;
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-@Command(name = "repl", description = "Interactive Vesper")
+@Command(name = "ivp", description = "Interactive Vesper")
 public class ReplCommand extends VesperCommand {
     @Option(name = "-c", description = "Enter remote credentials")
     public boolean config = false;
+
+    @Option(name = "--longer-prompt", description = "Longer prompt")
+    public boolean prompt = false;
 
     @Arguments(description = "Interactive Vesper parameters")
     public List<String> patterns;
@@ -47,18 +50,18 @@ public class ReplCommand extends VesperCommand {
 
             }
 
-            if(runRepl(credential, environment)){
-                return Result.sourcePackage(environment.getOrigin());
+            if(runRepl(credential, environment, prompt)){
+                return Result.sourcePackage(environment.getTrackedSource());
             }
 
         } catch (Throwable ex){
             throw new RuntimeException(ex);
         }
 
-        return Environment.unit();
+        return environment.unit();
     }
 
-    private static boolean runRepl(Credential credential, Environment global) throws IOException {
+    private static boolean runRepl(Credential credential, Environment global, boolean longerPrompt) throws IOException {
         System.out.println();
         System.out.println(Interpreter.VERSION);
         System.out.println("-----------");
@@ -71,14 +74,16 @@ public class ReplCommand extends VesperCommand {
         Interpreter interpreter = new Interpreter();
 
         if(credential != null){
-            interpreter.getEnvironment().setCredential(credential);
+            interpreter.getEnvironment().enableUpstream(credential);
         }
 
 
         Result result;
 
+        final String prompt = longerPrompt ? Interpreter.VERSION + "> " : "vesper> ";
+
         while (true) {
-            System.out.print("vesper> ");
+            System.out.print(prompt);
 
             String line = in.readLine();
 
@@ -90,8 +95,8 @@ public class ReplCommand extends VesperCommand {
                     // bubble up changes done in REPL mode to the global
                     // environment (scope), and then clear the local
                     // environment.
-                    global.clears();
-                    global.setOrigin(interpreter.getEnvironment().getOrigin());
+                    global.clear();
+                    global.track(interpreter.getEnvironment().getTrackedSource());
                     interpreter.clears();
                     interpreter.print("quitting " + Interpreter.VERSION + " Good bye!\n");
                     return true; // exiting ivr

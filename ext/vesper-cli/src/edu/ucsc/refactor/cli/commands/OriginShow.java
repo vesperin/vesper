@@ -14,11 +14,11 @@ public class OriginShow extends VesperCommand {
     @Override public Result execute(Environment environment) throws RuntimeException {
         ensureValidState(environment);
 
-        if(!environment.containsOrigin()){
-            return Result.nothing();
+        if(!environment.isSourceTracked()){
+            return environment.unit();
         }
 
-        return Result.sourcePackage(environment.getOrigin());
+        return Result.sourcePackage(environment.getTrackedSource());
     }
 
     @Override public String toString() {

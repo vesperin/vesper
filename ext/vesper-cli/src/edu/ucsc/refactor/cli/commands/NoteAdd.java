@@ -21,11 +21,11 @@ public class NoteAdd extends VesperCommand {
 
         final String noteToAdd = Preconditions.checkNotNull(note);
 
-        environment.getOrigin().addNote(
+        environment.getTrackedSource().addNote(
                 // todo(Huascar) add SourceRange (1, 2) or [1,2]
                 new Note(/*[1,2]*/noteToAdd)
         );
 
-        return Environment.unit();
+        return environment.unit();
     }
 }

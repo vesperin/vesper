@@ -2,7 +2,6 @@ package edu.ucsc.refactor.cli.commands;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import edu.ucsc.refactor.Issue;
 import edu.ucsc.refactor.cli.Environment;
@@ -29,15 +28,19 @@ public class InspectCommand extends VesperCommand {
                 || "java".equals(Files.getFileExtension(name));
 
 
-        List<Issue> issues = Lists.newArrayList();
-        if(environment.containsOrigin() && inspectOrigin){
-            issues = environment.getRefactorer().getIssues(environment.getOrigin());
+        final Result result = Result.empty(Result.Content.ISSUES);
+        if(environment.isSourceTracked() && inspectOrigin){
+            final List<Issue> issues = environment.getCodeRefactorer().getIssues(environment.getTrackedSource());
             if(issues.isEmpty()){
-                return Result.infoPackage("No issues to show.\n");
+                return environment.unit();
+            }
+
+            for(Issue each : issues){
+                result.add(each);
             }
         }
 
-        return Result.issuesListPackage(issues);   // maybe we should return only the text of each issue
+        return result;
 
     }
 

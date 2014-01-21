@@ -56,14 +56,14 @@ public class AddCommand extends VesperCommand {
     }
 
     private Result compareAndSet(Environment environment, String name, String content){
-        if(environment.containsOrigin()){
+        if(environment.isSourceTracked()){
             // ask to continue
             if (!ask("Are you sure you would like to REPLACE the existing SOURCE?", false)) {
-                return Result.nothing();
+                return environment.unit();
             }
         }
 
-        environment.setOrigin(
+        environment.track(
                 new Source(
                         name,
                         content
@@ -71,7 +71,7 @@ public class AddCommand extends VesperCommand {
         );
 
 
-        return Result.sourcePackage(environment.getOrigin());
+        return Result.sourcePackage(environment.getTrackedSource());
     }
 
     @Override public String toString() {

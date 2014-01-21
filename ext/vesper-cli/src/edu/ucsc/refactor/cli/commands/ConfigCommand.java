@@ -39,7 +39,7 @@ public class ConfigCommand  extends VesperCommand {
         final String username  = credentials.get(USERNAME_VALUE);
         final String password  = credentials.get(PASSWORD_VALUE);
 
-        final boolean allSet  = environment.setCredential(username, password);
+        final boolean allSet  = environment.enableUpstream(username, password);
 
         if(allSet){
             if(globalOptions.verbose){
@@ -47,7 +47,7 @@ public class ConfigCommand  extends VesperCommand {
             }
         }
 
-        return Result.nothing();
+        return environment.unit();
     }
 
     @Override public String toString() {

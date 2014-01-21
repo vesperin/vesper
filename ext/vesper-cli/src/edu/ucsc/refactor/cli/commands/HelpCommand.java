@@ -18,7 +18,7 @@ public class HelpCommand extends VesperCommand {
 
     @Override public Result execute(Environment environment) throws RuntimeException {
         help.call();
-        return Environment.unit(); // nothing to show
+        return environment.unit(); // nothing to show
     }
 
     @Override public String toString() {

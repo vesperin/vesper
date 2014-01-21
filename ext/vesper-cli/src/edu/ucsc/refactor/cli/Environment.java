@@ -31,68 +31,39 @@ public class Environment {
         checkpoints     = new LinkedList<CommitRequest>();
     }
 
+
     /**
-     *
-     * @return
+     * Clears the environment.
      */
-    public static Result unit(){
-        return Result.nothing();
+    public void clear() {
+        this.refactorer.set(null);
+        this.origin.set(null);
+        this.remoteConfig.set(null);
+        this.checkpoints.clear();
     }
 
-    /**
-     *
-     * @return
-     */
-    public boolean containsOrigin() {
-        return this.origin.get() != null;
-    }
 
     /**
-     *
-     * @param origin
+     * Enable remote commits by providing a credential.
+     * @param username the username
+     * @param password the password
+     * @return {@code true} if the upstream access was enabled, {@code false} otherwise.
      */
-    public void setOrigin(Source origin) {
-        updateOrigin(origin);
-
-        if(origin != null){
-            final Configuration remote      = remoteConfig.get();
-            final Refactorer    refactorer  = remote == null
-                    ? Vesper.createRefactorer(getOrigin())
-                    : Vesper.createRefactorer(remote, getOrigin());
-
-            this.refactorer.set(refactorer);
-        } else {
-            this.refactorer.set(null);
-        }
-    }
-
-    /**
-     *
-     * @return
-     */
-    public Source getOrigin() {
-        return origin.get();
-    }
-
-    /**
-     *
-     * @param username
-     * @param password
-     * @return
-     */
-    public boolean setCredential(final String username, final String password) {
+    public boolean enableUpstream(final String username, final String password) {
         return !(Strings.isNullOrEmpty(username) || Strings.isNullOrEmpty(password))
-                && setCredential(new Credential(username, password));
+                && enableUpstream(new Credential(username, password));
 
     }
 
 
     /**
+     * Enable remote commits by providing a credential.
      *
-     * @param credential
-     * @return
+     * @param credential Access credential to a remote repository.
+     * @return {@code true} if the upstream access was enabled, {@code false} otherwise.
      */
-    public boolean setCredential(final Credential credential){
+    public boolean enableUpstream(final Credential credential){
+        Preconditions.checkNotNull(credential, "invalid credential");
         remoteConfig.set(new AbstractConfiguration() {
             @Override protected void configure() {
                 installDefaultSettings();
@@ -104,56 +75,91 @@ public class Environment {
     }
 
     /**
-     *
-     * @return
+     * @return the tracked {@code Source}.
      */
-    public CommitHistory getHistory(){
-        return (getRefactorer() == null
-                ? new CommitHistory()
-                : getRefactorer().getHistory(getOrigin())
-        );
+    public Source getTrackedSource() {
+        return origin.get();
     }
 
     /**
-     *
-     * @return
+     * @return the commit history of a tracked {@code Source}.
      */
-    public Refactorer getRefactorer() {
+    public CommitHistory getCommitHistory(){
+        return (getCodeRefactorer() == null
+                ? new CommitHistory()
+                : getCodeRefactorer().getHistory(getTrackedSource())
+        );
+    }
+
+
+    /**
+     * @return the {@code Refactorer} for the tracked {@code Source}
+     */
+    public Refactorer getCodeRefactorer() {
         return refactorer.get();
     }
 
     /**
-     *
-     * @param request
+     * @return a {@code Queue} of committed requests.
      */
-    public void put(CommitRequest request){
+    public Queue<CommitRequest> getCommittedRequests(){
+        return checkpoints;
+    }
+
+
+    /**
+     * @return {@code true} if the origin {@code Source} has been set.
+     */
+    public boolean isSourceTracked() {
+        return this.origin.get() != null;
+    }
+
+    /**
+     * Tracks the {@code Source} origin, which in turn will be used to initialize a
+     * {@code Refactorer}.
+     *
+     * @param origin the {@code Source} origin.
+     */
+    public void track(Source origin) {
+        update(origin);
+
+        if(origin != null){
+            final Configuration remote      = remoteConfig.get();
+            final Refactorer    refactorer  = remote == null
+                    ? Vesper.createRefactorer(getTrackedSource())
+                    : Vesper.createRefactorer(remote, getTrackedSource());
+
+            this.refactorer.set(refactorer);
+        } else {
+            this.refactorer.set(null);
+        }
+    }
+
+    /**
+     * @return the unit result.
+     */
+    public Result unit(){
+        return Result.unit();
+    }
+
+    /**
+     * Collects commit requests for later publishing.
+     *
+     * @param request The commit request to be collected.
+     */
+    public void collect(CommitRequest request){
         checkpoints.add(request);
     }
 
     /**
+     * Updates the origin or tracked {@code Source}.
      *
-     * @return
+     * @param updatedSource The new version of a {@code Source}
      */
-    public Queue<CommitRequest> getRequests(){
-        return checkpoints;
-    }
-
-    /**
-     *
-     */
-    public void clears() {
-        setCredential(null);
-        setOrigin(null);
-    }
-
-    /**
-     *
-     * @param updatedSource
-     */
-    public void updateOrigin(Source updatedSource) {
+    public void update(Source updatedSource) {
         // if origin != null, then refactorer.source === origin
         this.origin.set(updatedSource);
-        assert knows(getOrigin());
+        assert isTracked(getTrackedSource());
     }
 
     /**
@@ -163,8 +169,8 @@ public class Environment {
      * @param code The The {@code Source}
      * @return {@code true} if it knows, {@code false} otherwise.
      */
-    public boolean knows(Source code) {
-        for(Source each : getRefactorer().getTrackedSources()){
+    public boolean isTracked(Source code) {
+        for(Source each : getCodeRefactorer().getTrackedSources()){
             if(each.equals(code)){ return true; }
         }
 
@@ -172,34 +178,35 @@ public class Environment {
     }
 
     /**
-     *
+     * Reset current Source to its first version.
      */
     public void reset() {
-        resetSource(getOrigin().getName());
+        resetSource(getTrackedSource().getName());
     }
 
     /**
+     * Reset the Source matching the given {@code name} to its first version.
      *
-     * @param name
-     * @return
+     * @param name the name of the Source
+     * @return the {@code Source}'s first version.
      */
     public Source resetSource(String name) {
         Preconditions.checkNotNull(name);
 
-        final List<Source> all = getRefactorer().getTrackedSources();
+        final List<Source> all = getCodeRefactorer().getTrackedSources();
 
         for(Source each : all){
             if(each.getName().equals(name)){
 
-                final boolean isOrigin = each.equals(getOrigin());
+                final boolean isOrigin = each.equals(getTrackedSource());
 
-                final Source to         = getRefactorer().rewind(each);
-                final Source indexed    = getRefactorer().rewrite(to);
+                final Source to         = getCodeRefactorer().rewind(each);
+                final Source indexed    = getCodeRefactorer().rewrite(to);
 
                 final boolean isUpdateNeeded = !each.equals(indexed);
 
                 if(isOrigin && isUpdateNeeded){
-                    updateOrigin(indexed);
+                    update(indexed);
                 }
 
                 return each;

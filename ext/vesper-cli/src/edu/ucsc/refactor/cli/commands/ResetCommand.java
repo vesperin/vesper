@@ -29,7 +29,7 @@ public class ResetCommand extends VesperCommand {
             return Result.sourcePackage(indexed);
         } else {
             environment.reset();
-            return Result.sourcePackage(environment.getOrigin()); // show the new origin
+            return Result.sourcePackage(environment.getTrackedSource()); // show the new origin
         }
     }
 

@@ -45,7 +45,7 @@ public abstract class VesperCommand {
             }
         }
 
-        return firstNonNull(result, Result.nothing());
+        return firstNonNull(result, environment.unit());
     }
 
 
@@ -56,15 +56,15 @@ public abstract class VesperCommand {
     }
 
     protected CommitRequest commitChange(Environment environment, ChangeRequest request){
-        final CommitRequest applied = environment.getRefactorer().apply(environment.getRefactorer().createChange(request));
-        environment.updateOrigin(applied.getSource());
+        final CommitRequest applied = environment.getCodeRefactorer().apply(environment.getCodeRefactorer().createChange(request));
+        environment.update(applied.getSource());
         return applied;
     }
 
     protected static void ensureValidState(Environment environment){
         Preconditions.checkNotNull(environment, "No environment available");
-        Preconditions.checkNotNull(environment.getOrigin(), "No source code available");
-        Preconditions.checkNotNull(environment.getRefactorer(), "No refactorer available");
+        Preconditions.checkNotNull(environment.getTrackedSource(), "No source code available");
+        Preconditions.checkNotNull(environment.getCodeRefactorer(), "No refactorer available");
     }
 
 
@@ -82,7 +82,7 @@ public abstract class VesperCommand {
         final int start = Integer.valueOf(rangeSplit.iterator().next());
         final int end   = Integer.valueOf(Iterables.getLast(rangeSplit));
 
-        return new SourceSelection(environment.getOrigin(), start, end);
+        return new SourceSelection(environment.getTrackedSource(), start, end);
     }
 
 

@@ -17,7 +17,7 @@ public class LogCommand extends VesperCommand {
         Preconditions.checkNotNull(environment);
 
         final boolean       verboseMode = globalOptions.verbose;
-        final CommitHistory entire      = environment.getHistory();
+        final CommitHistory entire      = environment.getCommitHistory();
         final Result        commits     = Result.empty(Result.Content.COMMIT);
 
         if(verboseMode) {

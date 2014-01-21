@@ -115,7 +115,7 @@ public class Result {
      *
      * @return a new nothing-to-report Result
      */
-    public static Result nothing(){
+    public static Result unit(){
         return infoPackage("()");
     }
 
