@@ -50,7 +50,7 @@ public class Grammar {
                 .withCommand(RenameFieldCommand.class);
 
         builder.withGroup("rm")
-                .withDescription("Remove file contents from the tracked Source")
+                .withDescription("Remove file contents from the tracked source")
                 .withDefaultCommand(RemoveSourceCommand.class)
                 .withCommand(RemoveSourceCommand.class)
                 .withCommand(RemoveClassCommand.class)
