@@ -19,8 +19,10 @@ public class NotesShow extends VesperCommand {
         final Notes notes   = environment.getTrackedSource().getNotes();
         final StringBuilder text    = new StringBuilder();
 
+        text.append("\n");
+        int count = 1;
         for(Note each : notes){
-            text.append(each.getContent()).append("\n");
+            text.append(count++).append(". ").append(each.getContent()).append("\n");
         }
 
         return Result.infoPackage(text.toString());
