@@ -9,7 +9,8 @@
         <mkdir dir="${build.dir}/classes"/>
         <javac srcdir="${src.dir}"
                debug="on"
-               destdir="${build.dir}/classes">
+               destdir="${build.dir}/classes"
+               source="1.6" target="1.6">
             <classpath refid="compile.classpath"/>
         </javac>
         <copy toDir="${build.dir}/classes">
@@ -23,7 +24,8 @@
         <mkdir dir="${build.dir}/tests"/>
         <javac srcdir="${test.dir}"
                debug="on"
-               destdir="${build.dir}/tests">
+               destdir="${build.dir}/tests"
+               source="1.6" target="1.6">
             <classpath path="${build.dir}/classes"/>
             <classpath refid="compile.classpath"/>
         </javac>
@@ -31,6 +33,7 @@
             <fileset dir="${test.dir}" excludes="**/*.java"/>
         </copy>
     </target>
+
 
     <target name="test"
             depends="test.compile"
@@ -51,6 +54,34 @@
     <target name="clean"
             description="Remove generated files.">
         <delete dir="${build.dir}"/>
+    </target>
+
+
+    <target name="source.jar"
+            description="Create a .jar file with sources">
+        <mkdir dir="${build.dir}"/>
+        <zip destfile="${build.dir}/${ant.project.name}-${version}-src.jar">
+            <fileset dir="src"/>
+        </zip>
+    </target>
+
+    <target name="distjars"
+            depends="source.jar, jar"
+            description="Build jar files"/>
+
+    <target name="jar.withdeps" depends="compile"
+            description="Build jar with dependencies embedded.">
+        <mkdir dir="${build.dir}/dist"/>
+        <dirname property="common.basedir" file="${ant.file.common}"/>
+        <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
+                 classpath="lib/jarjar-1.4.jar"/>
+        <jarjar jarfile="${build.dir}/${ant.project.name}-with-deps.jar">
+            <fileset dir="${build.dir}/classes"/>
+            <zipfileset src="${common.basedir}/lib/diffutils-1.2.1.jar"/>
+            <zipfileset src="${common.basedir}/lib/guava-15.0.jar"/>
+            <zipfileset src="${common.basedir}/lib/org.eclipse**.jar"/>
+            <keep pattern="edu.ucsc.refactor.**"/>
+        </jarjar>
     </target>
 
 </project>

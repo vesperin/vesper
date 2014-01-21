@@ -8,18 +8,22 @@
         <fileset dir="${lib.dir}" includes="*.jar"/>
     </path>
 
-    <target name="jar" depends="compile"
+    <target name="jar" depends="jar.withdeps"
             description="Build jar.">
-        <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
-                 classpath="lib/jarjar-1.4.jar"/>
-        <mkdir dir="${build.dir}/dist"/>
-        <jarjar jarfile="${build.dir}/dist/vesper-${version}.jar">
-            <fileset dir="${build.dir}/classes"/>
-        </jarjar>
+        <jar jarfile="${build.dir}/dist/vesper-${version}.jar"
+             manifest="${build.dir}/META-INF/MANIFEST.MF">
+            <zipfileset src="${build.dir}/${ant.project.name}-with-deps.jar"/>
+        </jar>
     </target>
 
-    <target name="dist" depends="jar, javadoc"
+    <target name="dist" depends="distjars, javadoc"
             description="Build entire distribution.">
+
+        <ant antfile="ext/vesper-cli/build.xml" target="distjars" inheritAll="false"/>
+
+        <copy toDir="${build.dir}/dist">
+            <fileset dir="ext/vesper-cli/build" includes="*.jar" excludes="*-with-deps.jar"/>
+        </copy>
 
         <copy toDir="${build.dir}/dist" file="COPYING"/>
         <copy toDir="${build.dir}/dist">
@@ -34,7 +38,7 @@
              basedir="${build.dir}/dist"/>
         <zip destfile="${build.dir}/vesper-${version}-src.zip"
              basedir="."
-             excludes="build/**/*,build,.svn,.svn/**/*,**/.svn,classes,classes/**/*"/>
+             excludes="build/**/*,build,.svn,.svn/**/*,**/.svn,classes,classes/**/*,.classpath,.project,.idea"/>
     </target>
 
     <target name="test.dist"
@@ -60,9 +64,10 @@
                  destdir="${build.dir}/javadoc"
                  author="false"
                  protected="true"
-                 windowtitle="Vesper 1.0 API">
+                 windowtitle="Vesper 0.0.0 API">
             <sourcepath>
                 <pathelement location="${src.dir}"/>
+                <pathelement location="${cli.src.dir}"/>
             </sourcepath>
             <classpath refid="compile.classpath"/>
             <link href="http://java.sun.com/javase/6/docs/api"/>
@@ -72,6 +77,6 @@
     <target name="clean.all"
             depends="clean"
             description="Remove generated files.">
+        <ant dir="ext/vesper-cli" antfile="build.xml" target="clean"/>
     </target>
-
 </project>
