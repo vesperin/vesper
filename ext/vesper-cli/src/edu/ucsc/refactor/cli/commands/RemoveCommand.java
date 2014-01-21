@@ -18,7 +18,7 @@ import static io.airlift.airline.OptionType.GROUP;
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public abstract class RemoveMemberCommand extends VesperCommand {
+public abstract class RemoveCommand extends VesperCommand {
     @Option(type = GROUP, name = {"-f", "--file"}, description = "Remove the indexed Source")
     public boolean file = false;
 

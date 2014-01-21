@@ -11,7 +11,7 @@ import io.airlift.airline.Command;
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 @Command(name = "origin", description = "Remove the indexed source (i.e., the origin)")
-public class RemoveSourceCommand extends RemoveMemberCommand {
+public class RemoveSourceCommand extends RemoveCommand {
 
     @Override public Result execute(Environment environment) throws RuntimeException {
         ensureValidState(environment);
