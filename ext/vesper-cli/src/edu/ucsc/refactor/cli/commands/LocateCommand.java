@@ -1,5 +1,6 @@
 package edu.ucsc.refactor.cli.commands;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import edu.ucsc.refactor.Location;
 import edu.ucsc.refactor.cli.Environment;
@@ -50,4 +51,10 @@ public abstract class LocateCommand extends VesperCommand {
     }
 
     protected abstract ProgramUnit programUnit(String name);
+
+    @Override public String toString() {
+        return Objects.toStringHelper(getClass())
+                .add("params", patterns)
+                .toString();
+    }
 }

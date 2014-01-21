@@ -56,10 +56,14 @@ public class Grammar {
                 .withCommand(RemoveClassCommand.class)
                 .withCommand(RemoveMethodCommand.class)
                 .withCommand(RemoveParameterCommand.class)
-                .withCommand(RemoveFieldCommand.class);
+                .withCommand(RemoveFieldCommand.class)
+                .withCommand(RemoveRangeCommand.class);
 
-        // todo(Huascar)
-        builder.withGroup("slice");
+        builder.withGroup("slice")
+                .withDefaultCommand(SliceClassCommand.class)
+                .withCommand(SliceClassCommand.class)
+                .withCommand(SliceMethodCommand.class)
+                .withCommand(SliceRangeCommand.class);
 
     }
 
