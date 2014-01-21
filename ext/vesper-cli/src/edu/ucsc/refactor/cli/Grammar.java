@@ -27,6 +27,20 @@ public class Grammar {
                 .withCommand(PublishCommand.class)
                 .withCommand(FormatCommand.class);
 
+        builder.withGroup("locate")
+                .withDescription("Locates a program unit found in the tracked Source")
+                .withDefaultCommand(LocateClassCommand.class)
+                .withCommand(LocateClassCommand.class)
+                .withCommand(LocateMethodCommand.class)
+                .withCommand(LocateParamCommand.class)
+                .withCommand(LocateFieldCommand.class);
+
+        builder.withGroup("notes")
+                .withDescription("Manage set of notes describing the tracked Source")
+                .withDefaultCommand(NotesShow.class)
+                .withCommand(NotesShow.class)
+                .withCommand(NoteAdd.class);
+
         builder.withGroup("rename")
                 .withDescription("Manage set of renaming commands")
                 .withDefaultCommand(RenameClassCommand.class)
@@ -37,18 +51,15 @@ public class Grammar {
 
         builder.withGroup("rm")
                 .withDescription("Remove file contents from the indexed Source")
-                .withDefaultCommand(RemoveCommand.class)
-                .withCommand(RemoveCommand.class)
+                .withDefaultCommand(RemoveSourceCommand.class)
+                .withCommand(RemoveSourceCommand.class)
                 .withCommand(RemoveClassCommand.class)
                 .withCommand(RemoveMethodCommand.class)
                 .withCommand(RemoveParameterCommand.class)
                 .withCommand(RemoveFieldCommand.class);
 
-        builder.withGroup("notes")
-                .withDescription("Manage set of notes about SOURCE")
-                .withDefaultCommand(NotesShow.class)
-                .withCommand(NotesShow.class)
-                .withCommand(NoteAdd.class);
+        // todo(Huascar)
+        builder.withGroup("slice");
 
     }
 
