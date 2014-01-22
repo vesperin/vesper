@@ -11,7 +11,8 @@
     <target name="jar" depends="jar.withdeps, manifest"
             description="Build jar.">
         <echo message="CLI JAR"/>
-        <jar destfile="${build.dir}/${ant.project.name}-${version}.jar">
+        <jar destfile="${build.dir}/${ant.project.name}-${version}.jar"
+             manifest="${build.dir}/MANIFEST.MF">
             <fileset dir="${build.dir}/classes"/>
             <zipfileset src="${build.dir}/${ant.project.name}-with-deps.jar"
                         excludes="edu/ucsc/refactor/internal/**"/>

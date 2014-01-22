@@ -10,7 +10,7 @@
 
     <target name="jar" depends="jar.withdeps, manifest"
             description="Build jar.">
-        <echo message="MAIN JAR"/>
+        <echo message="vesper jar"/>
         <jar jarfile="${build.dir}/dist/vesper-${version}.jar"
              manifest="${build.dir}/MANIFEST.MF">
             <zipfileset src="${build.dir}/${ant.project.name}-with-deps.jar"/>
@@ -26,20 +26,22 @@
             <fileset dir="ext/vesper-cli/build" includes="*.jar" excludes="*-with-deps.jar"/>
         </copy>
 
-        <copy toDir="${build.dir}/dist" file="COPYING"/>
         <copy toDir="${build.dir}/dist">
             <fileset dir="${lib.dir}"
                      includes="*.jar"/>
         </copy>
+
         <copy toDir="${build.dir}/dist">
             <fileset dir="${build.dir}" includes="javadoc/**/*"/>
         </copy>
 
-        <zip destfile="${build.dir}/vesper-${version}.zip"
-             basedir="${build.dir}/dist"/>
-        <zip destfile="${build.dir}/vesper-${version}-src.zip"
-             basedir="."
-             excludes="build/**/*,build,.svn,.svn/**/*,**/.svn,classes,classes/**/*,.classpath,.project,.idea"/>
+        <zip destfile="${build.dir}/vesper-${version}.zip">
+            <zipfileset dir="${build.dir}/dist" prefix="vesper-${version}" excludes="*-src.jar"/>
+        </zip>
+        <zip destfile="${build.dir}/vesper-${version}-src.zip">
+            <zipfileset dir="." prefix="vesper-${version}-src"
+                        excludes="build/**/*,build,.svn,.svn/**/*,**/.svn,classes,classes/**/*,.classpath,.project,.idea"/>
+        </zip>
     </target>
 
     <target name="test.dist"

@@ -66,15 +66,16 @@
     </target>
 
     <target name="distjars"
-            depends="source.jar, jar"
+            depends="source.jar"
             description="Build jar files"/>
 
     <target name="jar.withdeps" depends="compile"
             description="Build jar.">
-        <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
-                 classpath="lib/jarjar-1.4.jar"/>
         <mkdir dir="${build.dir}/dist"/>
         <dirname property="common.basedir" file="${ant.file.common}"/>
+        <echo message="HOHOHO ${common.basedir}"/>
+        <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
+                 classpath="${common.basedir}/lib/jarjar-1.4.jar" />
         <jarjar jarfile="${build.dir}/${ant.project.name}-with-deps.jar">
             <fileset dir="${build.dir}/classes"/>
             <zipfileset src="${common.basedir}/lib/diffutils-1.2.1.jar"/>
