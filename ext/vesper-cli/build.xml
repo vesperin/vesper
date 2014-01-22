@@ -4,14 +4,17 @@
 
     <path id="compile.classpath">
         <fileset dir="${lib.dir}" includes="*.jar"/>
+        <fileset dir="../../build/dist" includes="*.jar"/>
     </path>
 
-    <target name="jar" depends="jar.withdeps"
+
+    <target name="jar" depends="jar.withdeps, manifest"
             description="Build jar.">
-        <mkdir dir="${build.dir}"/>
-        <jar destfile="${build.dir}/${ant.project.name}-${version}.jar"
-             manifest="${build.dir}/META-INF/MANIFEST.MF">
+        <echo message="CLI JAR"/>
+        <jar destfile="${build.dir}/${ant.project.name}-${version}.jar">
             <fileset dir="${build.dir}/classes"/>
+            <zipfileset src="${build.dir}/${ant.project.name}-with-deps.jar"
+                        excludes="edu/ucsc/refactor/internal/**"/>
         </jar>
     </target>
 </project>

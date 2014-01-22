@@ -8,10 +8,11 @@
         <fileset dir="${lib.dir}" includes="*.jar"/>
     </path>
 
-    <target name="jar" depends="jar.withdeps"
+    <target name="jar" depends="jar.withdeps, manifest"
             description="Build jar.">
+        <echo message="MAIN JAR"/>
         <jar jarfile="${build.dir}/dist/vesper-${version}.jar"
-             manifest="${build.dir}/META-INF/MANIFEST.MF">
+             manifest="${build.dir}/MANIFEST.MF">
             <zipfileset src="${build.dir}/${ant.project.name}-with-deps.jar"/>
         </jar>
     </target>
@@ -50,7 +51,8 @@
             <classpath>
                 <pathelement location="${build.dir}/tests"/>
                 <pathelement location="${build.dir}/dist/vesper-${version}.jar"/>
-                <pathelement location="${lib.dir}/*.jar" />
+                <pathelement location="lib/hamcrest-core-1.3.jar"/>
+                <pathelement location="lib/junit-4.11.jar"/>
                 <path refid="compile.classpath"/>
             </classpath>
             <arg value="${test.class}"/>
