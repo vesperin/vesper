@@ -3,10 +3,16 @@
 <project name="tasks">
 
     <property file="build.properties"/>
-    <property name="version" value="0.0.1"/>
+
+    <!-- can be overridden at the command line with -Dversion=
+         or in IDEA, in the ant properties dialog -->
+    <property name="version" value="1.0"/>
 
     <target name="compile" description="Compile Java source.">
         <mkdir dir="${build.dir}/classes"/>
+        <dirname property="common.basedir" file="${ant.file.tasks}"/>
+
+        <mkdir dir="${common.basedir}/build/META-INF" />
         <javac srcdir="${src.dir}"
                debug="on"
                destdir="${build.dir}/classes"
@@ -16,6 +22,26 @@
         <copy toDir="${build.dir}/classes">
             <fileset dir="${src.dir}" excludes="**/*.java"/>
         </copy>
+    </target>
+
+    <target name="manifest" description="Generate manifest." depends="compile">
+        <dirname property="common.basedir" file="${ant.file.tasks}"/>
+
+        <manifest file="${common.basedir}/build/META-INF/MANIFEST.MF">
+
+            <section name="Vesper Source Code Curating Framework">
+
+
+                <attribute name="Bundle-Name" value="Vesper"/>
+                <attribute name="Bundle-Version" value="${version}"/>
+
+                <attribute name="Bundle-Description" value="Vesper is a lightweight source code curating framework for Java 1.6 and above"/>
+                <attribute name="Bundle-DocURL" value="http://www.github.com/hsanchez/vesper/"/>
+                <attribute name="Bundle-Copyright" value="Copyright (C) 2014 Huascar A. Sanchez"/>
+                <attribute name="Bundle-License" value="http://www.apache.org/licenses/LICENSE-2.0"/>
+                <attribute name="Bundle-Vendor" value="Software Introspection Lab at UC Santa Cruz"/>
+            </section>
+        </manifest>
     </target>
 
     <target name="test.compile"
@@ -40,22 +66,23 @@
             description="Execute JUnit tests.">
         <java fork="true"
               classname="org.junit.runner.JUnitCore"
-              failonerror="true">
+              failonerror="true"
+              taskname="junit">
             <classpath>
                 <pathelement location="${build.dir}/tests"/>
                 <pathelement location="${build.dir}/classes"/>
-                <pathelement location="${lib.dir}/*.jar" />
                 <path refid="compile.classpath"/>
             </classpath>
             <arg value="${test.class}"/>
         </java>
     </target>
 
+
+
     <target name="clean"
             description="Remove generated files.">
         <delete dir="${build.dir}"/>
     </target>
-
 
     <target name="source.jar"
             description="Create a .jar file with sources">
@@ -66,16 +93,15 @@
     </target>
 
     <target name="distjars"
-            depends="source.jar"
+            depends="source.jar, jar"
             description="Build jar files"/>
 
     <target name="jar.withdeps" depends="compile"
-            description="Build jar.">
+            description="Build jar with dependencies embedded.">
         <mkdir dir="${build.dir}/dist"/>
-        <dirname property="common.basedir" file="${ant.file.common}"/>
-        <echo message="HOHOHO ${common.basedir}"/>
+        <dirname property="common.basedir" file="${ant.file.tasks}"/>
         <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
-                 classpath="${common.basedir}/lib/jarjar-1.4.jar" />
+                 classpath="${common.basedir}/lib/jarjar-1.4.jar"/>
         <jarjar jarfile="${build.dir}/${ant.project.name}-with-deps.jar">
             <fileset dir="${build.dir}/classes"/>
             <zipfileset src="${common.basedir}/lib/diffutils-1.2.1.jar"/>
@@ -95,23 +121,6 @@
             <zipfileset src="${common.basedir}/lib/org.eclipse.text_3.5.300.v20130515-1451.jar"/>
             <zipfileset src="${common.basedir}/lib/airbase-0.7-SNAPSHOT.jar"/>
         </jarjar>
-    </target>
-
-
-    <target name="manifest" depends="compile">
-        <dirname property="common.basedir" file="${ant.file.common}"/>
-        <manifest file="${common.basedir}/build/MANIFEST.MF">
-            <attribute name="Built-By" value="Huascar A. Sanchez"/>
-
-            <section name="${ant.project.name}">
-                <attribute name="Specification-Title" value="Vesper is source code curating framework for Java 5 and above"/>
-                <attribute name="Specification-Version" value="Vesper-${version}"/>
-                <attribute name="Specification-Vendor" value="University of California Santa Cruz"/>
-                <attribute name="Implementation-Title" value="${ant.project.name}"/>
-                <attribute name="Implementation-Version" value="Vesper-${version}"/>
-                <attribute name="Implementation-Vendor" value="Software Introspection Lab"/>
-            </section>
-        </manifest>
     </target>
 
 </project>

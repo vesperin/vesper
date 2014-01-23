@@ -8,18 +8,16 @@
         <fileset dir="${lib.dir}" includes="*.jar"/>
     </path>
 
-    <target name="jar" depends="jar.withdeps, manifest"
-            description="Build jar.">
-        <echo message="vesper jar"/>
+
+    <target name="jar" depends="jar.withdeps, manifest" description="Build jar.">
         <jar jarfile="${build.dir}/dist/vesper-${version}.jar"
-             manifest="${build.dir}/MANIFEST.MF">
+             manifest="${build.dir}/META-INF/MANIFEST.MF">
             <zipfileset src="${build.dir}/${ant.project.name}-with-deps.jar"/>
         </jar>
     </target>
 
     <target name="dist" depends="distjars, javadoc"
             description="Build entire distribution.">
-
         <ant antfile="ext/vesper-cli/build.xml" target="distjars" inheritAll="false"/>
 
         <copy toDir="${build.dir}/dist">
@@ -30,7 +28,6 @@
             <fileset dir="${lib.dir}"
                      includes="*.jar"/>
         </copy>
-
         <copy toDir="${build.dir}/dist">
             <fileset dir="${build.dir}" includes="javadoc/**/*"/>
         </copy>
@@ -38,9 +35,10 @@
         <zip destfile="${build.dir}/vesper-${version}.zip">
             <zipfileset dir="${build.dir}/dist" prefix="vesper-${version}" excludes="*-src.jar"/>
         </zip>
+
         <zip destfile="${build.dir}/vesper-${version}-src.zip">
             <zipfileset dir="." prefix="vesper-${version}-src"
-                        excludes="build/**/*,build,.svn,.svn/**/*,**/.svn,classes,classes/**/*,.classpath,.project,.idea"/>
+                        excludes="build/**/*,build,.svn,.svn/**/*,**/.svn,classes,classes/**/*"/>
         </zip>
     </target>
 
@@ -49,7 +47,8 @@
             description="Execute JUnit tests against distribution jar.">
         <java fork="true"
               classname="org.junit.runner.JUnitCore"
-              failonerror="true">
+              failonerror="true"
+              taskname="junit">
             <classpath>
                 <pathelement location="${build.dir}/tests"/>
                 <pathelement location="${build.dir}/dist/vesper-${version}.jar"/>
@@ -83,4 +82,5 @@
             description="Remove generated files.">
         <ant dir="ext/vesper-cli" antfile="build.xml" target="clean"/>
     </target>
+
 </project>
