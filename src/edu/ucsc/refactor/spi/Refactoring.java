@@ -14,6 +14,7 @@ public enum Refactoring implements Name {
     DELETE_METHOD("Delete Method", "Vesper will delete a selected method"),
     DELETE_PARAMETER("Delete Parameter", "Vesper will delete the selected method parameter"),
     DELETE_FIELD("Delete Field", "Vesper will delete the selected field"),
+    DELETE_REGION("Delete Region", "Vesper will delete the selected region"),
     DELETE_UNUSED_IMPORTS("Delete Unused Imports", "Vesper will optimize your imports"),
     RENAME_METHOD("Rename Method", "Vesper will rename the name of the selected method"),
     RENAME_PARAMETER("Rename Parameter", "Vesper will rename the name of the selected method's parameter"),
