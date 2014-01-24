@@ -95,7 +95,7 @@ public class Environment {
     public CommitHistory getCommitHistory(){
         return (getCodeRefactorer() == null
                 ? new CommitHistory()
-                : getCodeRefactorer().getHistory(getTrackedSource())
+                : getCodeRefactorer().getCommitHistory(getTrackedSource())
         );
     }
 
@@ -209,7 +209,7 @@ public class Environment {
                 final boolean isOrigin = each.equals(getTrackedSource());
 
                 final Source to         = getCodeRefactorer().rewind(each);
-                final Source indexed    = getCodeRefactorer().rewrite(to);
+                final Source indexed    = getCodeRefactorer().rewriteHistory(to);
 
                 final boolean isUpdateNeeded = !each.equals(indexed);
 
