@@ -47,11 +47,7 @@ public class JavaRefactorer implements Refactorer {
     }
 
     @Override public CommitRequest apply(Change change) {
-        if(change == null) {
-            throw new IllegalArgumentException(
-                    "apply() method has received a null change"
-            );
-        }
+        Preconditions.checkNotNull(change, "apply() method has received a null change" );
 
         final CommitRequest applied = change.perform();
 
@@ -101,6 +97,7 @@ public class JavaRefactorer implements Refactorer {
     }
 
     @Override public Change createChange(ChangeRequest request) {
+        Preconditions.checkNotNull(request, "createChange() method has received a null request");
         final boolean                isIssue    = request.isIssue();
         final CauseOfChange          cause      = request.getCauseOfChange();
         final Map<String, Parameter> parameters = request.getParameters();
@@ -149,6 +146,7 @@ public class JavaRefactorer implements Refactorer {
 
 
     @Override public void detectIssues(Source code) {
+        Preconditions.checkNotNull(code);
         try {
             final Context context = validContext(code);
             if(context == null) { return; }
@@ -164,12 +162,12 @@ public class JavaRefactorer implements Refactorer {
     }
 
     // forward
-    @Override public Source rewrite(Source current) {
+    @Override public Source rewriteHistory(Source source) {
 
-        final Source        from   = Preconditions.checkNotNull(current);
-        final CommitHistory entire = getHistory(from);
+        final Source        from   = Preconditions.checkNotNull(source);
+        final CommitHistory entire = getCommitHistory(from);
 
-        if(entire.isEmpty()) { return current; }
+        if(entire.isEmpty()) { return source; }
 
         final Checkpoint    first  = entire.first();
         final Checkpoint    last   = entire.last();
@@ -193,7 +191,7 @@ public class JavaRefactorer implements Refactorer {
 
                 Preconditions.checkArgument(
                         from.getUniqueSignature().equals(sliced.last().getUniqueSignature()),
-                        "rewrite() is dealing with sources that are not part "
+                        "rewriteHistory() is dealing with sources that are not part "
                         + "of the same change history"
                 );
 
@@ -202,7 +200,7 @@ public class JavaRefactorer implements Refactorer {
             }
         }
 
-        throw new NoSuchElementException("rewrite() was unable to find " + from);
+        throw new NoSuchElementException("rewriteHistory() was unable to find " + from);
     }
 
 
@@ -223,7 +221,7 @@ public class JavaRefactorer implements Refactorer {
     }
 
     @Override public Source forward(Source current) {
-        final CommitHistory history = getHistory(current);
+        final CommitHistory history = getCommitHistory(current);
 
         for(Checkpoint each : history){
             if(each.getSourceBeforeChange().equals(current)){
@@ -235,9 +233,8 @@ public class JavaRefactorer implements Refactorer {
         return current;
     }
 
-    // backwards
     @Override public Source rewind(Source current) {
-        final CommitHistory history = getHistory(current);
+        final CommitHistory history = getCommitHistory(current);
 
         for(Checkpoint each : history){
             if(each.getSourceAfterChange().equals(current)){
@@ -304,7 +301,7 @@ public class JavaRefactorer implements Refactorer {
         return Collections.emptyList();
     }
 
-    @Override public CommitHistory getHistory(Source src) {
+    @Override public CommitHistory getCommitHistory(Source src) {
         final CommitHistory result = timeline.get(Preconditions.checkNotNull(src).getUniqueSignature());
         if(result == null){
             return new CommitHistory();
@@ -314,10 +311,11 @@ public class JavaRefactorer implements Refactorer {
     }
 
     @Override public boolean hasIssues(Source code) {
-        return !getIssues(code).isEmpty();
+        return !getIssues(Preconditions.checkNotNull(code)).isEmpty();
     }
 
     @Override public UnitLocator getLocator(Source readSource) {
+        Preconditions.checkNotNull(readSource);
         Preconditions.checkState(!getValidContexts().isEmpty(), "unknown Source");
         return new ProgramUnitLocator(getValidContexts().get(readSource));
     }
