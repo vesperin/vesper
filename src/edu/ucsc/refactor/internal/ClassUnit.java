@@ -5,7 +5,7 @@ import com.google.common.collect.Lists;
 import edu.ucsc.refactor.Context;
 import edu.ucsc.refactor.Location;
 import edu.ucsc.refactor.internal.visitors.SelectedASTNodeVisitor;
-import edu.ucsc.refactor.util.AstUtil;
+import edu.ucsc.refactor.internal.util.AstUtil;
 import edu.ucsc.refactor.util.Locations;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 

@@ -3,13 +3,13 @@ package edu.ucsc.refactor.internal.visitors;
 import edu.ucsc.refactor.Location;
 import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.spi.Refactoring;
-import edu.ucsc.refactor.util.AstUtil;
+import edu.ucsc.refactor.internal.util.AstUtil;
 import org.eclipse.jdt.core.dom.*;
 
 import java.util.NoSuchElementException;
 
-import static edu.ucsc.refactor.util.AstUtil.isFurtherTraversalNecessary;
-import static edu.ucsc.refactor.util.AstUtil.isNodeWithinSelection;
+import static edu.ucsc.refactor.internal.util.AstUtil.isFurtherTraversalNecessary;
+import static edu.ucsc.refactor.internal.util.AstUtil.isNodeWithinSelection;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)

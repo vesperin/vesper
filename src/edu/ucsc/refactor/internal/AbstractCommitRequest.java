@@ -6,7 +6,7 @@ import edu.ucsc.refactor.Change;
 import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.spi.CommitRequest;
 import edu.ucsc.refactor.spi.CommitStatus;
-import edu.ucsc.refactor.util.AstUtil;
+import edu.ucsc.refactor.internal.util.AstUtil;
 import org.eclipse.jdt.core.dom.ASTNode;
 
 import java.io.File;

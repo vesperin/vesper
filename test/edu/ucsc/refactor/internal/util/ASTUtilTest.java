@@ -1,4 +1,4 @@
-package edu.ucsc.refactor.util;
+package edu.ucsc.refactor.internal.util;
 
 import edu.ucsc.refactor.AbstractConfiguration;
 import edu.ucsc.refactor.Context;

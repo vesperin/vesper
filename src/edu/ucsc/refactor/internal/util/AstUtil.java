@@ -1,4 +1,4 @@
-package edu.ucsc.refactor.util;
+package edu.ucsc.refactor.internal.util;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -7,6 +7,7 @@ import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.internal.visitors.LabelVisitor;
 import edu.ucsc.refactor.internal.visitors.LinkedNodesVisitor;
 import edu.ucsc.refactor.internal.visitors.SideEffectNodesVisitor;
+import edu.ucsc.refactor.util.Locations;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
