@@ -1,4 +1,4 @@
 vesper
 ======
 
-A library for performing refactorings (NO IDEs needed)
+Vesper is a lightweight source code curating framework for Java 1.6 and above (NO IDEs needed)

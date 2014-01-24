@@ -10,7 +10,8 @@ import java.util.List;
 /**
  * <p>
  * Vesper, in classical latin, means `evening.` However, the reason I named this
- * API like this is because I really like Vesper martinis :-)
+ * API vesper is because I really like Vesper martinis :-) and not because I love evenings, which
+ * I do.
  * </p>
  *
  * <p>
@@ -19,7 +20,7 @@ import java.util.List;
  *
  * <pre>
  *     import static edu.ucsc.refactor.ChangeRequest.forIssue;
- *     import static edu.ucsc.refactor.ChangeRequest.forEdit;
+ *     import static edu.ucsc.refactor.ChangeRequest.reformatSource;
  *
  *     final Source          code       = new Source(...);
  *     // using your own configuration:
@@ -29,35 +30,50 @@ import java.util.List;
  *
  *     final Map<String, Parameter> userInput = ...;
  *
- *     // I. Dealing with issues detected by the Refactorer
+ *     // I. Ask the refactorer to recommend changes for you
  *
- *     // basic usage
- *     if(refactorer.hasIssues(code){
- *        final List<Issue> issues = refactorer.getIssues(code);
- *        for(Issue issue : issues){
- *           final Change  change  = refactorer.createChange(forIssue(issue, userInput));
- *           final CommitRequest applied = refactorer.apply(change);
- *           System.out.println(applied.more()); // prints CommitRequest's data; e.g., successful..
- *        }
- *     }
- *
- *     // a simpler usage
+ *     // print the reason for the change
  *
  *     final List<Change> changes = refactorer.recommendChanges(code);
  *     for(Change each : changes){
- *        final CommitRequest applied = refactorer.apply(each);
- *        System.out.println(applied.more());
- *        break; // the rest of changes in list of changes are outdated; please re-run recommendChanges
+ *        System.out.println(each.getCause().getName());
+ *     }
+ *
+ *     // perform a single recommended change
+ *
+ *     final CommitRequest applied = refactor.apply(changes.get(0));
+ *     System.out.println(applied.more());
+ *
+ *     // or handle All recommended changes
+ *
+ *     List<Change> recommended = refactorer.recommendChanges(code);
+ *     while(!recommended.isEmpty()){
+ *         final CommitRequest applied = refactor.apply(recommended.get(0));
+ *         System.out.println(applied.more());
+ *         recommended = refactorer.recommendChanges(code); // get an updated list of changes
  *     }
  *
  *
- *     // select a method
- *     final SourceSelection    selection = new SourceSelection(code, 37, 62);
+ *     // II. Dealing with random edits started by the user
  *
- *     // II. Dealing with random edits from a user
+ *     // reformat Source's content
  *
- *     Change reformat = refactorer.createChange(forEdit(SingleEdit.reformatCode(selection)));
- *     System.out.println(refactorer.apply(reformat).more());
+ *     Change reformat = refactorer.createChange(reformatSource(code));
+ *     final CommitRequest applied = refactor.apply(reformat);
+ *     System.out.println(applied.more());
+ *
+ *     // III. Publishing locally committed changes to a remote repository (e.g., Gist.Github.com)
+ *
+ *     // Let's assume that vesper has been given the right credentials to access a remote repo
+ *     // (e.g., see default configuration for how to do this).
+ *
+ *     // publish changes
+ *     final CommitRequest published = refactorer.publish(applied);
+ *     System.out.println(published.more());
+ *
+ *     // IV. More?
+ *
+ *     // see {@code Refactorer}'s API for more details.
  *
  * </pre>
  *
