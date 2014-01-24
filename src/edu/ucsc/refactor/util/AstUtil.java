@@ -36,11 +36,9 @@ public class AstUtil {
 
     public static boolean usesVariable(MethodDeclaration methodDeclaration,
                                        SingleVariableDeclaration variableDeclaration) {
-        final SideEffectNodesVisitor sideEffect = new SideEffectNodesVisitor();
-        methodDeclaration.accept(sideEffect);
 
         final String methodBlock = methodDeclaration.getBody().toString();
-        return methodBlock.contains(variableDeclaration.getName().toString()) && !sideEffect.getSideEffectNodes().isEmpty();
+        return methodBlock.contains(variableDeclaration.getName().toString());
     }
 
     /**
@@ -219,13 +217,57 @@ public class AstUtil {
      * @return <code>true</code> iff <code>parent</code> is a true ancestor of <code>node</code>
      */
     public static boolean isParent(ASTNode node, ASTNode parent) {
-        Preconditions.checkNotNull(parent);
+        ASTNode a = Preconditions.checkNotNull(node);
+        ASTNode b = Preconditions.checkNotNull(parent);
+
         do {
-            node = node.getParent();
-            if (node == parent) return true;
-        } while (node != null);
+            a = a.getParent();
+            if (a == b) return true;
+        } while (a != null);
 
         return false;
+    }
+
+
+    /**
+     * Checks if a variable, a field, or a parameter has any side effects withing its declaring
+     * scope (e.g., A TypeDeclaration for a field, a MethodDeclaration for a parameter or local
+     * variable).
+     *
+     * @param reference The reference to a field, parameter, or a local variable.
+     * @return {@code true} if the referenced member has any side effects.
+     */
+    public static boolean isSideEffectFound(SimpleName reference) {
+        ASTNode parent = reference.getParent();
+
+        while (parent instanceof QualifiedName) {
+            parent = parent.getParent();
+        }
+
+        if (parent instanceof FieldAccess) {
+            parent = parent.getParent();
+        }
+
+        ASTNode node;
+
+        int nameParentType = parent.getNodeType();
+        if (nameParentType == ASTNode.ASSIGNMENT) {
+            Assignment assignment = (Assignment) parent;
+            node = assignment.getRightHandSide();
+        } else if (nameParentType == ASTNode.SINGLE_VARIABLE_DECLARATION) {
+            final SingleVariableDeclaration declaration = (SingleVariableDeclaration) parent;
+            node = declaration.getInitializer();
+            if (node == null) { return false; }
+        } else if (nameParentType == ASTNode.VARIABLE_DECLARATION_FRAGMENT) {
+            node = parent;
+        } else {
+            return false;
+        }
+
+        final SideEffectNodesVisitor visitor = new SideEffectNodesVisitor();
+        node.accept(visitor);
+
+        return visitor.getSideEffectNodes().size() > 0;
     }
 
 

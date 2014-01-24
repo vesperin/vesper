@@ -10,7 +10,7 @@ import java.util.Set;
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public class TypeDeclarationVisitor extends SourceVisitor {
-    final Set<AbstractTypeDeclaration> clazz = Sets.newHashSet();
+    final Set<AbstractTypeDeclaration> clazz = Sets.newLinkedHashSet();
 
     /**
      * Constructs a new TypeDeclarationVisitor
@@ -38,5 +38,10 @@ public class TypeDeclarationVisitor extends SourceVisitor {
     @Override public boolean visit(AnnotationTypeDeclaration node) {
         clazz.add(node);
         return super.visit(node);
+    }
+
+
+    public Set<AbstractTypeDeclaration> getDeclaredTypes(){
+        return clazz;
     }
 }

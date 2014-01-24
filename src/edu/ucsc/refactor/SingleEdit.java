@@ -46,7 +46,7 @@ public class SingleEdit extends AbstractCauseOfChange {
      * @return The {@code SingleEdit}.
      */
     public static SingleEdit deleteClass(SourceSelection selection){
-        return new SingleEdit(Refactoring.DELETE_CLASS, selection);
+        return new SingleEdit(Refactoring.DELETE_TYPE, selection);
     }
 
     /**

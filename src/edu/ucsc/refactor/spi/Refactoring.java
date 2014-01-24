@@ -10,7 +10,7 @@ import java.util.NoSuchElementException;
  */
 public enum Refactoring implements Name {
     REFORMAT_CODE("Reformat Code", "Vesper will automatically reformat a selected code block"),
-    DELETE_CLASS("Delete Class", "Vesper will delete a selected method"),
+    DELETE_TYPE("Delete Type", "Vesper will delete a selected type declaration"),
     DELETE_METHOD("Delete Method", "Vesper will delete a selected method"),
     DELETE_PARAMETER("Delete Parameter", "Vesper will delete the selected method parameter"),
     DELETE_FIELD("Delete Field", "Vesper will delete the selected field"),

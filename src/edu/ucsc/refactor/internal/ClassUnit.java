@@ -39,7 +39,8 @@ public class ClassUnit extends AbstractProgramUnit {
                     visitor.getMatchedNode()
             );
 
-            if(declaration != null){
+            if(declaration != null && getName().equals(declaration.getName().getIdentifier())){
+                // ignore instance creation, parameter passing,... just give me its declaration
                 locations.add(new ProgramUnitLocation(declaration, each));
             }
 

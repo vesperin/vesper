@@ -1,5 +1,6 @@
 package edu.ucsc.refactor.internal;
 
+import edu.ucsc.refactor.internal.changers.ChangersTest;
 import edu.ucsc.refactor.internal.detectors.DetectorsTest;
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -11,7 +12,8 @@ import org.junit.runners.Suite;
  */
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-        DetectorsTest.class
+        DetectorsTest.class,
+        ChangersTest.class
 })
 public class InternalTestSuite {
     public static Test suite() {

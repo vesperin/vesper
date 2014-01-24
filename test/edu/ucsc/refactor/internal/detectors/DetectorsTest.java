@@ -111,6 +111,33 @@ public class DetectorsTest {
         assertThat(issues.size(), is(0));
     }
 
+    @Test public void testUnusedClassDetectorOnClassWithUsedNestedClass(){
+        final Context context = new Context(
+                InternalUtil.createSourceWithOneUsedStaticNestedClass()
+        );
+
+        parser.parseJava(context);
+
+        final UnusedTypes unusedClass = new UnusedTypes();
+        final Set<Issue>  issues      = unusedClass.detectIssues(context);
+
+        assertThat(issues.size(), is(0));
+    }
+
+
+    @Test public void testUnusedClassDetectorOnClassWithOneUnusedNestedClass(){
+        final Context context = new Context(
+                InternalUtil.createSourceWithOneUnusedStaticNestedClass()
+        );
+
+        parser.parseJava(context);
+
+        final UnusedTypes unusedClass = new UnusedTypes();
+        final Set<Issue>  issues      = unusedClass.detectIssues(context);
+
+        assertThat(issues.size(), is(1));
+    }
+
     @Test public void testUnableToDetectUnusedMethodParameter(){
         final Context context = new Context(
                 InternalUtil.createSourceNoIssues()

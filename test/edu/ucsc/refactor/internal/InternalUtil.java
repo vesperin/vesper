@@ -78,6 +78,48 @@ public class InternalUtil {
         );
     }
 
+
+
+    public static Source createSourceWithOneUsedStaticNestedClass(){
+        final String content = "import java.util.List; \n" +
+                "class Preconditions {\n" +
+                "\t\tPreconditions(B b){}" +
+                "\tstatic void check(\n" +
+                "\t\tboolean cond, String message\n" +
+                "\t) throws RuntimeException {\n" +
+                "\t\tB bbb = new B(); cond = !cond;" +
+                "\t\tif(!cond) throw new IllegalArgumentException();\n" +
+                "\t}\n" +
+                "\tstatic void check2(\n" +
+                "B b){}" +
+                "\tstatic class B{}\n" +
+                "}";
+
+        return createSource(
+                "Preconditions.java",
+                new StringBuilder(content)
+        );
+    }
+
+
+    public static Source createSourceWithOneUnusedStaticNestedClass(){
+        final String content = "import java.util.List; \n" +
+                "class Preconditions {\n" +
+                "\tstatic void check(\n" +
+                "\t\tboolean cond, String message\n" +
+                "\t) throws RuntimeException {\n" +
+                "\t\tcond = !cond;" +
+                "\t\tif(!cond) throw new IllegalArgumentException();\n" +
+                "\t}\n" +
+                "\tstatic class B{}\n" +
+                "}";
+
+        return createSource(
+                "Preconditions.java",
+                new StringBuilder(content)
+        );
+    }
+
     public static Source createSource(String name, StringBuilder builder){
         return new Source(name, builder.toString());
     }

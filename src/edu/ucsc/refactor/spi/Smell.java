@@ -3,7 +3,7 @@ package edu.ucsc.refactor.spi;
 import java.util.*;
 
 /**
- * <strong>PLEASE REMEMBER THIS</strong> THis is how amendments will be trigger.
+ * <strong>PLEASE REMEMBER THIS</strong> THis is how amendments will be triggered.
  * Issue delete command containing a selection:
  * 1. we use the selection to determine what we need to delete
  * 2. if found, then trigger the appropriate strategy.
@@ -12,6 +12,7 @@ import java.util.*;
  */
 public enum Smell implements Name {
     UNFORMATTED_CODE("Unformatted code", "Vesper has detected unformatted code!"),
+    UNUSED_TYPE("Unused type", "Vesper has detected one or more unused type declarations!"),
     UNUSED_METHOD("Unused method", "Vesper has detected one or more unused methods!"),
     UNUSED_PARAMETER("Unused parameter", "Vesper has detected unused parameters in one or more methods"),
     UNUSED_FIELD("Unused field", "Vesper has detected one or more unused fields in code!"),

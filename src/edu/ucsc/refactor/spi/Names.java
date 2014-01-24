@@ -2,7 +2,6 @@ package edu.ucsc.refactor.spi;
 
 import com.google.common.collect.Maps;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -18,6 +17,7 @@ public class Names {
         WARNING_RESPONSE_MAP.put(Smell.UNUSED_PARAMETER, Refactoring.DELETE_PARAMETER);
         WARNING_RESPONSE_MAP.put(Smell.UNUSED_METHOD, Refactoring.DELETE_METHOD);
         WARNING_RESPONSE_MAP.put(Smell.UNUSED_IMPORTS, Refactoring.DELETE_UNUSED_IMPORTS);
+        WARNING_RESPONSE_MAP.put(Smell.UNUSED_TYPE, Refactoring.DELETE_TYPE);
     }
 
     private Names(){}

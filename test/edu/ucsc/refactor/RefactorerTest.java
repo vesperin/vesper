@@ -23,8 +23,10 @@ public class RefactorerTest {
             "\tstatic void check(\n" +
             "\t\tboolean cond, String message\n" +
             "\t) throws RuntimeException {\n" +
+            "\t\tB bbb = new B(); cond = !cond;" +
             "\t\tif(!cond) throw new IllegalArgumentException();\n" +
             "\t}\n" +
+            "\tstatic class B{}\n" +
             "}";
 
     static final String NAME = "Preconditions.java";
