@@ -69,7 +69,7 @@ public class ChangersTest {
 
 
         final ProgramUnitLocator locator    = new ProgramUnitLocator(context);
-        final List<Location>     locations  = locator.locate(new ClassUnit("B"));
+        final List<NamedLocation>     locations  = locator.locate(new ClassUnit("B"));
 
         assertThat(locations.isEmpty(), is(false));
 
@@ -130,7 +130,7 @@ public class ChangersTest {
         parser.parseJava(context);
 
         final ProgramUnitLocator locator   = new ProgramUnitLocator(context);
-        final List<Location>     locations = locator.locate(new FieldUnit("a"));
+        final List<NamedLocation>     locations = locator.locate(new FieldUnit("a"));
 
         final ProgramUnitLocation target      = (ProgramUnitLocation)locations.get(0);
         final FieldDeclaration    declaration = (FieldDeclaration)target.getNode();
@@ -202,7 +202,7 @@ public class ChangersTest {
         parser.parseJava(context);
 
         final ProgramUnitLocator locator   = new ProgramUnitLocator(context);
-        final List<Location>     locations = locator.locate(new MethodUnit("boom"));
+        final List<NamedLocation>     locations = locator.locate(new MethodUnit("boom"));
 
         final ProgramUnitLocation target      = (ProgramUnitLocation)locations.get(0);
         final MethodDeclaration declaration   = (MethodDeclaration)target.getNode();
@@ -248,7 +248,7 @@ public class ChangersTest {
         parser.parseJava(context);
 
         final ProgramUnitLocator locator   = new ProgramUnitLocator(context);
-        final List<Location>     locations = locator.locate(new ParameterUnit("msg"));
+        final List<NamedLocation>     locations = locator.locate(new ParameterUnit("msg"));
 
         final RemoveUnusedParameters remove = new RemoveUnusedParameters();
         for(Location each : locations){

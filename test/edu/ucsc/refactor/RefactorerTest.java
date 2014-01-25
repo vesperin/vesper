@@ -99,16 +99,16 @@ public class RefactorerTest {
         final Refactorer refactorer = Vesper.createRefactorer(SRC);
         final UnitLocator locator = refactorer.getLocator(SRC);
 
-        final List<Location> params = locator.locate(new ParameterUnit("message"));
+        final List<NamedLocation> params = locator.locate(new ParameterUnit("message"));
         assertThat(params.isEmpty(), is(false));
 
-        final List<Location> methods = locator.locate(new MethodUnit("check"));
+        final List<NamedLocation> methods = locator.locate(new MethodUnit("check"));
         assertThat(methods.isEmpty(), is(false));
 
-        final List<Location> classes = locator.locate(new ClassUnit("Preconditions"));
+        final List<NamedLocation> classes = locator.locate(new ClassUnit("Preconditions"));
         assertThat(classes.isEmpty(), is(false));
 
-        final List<Location> fields = locator.locate(new FieldUnit("something"));
+        final List<NamedLocation> fields = locator.locate(new FieldUnit("something"));
         assertThat(fields.isEmpty(), is(true));
 
     }

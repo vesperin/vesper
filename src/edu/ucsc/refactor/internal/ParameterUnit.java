@@ -4,8 +4,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import edu.ucsc.refactor.Context;
 import edu.ucsc.refactor.Location;
-import edu.ucsc.refactor.internal.visitors.SelectedASTNodeVisitor;
+import edu.ucsc.refactor.NamedLocation;
 import edu.ucsc.refactor.internal.util.AstUtil;
+import edu.ucsc.refactor.internal.visitors.SelectedASTNodeVisitor;
 import edu.ucsc.refactor.util.Locations;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
@@ -27,8 +28,8 @@ public class ParameterUnit extends AbstractProgramUnit {
         super(name);
     }
 
-    @Override public List<Location> getLocations(Context context) {
-        final Set<Location> locations = Sets.newHashSet();
+    @Override public List<NamedLocation> getLocations(Context context) {
+        final Set<NamedLocation> locations = Sets.newHashSet();
         final List<Location> instances = Locations.locateWord(context.getSource(), getName());
         for(Location each : instances){
             final SelectedASTNodeVisitor visitor = new SelectedASTNodeVisitor(each);

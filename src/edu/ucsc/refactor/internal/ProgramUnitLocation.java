@@ -3,17 +3,28 @@ package edu.ucsc.refactor.internal;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import edu.ucsc.refactor.Location;
+import edu.ucsc.refactor.NamedLocation;
 import edu.ucsc.refactor.Position;
 import edu.ucsc.refactor.Source;
-import org.eclipse.jdt.core.dom.ASTNode;
+import edu.ucsc.refactor.internal.util.AstUtil;
+import org.eclipse.jdt.core.dom.*;
+
+import java.util.NoSuchElementException;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public class ProgramUnitLocation implements Location {
+public class ProgramUnitLocation implements NamedLocation {
 
     private final ASTNode           node;
     private final Location          location;
+
+
+    private static final int METHOD_DECLARATION   = ASTNode.METHOD_DECLARATION;
+    private static final int TYPE_DECLARATION     = ASTNode.TYPE_DECLARATION;
+    private static final int VARIABLE_DECLARATION = ASTNode.SINGLE_VARIABLE_DECLARATION;
+    private static final int FIELD_DECLARATION    = ASTNode.FIELD_DECLARATION;
+
 
     /**
      * Construct a new ProgramUnitLocation
@@ -24,6 +35,37 @@ public class ProgramUnitLocation implements Location {
     public ProgramUnitLocation(ASTNode node, Location location){
         this.node       = Preconditions.checkNotNull(node);
         this.location   = Preconditions.checkNotNull(location);
+    }
+
+    @Override public String getName() {
+        final ASTNode node = getNode();
+
+        switch (node.getNodeType()){
+            case METHOD_DECLARATION: {
+                final MethodDeclaration method = AstUtil.exactCast(MethodDeclaration.class, node);
+                final TypeDeclaration clazz =  AstUtil.exactCast(TypeDeclaration.class, method.getParent());
+                return "type(" + clazz.getName().getIdentifier() + ")";
+            }
+
+            case TYPE_DECLARATION: {
+                final TypeDeclaration clazz =  AstUtil.exactCast(TypeDeclaration.class, node);
+                return "type(" + clazz.getName().getIdentifier() + ")";
+            }
+
+            case VARIABLE_DECLARATION: {
+                final SingleVariableDeclaration param = AstUtil.exactCast(SingleVariableDeclaration.class, node);
+                final MethodDeclaration method = AstUtil.exactCast(MethodDeclaration.class, param.getParent());
+                return "method(" + method.getName().getIdentifier() + ")";
+            }
+
+            case FIELD_DECLARATION: {
+                final FieldDeclaration field = AstUtil.exactCast(FieldDeclaration.class, node);
+                final TypeDeclaration  clazz = AstUtil.exactCast(TypeDeclaration.class, field.getParent());
+                return "type(" + clazz.getName().getIdentifier() + ")";
+            }
+
+            default: throw new NoSuchElementException("unknown ASTNode");
+        }
     }
 
     public ASTNode getNode(){

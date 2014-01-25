@@ -1,6 +1,6 @@
 package edu.ucsc.refactor.spi;
 
-import edu.ucsc.refactor.Location;
+import edu.ucsc.refactor.NamedLocation;
 
 import java.util.List;
 
@@ -23,5 +23,5 @@ public interface UnitLocator {
      * @return The list of locations where the
      *      {@code key} is found, or empty if nothing was found.
      */
-    List<Location> locate(ProgramUnit unit);
+    List<NamedLocation> locate(ProgramUnit unit);
 }

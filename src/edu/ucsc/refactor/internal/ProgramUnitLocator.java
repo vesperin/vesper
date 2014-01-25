@@ -3,6 +3,7 @@ package edu.ucsc.refactor.internal;
 import com.google.common.base.Preconditions;
 import edu.ucsc.refactor.Context;
 import edu.ucsc.refactor.Location;
+import edu.ucsc.refactor.NamedLocation;
 import edu.ucsc.refactor.spi.ProgramUnit;
 import edu.ucsc.refactor.spi.UnitLocator;
 
@@ -26,7 +27,7 @@ public class ProgramUnitLocator implements UnitLocator {
         this.record     = new Record();
     }
 
-    @Override public List<Location> locate(ProgramUnit unit) {
+    @Override public List<NamedLocation> locate(ProgramUnit unit) {
         track(unit.getName(), unit);
 
         return unit.getLocations(context);

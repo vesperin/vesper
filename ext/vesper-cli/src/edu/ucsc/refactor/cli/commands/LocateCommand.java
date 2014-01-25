@@ -2,7 +2,7 @@ package edu.ucsc.refactor.cli.commands;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import edu.ucsc.refactor.Location;
+import edu.ucsc.refactor.NamedLocation;
 import edu.ucsc.refactor.cli.Environment;
 import edu.ucsc.refactor.cli.Result;
 import edu.ucsc.refactor.cli.VesperCommand;
@@ -29,16 +29,18 @@ public abstract class LocateCommand extends VesperCommand {
         final String        name    = patterns.get(0);
         final UnitLocator   locator = environment.getCodeLocator();
 
-        final List<Location>    locations   = locator.locate(programUnit(name));
+        final List<NamedLocation>    locations   = locator.locate(programUnit(name));
         final StringBuilder     message     = new StringBuilder();
 
-        final Iterator<Location> itr = locations.iterator();
-        message.append("offsets").append("(");
+        final Iterator<NamedLocation> itr = locations.iterator();
+        message.append("at").append("(");
 
         while(itr.hasNext()){
-            final Location each = itr.next();
+            final NamedLocation each = itr.next();
             message.append("[");
-            message.append(each.getStart().getOffset()).append(",").append(each.getEnd().getOffset());
+            message.append(each.getStart().getOffset())
+                    .append(",").append(each.getEnd().getOffset())
+                    .append(",").append(each.getName());
             message.append("]");
             if(itr.hasNext()){
                 message.append(", ");

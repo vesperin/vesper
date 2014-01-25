@@ -3,7 +3,7 @@ package edu.ucsc.refactor.internal;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import edu.ucsc.refactor.Context;
-import edu.ucsc.refactor.Location;
+import edu.ucsc.refactor.NamedLocation;
 import edu.ucsc.refactor.internal.visitors.MethodDeclarationVisitor;
 import edu.ucsc.refactor.util.Locations;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -25,11 +25,11 @@ public class MethodUnit extends AbstractProgramUnit {
         super(name);
     }
 
-    @Override public List<Location> getLocations(Context context) {
+    @Override public List<NamedLocation> getLocations(Context context) {
         final MethodDeclarationVisitor visitor = new MethodDeclarationVisitor();
         context.accept(visitor);
 
-        final List<Location> locations = Lists.newArrayList();
+        final List<NamedLocation> locations = Lists.newArrayList();
 
         final List<MethodDeclaration> methods = visitor.getMethodDeclarations();
         for(MethodDeclaration each : methods){
