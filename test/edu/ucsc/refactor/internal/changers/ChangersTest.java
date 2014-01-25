@@ -9,6 +9,7 @@ import edu.ucsc.refactor.internal.detectors.UnusedTypes;
 import edu.ucsc.refactor.spi.JavaParser;
 import edu.ucsc.refactor.util.Locations;
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.junit.After;
 import org.junit.Before;
@@ -114,6 +115,29 @@ public class ChangersTest {
             assertNotNull(change);
             assertThat(change.isValid(), is(true));
         }
+    }
+
+
+    @Test public void testTryRemovingUsedField(){
+        final Context context = new Context(
+                InternalUtil.createSourceWithUsedField()
+        );
+
+        parser.parseJava(context);
+
+        final ProgramUnitLocator locator   = new ProgramUnitLocator(context);
+        final List<Location>     locations = locator.locate(new FieldUnit("a"));
+
+        final ProgramUnitLocation target      = (ProgramUnitLocation)locations.get(0);
+        final FieldDeclaration    declaration = (FieldDeclaration)target.getNode();
+
+        final Location           loc    = Locations.locate(declaration);
+        final RemoveUnusedFields remove = new RemoveUnusedFields();
+
+        final SingleEdit        edit        = SingleEdit.deleteField(new SourceSelection(loc));
+        edit.addNode(declaration);
+        final Change            change      = remove.createChange(edit, Maps.<String, Parameter>newHashMap());
+        assertThat(change.isValid(), is(false));
     }
 
 
