@@ -18,7 +18,7 @@ public class StringReader {
 
     private final StringBuilder parentheses = new StringBuilder();
 
-    Iterable<String> process(String statement){
+    public Iterable<String> process(String statement){
         final List<String> result = Lists.newArrayList();
 
         String  delimiter = WHITESPACE_AND_QUOTES_DELIMITER;
