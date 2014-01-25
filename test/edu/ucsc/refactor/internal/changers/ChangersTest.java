@@ -1,11 +1,14 @@
 package edu.ucsc.refactor.internal.changers;
 
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.*;
+import edu.ucsc.refactor.internal.detectors.UnusedFields;
 import edu.ucsc.refactor.internal.detectors.UnusedTypes;
 import edu.ucsc.refactor.spi.JavaParser;
 import edu.ucsc.refactor.util.Locations;
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.junit.After;
 import org.junit.Before;
@@ -91,6 +94,53 @@ public class ChangersTest {
         edit.addNode(context.getCompilationUnit());
         final Change              change = remove.createChange(edit, Maps.<String, Parameter>newHashMap());
         assertThat(change.isValid(), is(true));
+    }
+
+
+    @Test public void testRemoveDetectedUnusedField(){
+        final Context context = new Context(
+                InternalUtil.createSourceWithUnusedField()
+        );
+
+        parser.parseJava(context);
+
+        final UnusedFields unusedFields = new UnusedFields();
+        final Set<Issue>    issues      = unusedFields.detectIssues(context);
+
+        final RemoveUnusedFields remove = new RemoveUnusedFields();
+
+        for(Issue each : issues){
+            Change change = remove.createChange(each, Maps.<String, Parameter>newHashMap());
+            assertNotNull(change);
+            assertThat(change.isValid(), is(true));
+        }
+    }
+
+
+    @Test public void testRemoveFieldTriggeredByUser(){
+        final Context context = new Context(
+                InternalUtil.createSourceWithUnusedField()
+        );
+
+        parser.parseJava(context);
+
+        final UnusedFields unusedFields = new UnusedFields();
+        final Set<Issue>    issues      = unusedFields.detectIssues(context);
+
+        for(Issue each : issues){
+
+            final ASTNode target = Iterables.getFirst(each.getAffectedNodes(), null);
+            assertNotNull(target);
+
+            final Location      loc     = Locations.locate(target);
+            final SingleEdit    edit    = SingleEdit.deleteField(new SourceSelection(loc));
+            edit.addNode(target);
+
+            final RemoveUnusedFields remove = new RemoveUnusedFields();
+            Change change = remove.createChange(edit, Maps.<String, Parameter>newHashMap());
+            assertNotNull(change);
+            assertThat(change.isValid(), is(true));
+        }
     }
 
     @After public void tearDown() throws Exception {

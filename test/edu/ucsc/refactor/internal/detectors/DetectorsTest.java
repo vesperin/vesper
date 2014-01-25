@@ -72,6 +72,34 @@ public class DetectorsTest {
     }
 
 
+    @Test public void testDetectUnusedField(){
+        final Context context = new Context(
+                InternalUtil.createSourceWithUnusedField()
+        );
+
+        parser.parseJava(context);
+
+        final UnusedFields unusedFields = new UnusedFields();
+        final Set<Issue>    issues      = unusedFields.detectIssues(context);
+
+        assertThat(issues.size(), is(1));
+    }
+
+
+    @Test public void testDetectUsedField(){
+        final Context context = new Context(
+                InternalUtil.createSourceWithUsedField()
+        );
+
+        parser.parseJava(context);
+
+        final UnusedFields unusedFields = new UnusedFields();
+        final Set<Issue>    issues      = unusedFields.detectIssues(context);
+
+        assertThat(issues.size(), is(0));
+    }
+
+
     @Test public void testDetectUnusedMethod(){
         final Context context = new Context(
                 InternalUtil.createSourceWithUnusedMethodAndParameter()
