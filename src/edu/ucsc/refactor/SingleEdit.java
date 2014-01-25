@@ -1,7 +1,7 @@
 package edu.ucsc.refactor;
 
+import com.google.common.base.Objects;
 import edu.ucsc.refactor.spi.Refactoring;
-import edu.ucsc.refactor.util.ToStringBuilder;
 
 /**
  * A user-triggered change
@@ -23,7 +23,7 @@ public class SingleEdit extends AbstractCauseOfChange {
     }
 
     /**
-     * Reformats the {@code Source} code.
+     * Reformat the {@code Source} code.
      *
      * @param code The source code to be formatted.
      * @return The {@code SingleEdit}.
@@ -35,6 +35,20 @@ public class SingleEdit extends AbstractCauseOfChange {
         );
     }
 
+
+    /**
+     * Deletes a class, which location can be inferred from {@code SourceSelection}
+     *
+     * Note: this edit can be performed only if this class is not the main class covering
+     * the whole code snippet. If it is, then it will fail.
+     *
+     * @param selection The selected field
+     * @return The {@code SingleEdit}.
+     */
+    public static SingleEdit deleteClass(SourceSelection selection){
+        return new SingleEdit(Refactoring.DELETE_TYPE, selection);
+    }
+
     /**
      * Deletes a method, which location can be inferred from {@code SourceSelection}
      *
@@ -44,6 +58,42 @@ public class SingleEdit extends AbstractCauseOfChange {
     public static SingleEdit deleteMethod(SourceSelection selection){
         return new SingleEdit(Refactoring.DELETE_METHOD, selection);
     }
+
+
+    /**
+     * Deletes a field, which location can be inferred from {@code SourceSelection}
+     *
+     * @param selection The selected field
+     * @return The {@code SingleEdit}.
+     */
+    public static SingleEdit deleteField(SourceSelection selection){
+        return new SingleEdit(Refactoring.DELETE_FIELD, selection);
+    }
+
+
+    /**
+     * Deletes a method parameter, which location can be inferred from {@code SourceSelection}
+     *
+     * @param selection The selected method parameter
+     * @return The {@code SingleEdit}.
+     */
+    public static SingleEdit deleteParameter(SourceSelection selection){
+        return new SingleEdit(Refactoring.DELETE_PARAMETER, selection);
+    }
+
+    /**
+     * Optimizes the import declarations found in a {@code Source} code.
+     *
+     * @param code The source code whose import declarations will be optimized.
+     * @return The {@code SingleEdit}.
+     */
+    public static SingleEdit optimizeImports(Source code) {
+        return new SingleEdit(
+                Refactoring.DELETE_UNUSED_IMPORTS,
+                new SourceSelection(code, 0, code.getLength())
+        );
+    }
+
 
     /**
      * Renames a class or interface, which location can be inferred from {@code SourceSelection}
@@ -102,7 +152,7 @@ public class SingleEdit extends AbstractCauseOfChange {
     }
 
     @Override public String more() {
-        final ToStringBuilder builder = new ToStringBuilder("SingleEdit");
+        final Objects.ToStringHelper builder = Objects.toStringHelper(getClass());
         final boolean isNodesEmpty = getAffectedNodes().isEmpty();
 
         if(isNodesEmpty){ builder.add("scope", getSourceSelection()); } else {

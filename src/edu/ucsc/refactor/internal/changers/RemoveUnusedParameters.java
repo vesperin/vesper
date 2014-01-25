@@ -1,16 +1,19 @@
 package edu.ucsc.refactor.internal.changers;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
 import edu.ucsc.refactor.CauseOfChange;
 import edu.ucsc.refactor.Change;
 import edu.ucsc.refactor.Parameter;
 import edu.ucsc.refactor.internal.Delta;
 import edu.ucsc.refactor.internal.SourceChange;
+import edu.ucsc.refactor.internal.util.AstUtil;
+import edu.ucsc.refactor.spi.Names;
 import edu.ucsc.refactor.spi.Smell;
 import edu.ucsc.refactor.spi.SourceChanger;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -21,8 +24,6 @@ public class RemoveUnusedParameters extends SourceChanger {
 
     private final static int METHOD_DECLARATION             = 0;
     private final static int SINGLE_VARIABLE_DECLARATION    = 1;
-    private final static int START_METHOD_INVOCATIONS       = 2;
-
 
     /**
      * Instantiates a new {@link RemoveUnusedParameters} object.
@@ -32,87 +33,71 @@ public class RemoveUnusedParameters extends SourceChanger {
     }
 
     @Override public boolean canHandle(CauseOfChange cause) {
-        return cause.getName().isSame(Smell.UNUSED_PARAMETER);
+        return cause.getName().isSame(Smell.UNUSED_PARAMETER)
+                || Names.from(Smell.UNUSED_PARAMETER).isSame(cause.getName());
     }
 
     @Override protected Change initChanger(CauseOfChange cause,
                                            Map<String, Parameter> parameters) {
 
-        final SourceChange solution = new SourceChange(cause, this, parameters);
+        final SourceChange change = new SourceChange(cause, this, parameters);
 
         try {
-            final MethodDeclaration         methodDeclaration   = getMethodDeclarationNode(cause);
-            final SingleVariableDeclaration variableDeclaration = getSingleVariableDeclarationNode(cause);
 
+            final CompilationUnit root      = getCompilationUnit(cause);
+            final ASTRewrite      rewrite   = ASTRewrite.create(root.getAST());
 
+            change.getDeltas().add(removeUnusedParameters(root, rewrite, cause));
 
-            //1. Remove parameter from the method declaration
-            solution.getDeltas().add(removeFromDeclaration(methodDeclaration, variableDeclaration));
-
-            //2. Remove parameter from method invocations
-            solution.getDeltas().addAll(removeFromInvocations(cause, methodDeclaration,
-                    variableDeclaration));
         } catch (Throwable ex){
-            solution.getErrors().add(ex.getMessage());
+            change.getErrors().add(ex.getMessage());
         }
 
-        return solution;
+        return change;
     }
 
 
-    private List<Delta> removeFromInvocations(CauseOfChange cause,
-                                              MethodDeclaration methodDeclaration,
-                                              SingleVariableDeclaration singleVariableDeclaration) {
+    private Delta removeUnusedParameters(CompilationUnit root, ASTRewrite rewrite, CauseOfChange cause){
+        final boolean cameFromDetector = cause.getName().isSame(Smell.UNUSED_PARAMETER);
 
-        final List<Delta> deltas = new ArrayList<Delta>();
-        final int size = cause.getAffectedNodes().size();
+        final List<ASTNode> nodes   = cause.getAffectedNodes();
+        final int           length  = nodes.size();
 
-        if (size > START_METHOD_INVOCATIONS) {
-            final List<ASTNode> methodInvocations;
-            methodInvocations = cause.getAffectedNodes().subList(
-                    START_METHOD_INVOCATIONS,
-                    size
-            );
+        if(cameFromDetector){
+            // at least the method declaration, and the actual parameter
+            Preconditions.checkArgument(length >= 2, "invalid detection of unused parameter");
 
-            ASTRewrite rewrite;
+            final MethodDeclaration         method    = AstUtil.exactCast(MethodDeclaration.class, nodes.get(METHOD_DECLARATION));
+            final SingleVariableDeclaration parameter = AstUtil.exactCast(SingleVariableDeclaration.class, nodes.get(SINGLE_VARIABLE_DECLARATION));
 
-            for (ASTNode method : methodInvocations) {
-                final MethodInvocation methodInvocation = (MethodInvocation) method;
+            rewrite.remove(parameter, null);
+
+            final Iterable<ASTNode> invocations = Iterables.skip(nodes, 2/*skip first two elements*/);
+
+            for(ASTNode invocation : invocations){
+                final MethodInvocation methodInvocation = AstUtil.exactCast(MethodInvocation.class, invocation);
                 final Expression argument = (Expression) methodInvocation.arguments().get
-                        (methodDeclaration.parameters().indexOf(singleVariableDeclaration));
+                        (method.parameters().indexOf(parameter));
 
-                rewrite = ASTRewrite.create(method.getAST());
                 rewrite.remove(argument, null);
-
-                deltas.add(createDelta(methodInvocation, rewrite));
             }
+        } else {
+            final SingleVariableDeclaration parameterReference = AstUtil.exactCast(SingleVariableDeclaration.class, nodes.get(0));
+            final List<SimpleName>  usages  = AstUtil.findByNode(parameterReference.getParent(), parameterReference.getName());
+
+
+            if(usages.size() > 1){
+                throw new RuntimeException(
+                        parameterReference.getName().getIdentifier() +
+                                " cannot be deleted. It is used somewhere" +
+                                " in the method's body."
+                );
+            }
+
         }
 
-        return deltas;
-    }
 
-    private Delta removeFromDeclaration(MethodDeclaration methodDeclaration,
-                                        SingleVariableDeclaration variableDeclaration) {
-        final ASTRewrite rewrite = ASTRewrite.create(methodDeclaration.getAST());
-        rewrite.remove(variableDeclaration, null);
-        return createDelta(methodDeclaration, rewrite);
-    }
 
-    private static MethodDeclaration getMethodDeclarationNode(CauseOfChange cause){
-        return (MethodDeclaration) getNode(
-                cause,
-                METHOD_DECLARATION
-        );
-    }
-
-    private static SingleVariableDeclaration getSingleVariableDeclarationNode(CauseOfChange cause){
-        return (SingleVariableDeclaration) getNode(
-                cause,
-                SINGLE_VARIABLE_DECLARATION
-        );
-    }
-
-    private static ASTNode getNode(CauseOfChange cause, int index){
-        return cause.getAffectedNodes().get(index);
+        return createDelta(root, rewrite);
     }
 }

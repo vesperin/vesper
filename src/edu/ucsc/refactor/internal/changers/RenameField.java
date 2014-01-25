@@ -6,7 +6,7 @@ import edu.ucsc.refactor.internal.SourceChange;
 import edu.ucsc.refactor.internal.visitors.RenameAstNodeVisitor;
 import edu.ucsc.refactor.spi.Refactoring;
 import edu.ucsc.refactor.spi.SourceChanger;
-import edu.ucsc.refactor.util.AstUtil;
+import edu.ucsc.refactor.internal.util.AstUtil;
 import edu.ucsc.refactor.util.Locations;
 import edu.ucsc.refactor.util.Parameters;
 import org.eclipse.jdt.core.dom.*;

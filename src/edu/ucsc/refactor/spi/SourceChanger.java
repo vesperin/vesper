@@ -1,12 +1,11 @@
 package edu.ucsc.refactor.spi;
 
 import edu.ucsc.refactor.*;
-import edu.ucsc.refactor.internal.GistCommitRequest;
-import edu.ucsc.refactor.internal.Delta;
-import edu.ucsc.refactor.internal.SourceFormatter;
-import edu.ucsc.refactor.internal.SourceLocation;
+import edu.ucsc.refactor.internal.*;
+import edu.ucsc.refactor.internal.util.AstUtil;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
@@ -61,7 +60,9 @@ public abstract class SourceChanger implements Changer {
 
 
     @Override public CommitRequest commitChange(Change change) {
-        return new GistCommitRequest(change);
+        // Always commit changes locally...once we are ready to save changes, we perform
+        // a remote commit...
+        return new LocalCommitRequest(change);
     }
 
     /**
@@ -73,20 +74,15 @@ public abstract class SourceChanger implements Changer {
      */
     protected abstract Change initChanger(CauseOfChange cause, Map<String, Parameter> parameters);
 
-
     /**
      * Tracks the changes made to a {@link Source file} by storing them
      * in the {@link Delta} object.
      *
-     * @param node The ASTNode object.
+     * @param source The Source object.
      * @param rewrite The ASTRewrite object.
      * @return a new {@link Delta} object.
      */
-    // todo(Huascar) investigate whether we can make deltas non orthogonal (make deltas aware of
-    // related deltas' changes). Currently, deltas are orthogonal in terms of the file they
-    // are changing.
-    protected Delta createDelta(ASTNode node, ASTRewrite rewrite) {
-        final Source    source      = Source.from(node);
+    protected Delta createDelta(Source source, ASTRewrite rewrite){
         final IDocument document    = source.toDocument();
 
         Delta delta = new Delta(source);
@@ -104,6 +100,18 @@ public abstract class SourceChanger implements Changer {
         delta.setAfter(format(document));
 
         return delta;
+    }
+
+    /**
+     * Tracks the changes made to a {@link Source file} by storing them
+     * in the {@link Delta} object.
+     *
+     * @param node The ASTNode object.
+     * @param rewrite The ASTRewrite object.
+     * @return a new {@link Delta} object.
+     */
+    protected Delta createDelta(ASTNode node, ASTRewrite rewrite) {
+        return createDelta(Source.from(node), rewrite);
     }
 
 
@@ -128,6 +136,10 @@ public abstract class SourceChanger implements Changer {
         }
 
         return locations;
+    }
+
+    protected static CompilationUnit getCompilationUnit(CauseOfChange cause){
+        return AstUtil.parent(CompilationUnit.class, cause.getAffectedNodes().get(0));
     }
 
 

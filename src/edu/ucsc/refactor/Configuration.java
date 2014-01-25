@@ -8,7 +8,7 @@ public interface Configuration {
      * A Configuration configures a Host, which typically includes issue finders and fixers,
      * which will be used to create a {@link Refactorer}.
      *
-     * A hanko-based application is ultimately composed of ONE {@code Configuration}.
+     * A Vesper-based application is ultimately composed of ONE {@code Configuration}.
      *
      * @param host The {@code Host}
      */

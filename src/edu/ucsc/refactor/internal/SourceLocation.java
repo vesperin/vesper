@@ -1,9 +1,9 @@
 package edu.ucsc.refactor.internal;
 
+import com.google.common.base.Objects;
 import edu.ucsc.refactor.Location;
 import edu.ucsc.refactor.Position;
 import edu.ucsc.refactor.Source;
-import edu.ucsc.refactor.util.ToStringBuilder;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -158,7 +158,7 @@ public final class SourceLocation implements Location {
     @Override public Position getEnd()   { return end;   }
 
     @Override public String toString() {
-        final ToStringBuilder builder = new ToStringBuilder(getSource().getName());
+        final Objects.ToStringHelper builder = Objects.toStringHelper(getSource().getName());
         builder.add("start", getStart());
         builder.add("end", getEnd());
         return builder.toString();

@@ -4,7 +4,7 @@ import edu.ucsc.refactor.Context;
 import edu.ucsc.refactor.internal.visitors.ImportsReferencesVisitor;
 import edu.ucsc.refactor.spi.IssueDetector;
 import edu.ucsc.refactor.spi.Smell;
-import edu.ucsc.refactor.util.AstUtil;
+import edu.ucsc.refactor.internal.util.AstUtil;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
@@ -21,15 +21,11 @@ public class UnusedImports extends IssueDetector {
     private static final String STRATEGY_NAME        = Smell.UNUSED_IMPORTS.getKey();
     private static final String STRATEGY_DESCRIPTION = Smell.UNUSED_IMPORTS.getSummary();
 
-    private final Set<ASTNode> unusedImportDeclarations;
-
-
     /**
      * Instantiate {@code UnusedImports} detector.
      */
     public UnusedImports() {
         super(STRATEGY_NAME, STRATEGY_DESCRIPTION);
-        this.unusedImportDeclarations  = new HashSet<ASTNode>();
     }
 
     @Override public void scanJava(Context context) {
@@ -43,23 +39,7 @@ public class UnusedImports extends IssueDetector {
         final Set<String> staticNames   = visitor.getStaticImportNames();
 
 
-        @SuppressWarnings("unchecked")
-        final List<ImportDeclaration> totalImports = unit.imports();
-        for(ImportDeclaration eachDeclaration : totalImports){
-
-            final Name name              = eachDeclaration.getName();
-            final boolean isNotAsterisk  = !eachDeclaration.toString().contains("*;");
-            final String target          = AstUtil.getSimpleNameIdentifier(name);
-
-
-            if(!importNames.contains(target) && (!staticNames.contains(target) || staticNames
-                    .isEmpty()) && isNotAsterisk){
-                unusedImportDeclarations.add(eachDeclaration);
-            }
-        }
-
-
-        createIssues(unusedImportDeclarations);
+        createIssues(AstUtil.getUnusedImports(unit, importNames, staticNames));
 
     }
 }

@@ -1,8 +1,9 @@
 package edu.ucsc.refactor;
 
+import com.google.common.base.Objects;
 import edu.ucsc.refactor.util.Notes;
 import edu.ucsc.refactor.util.StringUtil;
-import edu.ucsc.refactor.util.ToStringBuilder;
+import edu.ucsc.refactor.util.UniqueIdentifierGenerator;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
@@ -12,16 +13,17 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-// todo(Huascar) investigate the need for implementing equals and hashCode
 public class Source {
     public static final String SOURCE_FILE_PROPERTY = "kae.source_file.source_file_property";
 
-    private final String        name;
     private final String        contents;
     private final String        description;
     private final Notes notes;
 
+    private final AtomicReference<String> name;
     private final AtomicReference<String> id;
+
+    private final AtomicReference<String> signature;
 
     /**
      * construct a new {@link Source} object.
@@ -45,11 +47,12 @@ public class Source {
      * @param description The file's description.
      */
     public Source(String name, String contents, String description){
-        this.name        = name;
+        this.name        = new AtomicReference<String>(name);
         this.contents    = contents;
         this.description = description;
         this.id          = new AtomicReference<String>();
         this.notes       = new Notes();
+        this.signature   = new AtomicReference<String>();
     }
 
     /**
@@ -73,8 +76,31 @@ public class Source {
     }
 
 
+    @Override public boolean equals(Object o) {
+        if(!(o instanceof Source)){
+            return false;
+        }
+
+        final Source that      = (Source)o;
+        final boolean sameName = that.getName().equals(getName());
+        final boolean sameCont = that.getContents().equals(getContents());
+
+        return sameName && sameCont;
+    }
+
     private static String generateDescription(String fromName){
         return "Java: " + StringUtil.splitCamelCase(StringUtil.extractName(fromName));
+    }
+
+    /**
+     * Generate a random and unique identifier.
+     *
+     * @return The random and unique signature
+     */
+    public String generateUniqueSignature(){
+        final String uuid = UniqueIdentifierGenerator.generateUniqueIdentifier();
+        setSignature(uuid);
+        return uuid;
     }
 
     /**
@@ -113,7 +139,7 @@ public class Source {
      *
      * @return The file's name
      */
-    public String getName()     { return name; }
+    public String getName()     { return name.get(); }
 
     /**
      * Gets the content's length.
@@ -123,12 +149,32 @@ public class Source {
     public int getLength()      { return getContents().length(); }
 
     /**
+     * @return A unique identifier (will never change across multiple versions of this source).
+     */
+    public String getUniqueSignature(){ return this.signature.get(); }
+
+
+    @Override public int hashCode() {
+        return Objects.hashCode(getName(), getContents());
+    }
+
+    /**
      * Removes a note from symbol table.
      *
      * @return {@code true} if the note was removed.
      */
     public boolean removeNote(Note note){
         return this.notes.delete(note);
+    }
+
+    /**
+     * Sets the name of the {@code Source}, which is different than the one
+     * initially given.
+     *
+     * @param name The {@code Source}'s name.
+     */
+    public void setName(String name){
+        this.name.compareAndSet(getName(), name);
     }
 
     /**
@@ -143,8 +189,19 @@ public class Source {
         return this.id.compareAndSet(old, id);
     }
 
+    /**
+     * Sets the local (and unique) signature of the {@code Source}. A non-null signature means this
+     * {@code Source} has been persisted.
+     *
+     * @param signature The {@code Source}'s unique signature.
+     * @return {@code true} if the signature was set.
+     */
+    public boolean setSignature(String signature){
+        return this.signature.compareAndSet(this.signature.get(), signature);
+    }
+
     @Override public String toString() {
-        final ToStringBuilder builder = new ToStringBuilder("Source");
+        final Objects.ToStringHelper builder = Objects.toStringHelper(getClass());
         if(getId() != null){
             builder.add("id", getId());
         }

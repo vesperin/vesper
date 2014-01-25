@@ -1,5 +1,10 @@
 package edu.ucsc.refactor;
 
+import edu.ucsc.refactor.internal.ClassUnit;
+import edu.ucsc.refactor.internal.FieldUnit;
+import edu.ucsc.refactor.internal.MethodUnit;
+import edu.ucsc.refactor.internal.ParameterUnit;
+import edu.ucsc.refactor.spi.UnitLocator;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -18,8 +23,10 @@ public class RefactorerTest {
             "\tstatic void check(\n" +
             "\t\tboolean cond, String message\n" +
             "\t) throws RuntimeException {\n" +
+            "\t\tB bbb = new B(); cond = !cond;" +
             "\t\tif(!cond) throw new IllegalArgumentException();\n" +
             "\t}\n" +
+            "\tstatic class B{}\n" +
             "}";
 
     static final String NAME = "Preconditions.java";
@@ -38,14 +45,14 @@ public class RefactorerTest {
 
     @Test public void testRefactorerInternals(){
         final Refactorer refactorer = Vesper.createRefactorer(SRC);
-        assertThat(refactorer.getIssueRegistry().isEmpty(), is(false));
-        assertThat(refactorer.getIssueRegistry().size(), is(1));
+        assertThat(refactorer.getIssues(SRC).isEmpty(), is(false));
+        assertThat(refactorer.getTrackedSources().size(), is(1));
 
-        assertThat(refactorer.getVisibleSources().isEmpty(), is(false));
-        assertThat(refactorer.getVisibleSources().size(), is(1));
+        assertThat(refactorer.getTrackedSources().isEmpty(), is(false));
+        assertThat(refactorer.getTrackedSources().size(), is(1));
 
-        assertSame(refactorer.getVisibleSources().get(0), SRC);
-        assertThat(refactorer.getIssueRegistry().containsKey(SRC), is(true));
+        assertSame(refactorer.getTrackedSources().get(0), SRC);
+        assertThat(refactorer.getTrackedSources().contains(SRC), is(true));
 
         assertThat(refactorer.hasIssues(SRC), is(true));
     }
@@ -71,9 +78,7 @@ public class RefactorerTest {
 
 
         final Change amendment = refactorer.createChange(
-                ChangeRequest.forEdit(
-                        SingleEdit.reformatCode(SRC)
-                )
+                ChangeRequest.reformatSource(SRC)
         );
 
         assertNotNull(amendment);
@@ -88,6 +93,24 @@ public class RefactorerTest {
 
         assertThat(recommendedChanges.isEmpty(), is(false));
         assertThat(recommendedChanges.size(), is(2));
+    }
+
+    @Test public void testRefactorerUnitLocator() {
+        final Refactorer refactorer = Vesper.createRefactorer(SRC);
+        final UnitLocator locator = refactorer.getLocator(SRC);
+
+        final List<NamedLocation> params = locator.locate(new ParameterUnit("message"));
+        assertThat(params.isEmpty(), is(false));
+
+        final List<NamedLocation> methods = locator.locate(new MethodUnit("check"));
+        assertThat(methods.isEmpty(), is(false));
+
+        final List<NamedLocation> classes = locator.locate(new ClassUnit("Preconditions"));
+        assertThat(classes.isEmpty(), is(false));
+
+        final List<NamedLocation> fields = locator.locate(new FieldUnit("something"));
+        assertThat(fields.isEmpty(), is(true));
+
     }
 
 

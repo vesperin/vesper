@@ -1,6 +1,6 @@
 package edu.ucsc.refactor;
 
-import edu.ucsc.refactor.util.ToStringBuilder;
+import com.google.common.base.Objects;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -20,6 +20,15 @@ public final class Credential {
         this.password = password;
     }
 
+    /**
+     * Creates the NoCredential object.
+     *
+     * @return THe NoCredential object.
+     */
+    public static Credential none(){
+        return new Credential("NONE", "NONE");
+    }
+
 
     /**
      * @return The username
@@ -32,7 +41,7 @@ public final class Credential {
     public String getPassword() { return password; }
 
     @Override public String toString() {
-        return new ToStringBuilder("Credential")
+        return Objects.toStringHelper("Credential")
                 .add("username", getUsername())
                 .add("password", (!getPassword().isEmpty() ? "..." : getPassword())).toString();
     }

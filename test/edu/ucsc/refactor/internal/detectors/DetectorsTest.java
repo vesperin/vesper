@@ -72,6 +72,34 @@ public class DetectorsTest {
     }
 
 
+    @Test public void testDetectUnusedField(){
+        final Context context = new Context(
+                InternalUtil.createSourceWithUnusedField()
+        );
+
+        parser.parseJava(context);
+
+        final UnusedFields unusedFields = new UnusedFields();
+        final Set<Issue>    issues      = unusedFields.detectIssues(context);
+
+        assertThat(issues.size(), is(1));
+    }
+
+
+    @Test public void testDetectUsedField(){
+        final Context context = new Context(
+                InternalUtil.createSourceWithUsedField()
+        );
+
+        parser.parseJava(context);
+
+        final UnusedFields unusedFields = new UnusedFields();
+        final Set<Issue>    issues      = unusedFields.detectIssues(context);
+
+        assertThat(issues.size(), is(0));
+    }
+
+
     @Test public void testDetectUnusedMethod(){
         final Context context = new Context(
                 InternalUtil.createSourceWithUnusedMethodAndParameter()
@@ -82,7 +110,7 @@ public class DetectorsTest {
         final UnusedMethods unusedMethods = new UnusedMethods();
         final Set<Issue>    issues        = unusedMethods.detectIssues(context);
 
-        assertThat(issues.size(), is(1));
+        assertThat(issues.size(), is(2));
     }
 
     @Test public void testDetectUnusedMethodParameter(){
@@ -109,6 +137,33 @@ public class DetectorsTest {
         final Set<Issue>    issues        = unusedMethods.detectIssues(context);
 
         assertThat(issues.size(), is(0));
+    }
+
+    @Test public void testUnusedClassDetectorOnClassWithUsedNestedClass(){
+        final Context context = new Context(
+                InternalUtil.createSourceWithOneUsedStaticNestedClass()
+        );
+
+        parser.parseJava(context);
+
+        final UnusedTypes unusedClass = new UnusedTypes();
+        final Set<Issue>  issues      = unusedClass.detectIssues(context);
+
+        assertThat(issues.size(), is(0));
+    }
+
+
+    @Test public void testUnusedClassDetectorOnClassWithOneUnusedNestedClass(){
+        final Context context = new Context(
+                InternalUtil.createSourceWithOneUnusedStaticNestedClass()
+        );
+
+        parser.parseJava(context);
+
+        final UnusedTypes unusedClass = new UnusedTypes();
+        final Set<Issue>  issues      = unusedClass.detectIssues(context);
+
+        assertThat(issues.size(), is(1));
     }
 
     @Test public void testUnableToDetectUnusedMethodParameter(){

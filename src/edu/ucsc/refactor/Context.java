@@ -1,7 +1,7 @@
 package edu.ucsc.refactor;
 
+import com.google.common.base.Objects;
 import edu.ucsc.refactor.util.Locations;
-import edu.ucsc.refactor.util.ToStringBuilder;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -10,7 +10,7 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public class Context {
-    private final Source                    file;
+    private final Source    file;
 
     private Location        scope;
     private CompilationUnit compilationUnit;
@@ -110,7 +110,8 @@ public class Context {
     }
 
     @Override public String toString() {
-        final ToStringBuilder builder = new ToStringBuilder("Context");
-        return builder.toString();
+        return Objects.toStringHelper(getClass())
+                .add("Source", getSource())
+                .toString();
     }
 }

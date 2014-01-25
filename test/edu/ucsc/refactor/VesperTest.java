@@ -1,8 +1,8 @@
 package edu.ucsc.refactor;
 
 import edu.ucsc.refactor.internal.HostImpl;
+import edu.ucsc.refactor.internal.RemoteRepository;
 import edu.ucsc.refactor.spi.CommitRequest;
-import edu.ucsc.refactor.spi.Upstream;
 import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.Gist;
 import org.eclipse.egit.github.core.GistFile;
@@ -13,8 +13,7 @@ import java.io.IOException;
 import java.util.*;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -75,19 +74,25 @@ public class VesperTest {
         final Change first = suggestedChanges.get(0);
         final CommitRequest applied = refactorer.apply(first);
         assertNotNull(applied);
+
+        final CommitRequest published = refactorer.publish(applied);
+        assertEquals(published.getStatus(), applied.getStatus());
+
+        final CommitRequest anotherPublished = refactorer.publish(
+                applied,
+                new RemoteRepository(new Credential("lala", "lala"), new LocalGistService())
+        );
+
+        assertNotNull(anotherPublished);
+        System.out.println(anotherPublished.more());
+
     }
 
 
     static class ShallowHost extends HostImpl {
-        @Override public Upstream getUpstream() {
-            return new ShallowUpstream();
-        }
     }
 
     static class SemiShallowHost extends HostImpl {
-        @Override public Upstream getUpstream() {
-            return new SemiShallowUpstream();
-        }
     }
 
     static class ShallowConfiguration extends AbstractConfiguration {
@@ -110,7 +115,13 @@ public class VesperTest {
             gist.setId(String.valueOf(new Random().nextLong()));
             gist.setFiles(Collections.singletonMap("Name.java", file));
             gist.setCreatedAt(new Date());
+            gist.setUrl("http://gist.github.com/lala/123456");
             return gist;
+        }
+
+        @Override
+        public Gist getGist(String id) throws IOException {
+            return null;
         }
 
         @Override
@@ -128,49 +139,6 @@ public class VesperTest {
         @Override
         public Gist updateGist(Gist gist) throws IOException {
             return gist;
-        }
-    }
-
-    static class SemiShallowUpstream implements Upstream {
-
-        @Override public String getUser() {
-            return "srcfolio";
-        }
-
-        @Override public GistService get() {
-            return new LocalGistService(){
-
-                @Override
-                public Gist getGist(String id) throws IOException {
-                    final Gist gist = new Gist();
-                    final GistFile file = new GistFile();
-                    file.setContent(CONTENT);
-                    file.setFilename("Name.java");
-
-                    gist.setId(id);
-                    gist.setFiles(Collections.singletonMap("Name.java", file));
-                    gist.setCreatedAt(new Date());
-                    gist.setUpdatedAt(new Date());
-
-                    return gist;
-                }
-            };
-        }
-    }
-
-    static class ShallowUpstream implements Upstream {
-        @Override public String getUser() {
-            return "srcfolio";
-        }
-
-        @Override public GistService get() {
-            return new LocalGistService(){
-
-                @Override
-                public Gist getGist(String id) throws IOException {
-                    return null;
-                }
-            };
         }
     }
 }

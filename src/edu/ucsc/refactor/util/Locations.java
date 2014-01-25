@@ -6,6 +6,11 @@ import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.internal.SourceLocation;
 import org.eclipse.jdt.core.dom.ASTNode;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
@@ -52,14 +57,28 @@ public class Locations {
      *
      * @return The location of the word in the {@code Source}
      */
-    public static Location locateWord(Source code, String word){
-        final int offset = code.getContents().indexOf(word);
-        return SourceLocation.createLocation(
-                code,
-                code.getContents(),
-                offset,
-                offset + word.length()
-        );
+    public static List<Location> locateWord(Source code, String word){
+        final List<Location> locations = new ArrayList<Location>();
+
+        final String  REGEX     = "\\b" + word + "\\b";
+        final Pattern pattern   = Pattern.compile(REGEX);
+        final Matcher matcher   = pattern.matcher(code.getContents());
+
+        while(matcher.find()) {
+            final int start = matcher.start();
+            final int end   = matcher.end();
+
+            final Location location = SourceLocation.createLocation(
+                    code,
+                    code.getContents(),
+                    start,
+                    end
+            );
+
+            locations.add(location);
+        }
+
+        return locations;
     }
 
     public static boolean isBeforeBaseLocation(Location base, Location other){

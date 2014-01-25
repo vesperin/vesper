@@ -1,6 +1,6 @@
 package edu.ucsc.refactor;
 
-import edu.ucsc.refactor.util.ToStringBuilder;
+import com.google.common.base.Objects;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -130,7 +130,7 @@ public class Note implements Comparable<Note> {
 
 
     @Override public String toString() {
-        return new ToStringBuilder("Note")
+        return Objects.toStringHelper("Note")
                 .add("id", getId())
                 .add("user", getUser())
                 .add("content", getContent())

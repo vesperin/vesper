@@ -1,6 +1,9 @@
 package edu.ucsc.refactor;
 
-import edu.ucsc.refactor.spi.*;
+import edu.ucsc.refactor.spi.IssueDetector;
+import edu.ucsc.refactor.spi.JavaParser;
+import edu.ucsc.refactor.spi.SourceChanger;
+import edu.ucsc.refactor.spi.Upstream;
 
 import java.util.List;
 
@@ -47,16 +50,12 @@ public interface Host {
     void addSourceChanger(SourceChanger changer);
 
     /**
-     * User credentials to stored the refactored {@code Source}.
+     * User credentials to stored the refactored {@code Source}, null if all changes will
+     * be committed locally; otherwise the user must provide a Gist's user name and password.
      *
      * @param credential The access credentials
      */
     void addCredentials(Credential credential);
-
-    /**
-     * @return The commit destination.
-     */
-    Upstream getUpstream();
 
     /**
      * Creates a new Java context for the source file.  This
@@ -94,6 +93,12 @@ public interface Host {
      * Installs a configuration that automatically configures this host.
      */
     void install(Configuration configuration);
+
+    /**
+     * @return {@code true} if {@code Vesper} is set to allow remote commits,
+     * {@code false} otherwise.
+     */
+    boolean isRemoteUpstreamEnabled();
 
     /**
      * Throws a {@code CreationException} if any exception has been

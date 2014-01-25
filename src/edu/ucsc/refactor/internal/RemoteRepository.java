@@ -1,15 +1,13 @@
 package edu.ucsc.refactor.internal;
 
-import com.google.common.base.Joiner;
-import com.google.common.io.Files;
-import edu.ucsc.refactor.Change;
+import com.google.common.base.Preconditions;
+import edu.ucsc.refactor.Credential;
 import edu.ucsc.refactor.Note;
 import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.spi.CommitRequest;
 import edu.ucsc.refactor.spi.CommitStatus;
 import edu.ucsc.refactor.spi.Name;
 import edu.ucsc.refactor.spi.Upstream;
-import edu.ucsc.refactor.util.AstUtil;
 import edu.ucsc.refactor.util.CommitInformation;
 import edu.ucsc.refactor.util.Notes;
 import edu.ucsc.refactor.util.StringUtil;
@@ -17,88 +15,79 @@ import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.Gist;
 import org.eclipse.egit.github.core.GistFile;
 import org.eclipse.egit.github.core.service.GistService;
-import org.eclipse.jdt.core.dom.ASTNode;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.logging.Logger;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public final class GistCommitRequest implements CommitRequest {
-    private static final Logger LOGGER      = Logger.getLogger(GistCommitRequest.class.getName());
-    private static final String DOT_JAVA    = ".java";
-
-    private final Change            change;
-    private final Queue<Delta>      load;
-
-    private final AtomicReference<Source> fileMatchingLastDelta;
-
-    private CommitStatus status;
-
+public class RemoteRepository implements Upstream {
+    private final GistService service;
+    private final Credential  credential;
 
     /**
-     * Instantiates a new {@link GistCommitRequest}
-     * @param change The change to be applied and transmitted.
+     * Construct a new RemoteRepository
+     *
+     * @param key The storage service key
      */
-    public GistCommitRequest(Change change){
-        this.change     = change;
-        this.load       = new LinkedList<Delta>();
+    public RemoteRepository(Credential key){
+        this(key, new GistService());
+    }
 
-        for(Delta each : change.getDeltas()){ // in order
-            this.load.add(each);
+    /**
+     * Construct a new RemoteRepository
+     *
+     * @param key The storage service key
+     * @param service The GistService object
+     */
+    public RemoteRepository(Credential key, GistService service){
+        if(key != null && "None".equals(key.getUsername())){
+            service.getClient().setCredentials(key.getUsername(), key.getPassword());
         }
-
-
-        this.fileMatchingLastDelta  = new AtomicReference<Source>();
-        this.status                 = CommitStatus.unknownStatus();
+        this.service    = service;
+        this.credential = key;
     }
 
-    @Override public boolean isValid() {
-        return change.isValid();
-    }
+    @Override public CommitRequest publish(CommitRequest request) {
+        if(!request.isValid()) return request;
 
-    static String squashedDeltas(String name, Queue<Delta> deltas, ASTNode node) throws RuntimeException {
-        File tempFile = null;
         try {
-            tempFile = File.createTempFile(name, DOT_JAVA);
-            while (!deltas.isEmpty()){
-                final Delta next = deltas.remove();
-                Files.write(next.getAfter().getBytes(), tempFile);
-                if(deltas.isEmpty()){  // optimization
-                    AstUtil.syncSourceProperty(next.getSource(), node);
-                }
-            }
+            final Source updatedSource = request.getSource();
+            Gist gist = new GistBuilder(service)
+                    .content(updatedSource.getContents())
+                    .file(updatedSource)
+                    .build();
 
-            Files.readLines(tempFile, Charset.defaultCharset());
+            ((AbstractCommitRequest)request).updateSource(sync(updatedSource, gist));
 
-            return Joiner.on("\n").join(
-                    Files.readLines(
-                            tempFile,
-                            Charset.defaultCharset()
+            // fill out the `more` information
+            final Name info = ((AbstractCommitRequest)request).getChange().getCause().getName();
+
+            ((AbstractCommitRequest)request).updateStatus(
+                    CommitStatus.succeededStatus(
+                            new CommitInformation()
+                                    .commit(gist.getId())
+                                    .author(getUser())
+                                    .url(gist.getUrl())
+                                    .date(gist.getCreatedAt())
+                                    .comment(info.getKey(), info.getSummary())
                     )
             );
+
+            return request;
         } catch (Throwable ex){
-            throw new RuntimeException(ex);
-        } finally {
-            if(tempFile != null){
-                if(tempFile.exists()){
-                    final boolean deleted = tempFile.delete();
-                    LOGGER.fine(name + " file was deleted? " + deleted);
-                }
-            }
+            request.abort(ex.getMessage());
+            return request;
         }
+
     }
 
-
-    static Source createSource(GistService service, Gist gist) throws IOException {
+    private static Source sync(Source src, Gist gist) throws IOException {
         final String        id           = gist.getId();
         final String        description  = gist.getDescription();
-        final List<Comment> comments     = service.getComments(id);
 
         String name     = null;
         String content  = null;
@@ -108,94 +97,26 @@ public final class GistCommitRequest implements CommitRequest {
             content = gist.getFiles().get(eachKey).getContent();
         }
 
+        Preconditions.checkNotNull(name);
+        Preconditions.checkNotNull(content);
+        Preconditions.checkNotNull(description);
+        Preconditions.checkArgument(src.getName().equals(name), "name mismatch");
+        Preconditions.checkArgument(description.equals(src.getDescription()), "description mismatch");
+
         assert name     != null;
         assert content  != null;
 
-        final Source updatedSource = new Source(name, content, description);
-        updatedSource.setId(id);
+        src.setId(id);
 
-        for(Comment eachComment : comments){
-
-            final String noteId         = String.valueOf(eachComment.getId());
-            final String user           = eachComment.getUser().getName();
-            final String noteContent    = eachComment.getBody();
-
-            final Note note = new Note(
-                    noteId,
-                    user,
-                    noteContent
-            );
-
-            updatedSource.addNote(note);
-        }
-
-        return updatedSource;
+        return src;
     }
 
-    @Override public CommitStatus commit(Upstream to) throws RuntimeException {
-        final Source            current             = this.load.peek().getSource();
-        final GistService       service             = (GistService) to.get();
-        final boolean           isAboutToBeUpdated  = !this.load.isEmpty();
-        final String            username            = to.getUser();
-        final String            fileName            = StringUtil.extractName(current.getName());
-        final ASTNode           node                = this.change.getCause().getAffectedNodes().get(0); // never null
-
-        try {
-            Gist local = new GistBuilder(service, isAboutToBeUpdated)
-                    .content(squashedDeltas(fileName, this.load, node))
-                    .file(current)
-                    .user(username)
-                    .build();
-
-            fileMatchingLastDelta.set(createSource(service, local));
-
-
-            // fill out the `more` information
-            final Name info = change.getCause().getName();
-
-            final boolean updatedDate = local.getUpdatedAt() != null;
-            final boolean createdDate = local.getCreatedAt() != null;
-
-            final Date date = createdDate
-                                ? (updatedDate ? local.getUpdatedAt() : local.getCreatedAt())
-                                : (updatedDate ? local.getUpdatedAt() : new Date());
-
-
-            status = status.update(
-                    CommitStatus.succeededStatus(
-                            new CommitInformation()
-                                    .commit(local.getId())
-                                    .author(username)
-                                    .date(date)
-                                    .comment(info.getKey(), info.getSummary()
-                                    )
-                    )
-            );
-
-            return status;
-
-        } catch (Throwable ex) {
-            status = status.update(
-                    CommitStatus.failedStatus(
-                            new CommitInformation()
-                                    .error(ex.getMessage()
-                                    )
-                    ) );
-            
-            throw new RuntimeException(ex);
-        }
-
+    Credential getCredential(){
+        return credential;
     }
 
-    @Override public Source getUpdatedSource() {
-        assert this.fileMatchingLastDelta.get() != null;
-
-        return this.fileMatchingLastDelta.get();
-    }
-
-
-    @Override public String more() {
-        return status.more();
+    public String getUser() {
+        return getCredential().getUsername();
     }
 
 
@@ -204,7 +125,6 @@ public final class GistCommitRequest implements CommitRequest {
      */
     static class GistBuilder {
         final GistService service;
-        final boolean     aboutTobeUpdated;
 
         Notes notes;
 
@@ -212,21 +132,18 @@ public final class GistCommitRequest implements CommitRequest {
         String description;
         String content;
         Source code;
-        String username;
 
         /**
          * Construct a builder with {@code GistService} and whether
          * we will be updating a gist file as values.
          */
-        GistBuilder(GistService service, boolean isAboutTobeUpdated){
+        GistBuilder(GistService service){
             this.service            = service;
-            this.aboutTobeUpdated   = isAboutTobeUpdated;
             this.notes              = new Notes();
 
             this.description        = null;
             this.content            = null;
             this.code               = null;
-            this.username           = null;
         }
 
         GistBuilder description(String description) {
@@ -252,17 +169,12 @@ public final class GistCommitRequest implements CommitRequest {
             return this;
         }
 
-        GistBuilder user(String username){
-            this.username = username;
-            return this;
-        }
-
         public Gist build() throws RuntimeException {
             Gist result = null;
             try {
                 final Gist remote = (this.code.getId() != null
-                                        ? service.getGist(this.code.getId())
-                                        : null);
+                        ? service.getGist(this.code.getId())
+                        : null);
                 if(remote == null){
                     Gist brandNew = new Gist().setDescription(this.description);
 
@@ -284,7 +196,7 @@ public final class GistCommitRequest implements CommitRequest {
                     }
 
                 } else {
-                    if(isDirty(this, remote) || aboutTobeUpdated){
+                    if(isDirty(this, remote)){
 
                         for(String each : remote.getFiles().keySet()){ // ONLY one file
                             remote.getFiles().get(each).setContent(content);

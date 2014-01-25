@@ -1,11 +1,10 @@
 package edu.ucsc.refactor.internal;
 
+import com.google.common.base.Objects;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.spi.IssueDetector;
 import edu.ucsc.refactor.spi.JavaParser;
-import edu.ucsc.refactor.spi.Upstream;
 import edu.ucsc.refactor.spi.SourceChanger;
-import edu.ucsc.refactor.util.ToStringBuilder;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -62,12 +61,7 @@ public class HostImpl implements Host {
     }
 
     @Override public void addCredentials(Credential credential) {
-        if(credential == null) return;
         this.credential = credential;
-    }
-
-    @Override public Upstream getUpstream() {
-        return new GistRepository(getStorageKey());
     }
 
     // Internal method
@@ -77,6 +71,9 @@ public class HostImpl implements Host {
 
     @Override public Context createContext(Source source) {
         try {
+            if(source.getUniqueSignature() == null){  // very important...
+                source.generateUniqueSignature();
+            }
             return parseJava(new Context(source));
         } catch (Throwable ex){
             addError(ex);
@@ -121,6 +118,10 @@ public class HostImpl implements Host {
         configuration.configure(this);
     }
 
+    @Override public boolean isRemoteUpstreamEnabled() {
+        return getStorageKey() != null;
+    }
+
     @Override public void throwCreationErrorIfErrorsExist() throws RuntimeException {
         // Blow up if we encountered errors.
         if (!errors.isEmpty()) {
@@ -129,7 +130,7 @@ public class HostImpl implements Host {
     }
 
     @Override public String toString() {
-        final ToStringBuilder builder = new ToStringBuilder("Host");
+        final Objects.ToStringHelper builder = Objects.toStringHelper("Host");
         builder.add("detectors", detectors.size());
         builder.add("changers", changers.size());
         builder.add("parser", (getJavaParser() != null ? "Yes" : "No"));

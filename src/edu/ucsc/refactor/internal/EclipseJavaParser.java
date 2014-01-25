@@ -27,6 +27,7 @@ public class EclipseJavaParser implements JavaParser {
 
         astParser.setKind(ASTParser.K_COMPILATION_UNIT);
         astParser.setResolveBindings(true);
+        astParser.setEnvironment(null, null, null, true);
         astParser.setCompilerOptions(JavaCore.getOptions());
     }
 

@@ -1,7 +1,7 @@
 package edu.ucsc.refactor.internal.visitors;
 
 import edu.ucsc.refactor.internal.SourceVisitor;
-import edu.ucsc.refactor.util.AstUtil;
+import edu.ucsc.refactor.internal.util.AstUtil;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.dom.*;
 

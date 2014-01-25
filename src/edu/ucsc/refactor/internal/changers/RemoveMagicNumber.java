@@ -8,7 +8,7 @@ import edu.ucsc.refactor.internal.SourceChange;
 import edu.ucsc.refactor.internal.visitors.FieldDeclarationVisitor;
 import edu.ucsc.refactor.spi.Smell;
 import edu.ucsc.refactor.spi.SourceChanger;
-import edu.ucsc.refactor.util.AstUtil;
+import edu.ucsc.refactor.internal.util.AstUtil;
 import edu.ucsc.refactor.util.Parameters;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;

@@ -6,18 +6,22 @@ import edu.ucsc.refactor.internal.visitors.MethodDeclarationVisitor;
 import edu.ucsc.refactor.internal.visitors.MethodInvocationVisitor;
 import edu.ucsc.refactor.spi.IssueDetector;
 import edu.ucsc.refactor.spi.Smell;
-import edu.ucsc.refactor.util.AstUtil;
+import edu.ucsc.refactor.internal.util.AstUtil;
 import org.eclipse.jdt.core.dom.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.logging.Logger;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public class UnusedMethods extends IssueDetector {
+    private static final Logger LOGGER = Logger.getLogger(UnusedMethods.class.getName());
+
+
     private static final String STRATEGY_NAME        = Smell.UNUSED_METHOD.getKey();
     private static final String STRATEGY_DESCRIPTION = Smell.UNUSED_METHOD.getSummary();
 
@@ -41,7 +45,7 @@ public class UnusedMethods extends IssueDetector {
         for (MethodDeclaration methodDeclaration : methodDeclarationVisitor.getMethodDeclarations()) {
             final Location location = context.locate(methodDeclaration);
 
-            System.out.println("Entering ... " + location);
+            LOGGER.fine("Entering ... " + location);
 
             methodUsages.put(methodDeclaration, new ArrayList<MethodInvocation>());
         }
@@ -91,7 +95,7 @@ public class UnusedMethods extends IssueDetector {
             }
 
             if ((!Modifier.isPrivate(modifiers) && !methodDeclaration.isConstructor() && !Modifier.isStatic(modifiers)
-                    && !AstUtil.hasAnnotation(methodDeclaration)
+                    && !AstUtil.isAnnotated(methodDeclaration)
                     && !AstUtil.isMainMethod(methodDeclaration))
                     && !Modifier.isAbstract(AstUtil.parent(TypeDeclaration.class, methodDeclaration).getModifiers())
                     && !AstUtil.parent(TypeDeclaration.class, methodDeclaration).isInterface()) {

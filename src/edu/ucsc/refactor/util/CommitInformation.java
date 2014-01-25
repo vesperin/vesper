@@ -23,6 +23,10 @@ public class CommitInformation {
         return add("commit", id + "\n");
     }
 
+    public CommitInformation url(String url){
+        return add("url", url + "\n");
+    }
+
     public CommitInformation author(String name){
         return add("Author", name + "\n");
     }

@@ -116,6 +116,8 @@ public class Delta {
                 original.getDescription()
         );
 
+        newSource.setSignature(original.getUniqueSignature());
+
         for(Note each : original.getNotes()){
             newSource.addNote(each);
         }

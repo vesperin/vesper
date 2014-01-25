@@ -101,6 +101,54 @@ public class ChangeRequest {
 
 
     /**
+     * Delete a class change request with selection.
+     *
+     * @see {@link SingleEdit#deleteClass(SourceSelection)}
+     */
+    public static ChangeRequest deleteClass(SourceSelection selection){
+        return ChangeRequest.forEdit(
+                SingleEdit.deleteClass(selection)
+        );
+    }
+
+
+    /**
+     * Delete a method change request with selection.
+     *
+     * @see {@link SingleEdit#deleteMethod(SourceSelection)}
+     */
+    public static ChangeRequest deleteMethod(SourceSelection selection){
+        return ChangeRequest.forEdit(
+                SingleEdit.deleteMethod(selection)
+        );
+    }
+
+
+    /**
+     * Delete a field change request with selection.
+     *
+     * @see {@link SingleEdit#deleteField(SourceSelection)}
+     */
+    public static ChangeRequest deleteField(SourceSelection selection){
+        return ChangeRequest.forEdit(
+                SingleEdit.deleteField(selection)
+        );
+    }
+
+
+    /**
+     * Delete a parameter change request with selection.
+     *
+     * @see {@link SingleEdit#deleteParameter(SourceSelection)}
+     */
+    public static ChangeRequest deleteParameter(SourceSelection selection){
+        return ChangeRequest.forEdit(
+                SingleEdit.deleteParameter(selection)
+        );
+    }
+
+
+    /**
      * Rename a class/interface change request with selection and newName as values.
      *
      * @see {@link SingleEdit#renameMethod(SourceSelection)}
@@ -151,14 +199,27 @@ public class ChangeRequest {
         );
     }
 
+
     /**
-     * Reformat source code change request with selection and newName as values.
+     * Reformat source code change request with source as value.
      *
      * @see {@link SingleEdit#reformatCode(Source)}
      */
     public static ChangeRequest reformatSource(Source source){
         return ChangeRequest.forEdit(
                 SingleEdit.reformatCode(source)
+        );
+    }
+
+    /**
+     * Optimizes the import declarations of a {@code Source}, cleaning out any
+     * un-used imports.
+     *
+     * @see {@link SingleEdit#optimizeImports(Source)}
+     */
+    public static ChangeRequest optimizeImports(Source code){
+        return ChangeRequest.forEdit(
+                SingleEdit.optimizeImports(code)
         );
     }
 

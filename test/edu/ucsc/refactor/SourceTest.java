@@ -33,7 +33,7 @@ public class SourceTest {
         assertThat(StringUtil.extractName(b.getName()), equalTo(StringUtil.extractName(NAME)));
         assertThat(b.getContents(), equalTo(CONTENT));
         assertNotNull(b.toDocument());
-        assertThat("Source[name=" + StringUtil.extractName(b.getName()) + "]",
+        assertThat("Source{name=" + StringUtil.extractName(b.getName()) + "}",
                 equalTo(b.toString()));
         assertEquals(b.getDescription(), VERBOSE_DESC);
         assertThat(b.getNotes().isEmpty(), is(true));

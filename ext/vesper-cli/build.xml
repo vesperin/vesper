@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+
+<project name="vesper-cli" basedir="." default="jar">
+
+    <import file="../../tasks.xml"/>
+
+    <path id="compile.classpath">
+        <fileset dir="${lib.dir}" includes="*.jar"/>
+        <fileset dir="../../build/dist" includes="*.jar"/>
+    </path>
+
+    <target name="jar" depends="jar.withdeps, manifest" description="Build jar.">
+        <dirname property="common.basedir" file="${ant.file.tasks}"/>
+        <jar destfile="${build.dir}/${ant.project.name}-${version}.jar"
+             manifest="${common.basedir}/build/META-INF/MANIFEST.MF">
+            <zipfileset src="${build.dir}/${ant.project.name}-with-deps.jar"
+                        excludes="edu/ucsc/refactor/internal/**"/>
+        </jar>
+    </target>
+
+</project>

@@ -6,7 +6,7 @@ import edu.ucsc.refactor.internal.SourceChange;
 import edu.ucsc.refactor.internal.visitors.RenameAstNodeVisitor;
 import edu.ucsc.refactor.spi.Refactoring;
 import edu.ucsc.refactor.spi.SourceChanger;
-import edu.ucsc.refactor.util.AstUtil;
+import edu.ucsc.refactor.internal.util.AstUtil;
 import edu.ucsc.refactor.util.Locations;
 import edu.ucsc.refactor.util.Parameters;
 import org.eclipse.jdt.core.dom.AST;
@@ -71,7 +71,9 @@ public class RenameClassOrInterface extends SourceChanger {
 
         rewrite.replace(unit, copy, null);
 
-        return createDelta(unit, rewrite);
+        src.setName(newName);
+
+        return createDelta(src, rewrite);
     }
 
     private static void checkNameIsNotTaken(TypeDeclaration unit, String newName){

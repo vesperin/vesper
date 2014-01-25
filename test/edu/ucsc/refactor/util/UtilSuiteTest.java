@@ -11,11 +11,10 @@ import org.junit.runners.Suite;
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
         StringsTest.class,
-        ToStringBuilderTest.class,
         LocationsTest.class,
-        ASTUtilTest.class,
         IoTest.class,
-        NotesTest.class
+        NotesTest.class,
+        CommitHistoryTest.class
 })
 public class UtilSuiteTest {
     public static Test suite() {

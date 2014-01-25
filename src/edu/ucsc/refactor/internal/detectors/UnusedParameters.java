@@ -6,7 +6,7 @@ import edu.ucsc.refactor.internal.visitors.MethodDeclarationVisitor;
 import edu.ucsc.refactor.internal.visitors.MethodInvocationVisitor;
 import edu.ucsc.refactor.spi.IssueDetector;
 import edu.ucsc.refactor.spi.Smell;
-import edu.ucsc.refactor.util.AstUtil;
+import edu.ucsc.refactor.internal.util.AstUtil;
 import org.eclipse.jdt.core.dom.*;
 
 import java.util.ArrayList;
@@ -21,7 +21,7 @@ public class UnusedParameters extends IssueDetector {
 
 
     private final List<MethodDeclaration> methodDeclarations;
-    private final List<MethodInvocation>    methodInvocations;
+    private final List<MethodInvocation>  methodInvocations;
 
     /**
      * Instantiate a new issue detector.
@@ -47,7 +47,7 @@ public class UnusedParameters extends IssueDetector {
         // check ALL variables for each method declaration
         for(MethodDeclaration eachMethodDeclaration : methodDeclarations){
             if (!Modifier.isAbstract(eachMethodDeclaration.getModifiers())
-                    && !AstUtil.hasAnnotation(eachMethodDeclaration)
+                    && !AstUtil.isAnnotated(eachMethodDeclaration)
                     && !AstUtil.parent(TypeDeclaration.class, eachMethodDeclaration).isInterface()
                     && !AstUtil.isMainMethod(eachMethodDeclaration) && eachMethodDeclaration.parameters() != null) {
 
