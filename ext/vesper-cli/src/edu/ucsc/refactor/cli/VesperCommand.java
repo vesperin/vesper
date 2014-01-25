@@ -4,6 +4,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
+import edu.ucsc.refactor.Change;
 import edu.ucsc.refactor.ChangeRequest;
 import edu.ucsc.refactor.SourceSelection;
 import edu.ucsc.refactor.Vesper;
@@ -56,9 +57,14 @@ public abstract class VesperCommand {
     }
 
     protected CommitRequest commitChange(Environment environment, ChangeRequest request){
-        final CommitRequest applied = environment.getCodeRefactorer().apply(environment.getCodeRefactorer().createChange(request));
-        environment.update(applied.getSource());
-        environment.collect(applied);
+        final Change        change  = environment.getCodeRefactorer().createChange(request);
+        final CommitRequest applied = environment.getCodeRefactorer().apply(change);
+        if(applied != null){
+            environment.update(applied.getSource());
+            environment.collect(applied);
+        } else {
+            environment.addError(change.getErrors());
+        }
         return applied;
     }
 
@@ -69,11 +75,7 @@ public abstract class VesperCommand {
     }
 
 
-    protected Result createResultPackage(CommitRequest applied, String message){
-        if(applied == null){
-            return Result.failedPackage(message);
-        }
-
+    protected Result createResultPackage(CommitRequest applied){
         return globalOptions.verbose ? Result.committedPackage(applied.getStatus()) : Result.unit();
     }
 

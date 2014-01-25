@@ -35,7 +35,11 @@ public abstract class SliceCommand extends VesperCommand {
         final ChangeRequest request   = createChangeRequest(selection);
         final CommitRequest applied   = commitChange(environment, request);
 
-        return createResultPackage(applied, "unable to commit 'chomp' change");
+        if(environment.hasLoggedError()){
+            return Result.failedPackage(environment.getErrorMessage());
+        }
+
+        return createResultPackage(applied);
     }
 
 

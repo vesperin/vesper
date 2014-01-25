@@ -36,11 +36,12 @@ public abstract class RenameCommand extends VesperCommand {
         final ChangeRequest request   = createChangeRequest(selection, tail);
         final CommitRequest applied   = commitChange(environment, request);
 
+        if(environment.hasLoggedError()){
+            return Result.failedPackage(environment.getErrorMessage());
+        }
+
         return createResultPackage(
-                applied,
-                "unable to commit '"
-                        + request.getCauseOfChange().getName().getKey()
-                        +  "' change."
+                applied
         );
     }
 

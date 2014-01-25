@@ -25,7 +25,8 @@ public class Grammar {
                 .withCommand(AddCommand.class)
                 .withCommand(OriginShow.class)
                 .withCommand(PublishCommand.class)
-                .withCommand(FormatCommand.class);
+                .withCommand(FormatCommand.class)
+                .withCommand(OptimizeImportsCommand.class);
 
         builder.withGroup("locate")
                 .withDescription("Locates a program unit found in the tracked source")

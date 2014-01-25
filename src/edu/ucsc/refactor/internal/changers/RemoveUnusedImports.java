@@ -37,7 +37,7 @@ public class RemoveUnusedImports extends SourceChanger {
         try {
             final CompilationUnit root = (cameFromDetector
                     ? getCompilationUnit(cause)
-                    : AstUtil.exactCast(CompilationUnit.class, cause.getAffectedNodes().get(0))
+                    : getCompilationUnitFromTypeDeclaration(cause)
             );
 
             final ASTRewrite      rewrite   = ASTRewrite.create(root.getAST());
@@ -47,6 +47,16 @@ public class RemoveUnusedImports extends SourceChanger {
         }
 
         return change;
+    }
+
+
+    private static CompilationUnit getCompilationUnitFromTypeDeclaration(CauseOfChange cause){
+        CompilationUnit unit = AstUtil.parent(CompilationUnit.class, cause.getAffectedNodes().get(0));
+        if(unit == null){
+            return AstUtil.exactCast(CompilationUnit.class, cause.getAffectedNodes().get(0));
+        }
+
+        return unit;
     }
 
 
@@ -67,6 +77,10 @@ public class RemoveUnusedImports extends SourceChanger {
             final Set<String> staticNames   = visitor.getStaticImportNames();
 
             final Set<ASTNode> unusedImports    = AstUtil.getUnusedImports(root, importNames, staticNames);
+            if(unusedImports.isEmpty()){
+                throw new RuntimeException("there is nothing to optimize");
+            }
+
             for(ASTNode eachUsed : unusedImports){
                 rewrite.remove(eachUsed, null);
             }

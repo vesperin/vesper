@@ -11,13 +11,14 @@ import io.airlift.airline.Command;
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-@Command(name = "format", description = "Formats the tracked source")
-public class FormatCommand extends VesperCommand {
+@Command(name = "optimize", description = "Optimize import declaration in tracked source")
+public class OptimizeImportsCommand extends VesperCommand {
+
     @Override public Result execute(Environment environment) throws RuntimeException {
         ensureValidState(environment);
 
 
-        final ChangeRequest request = ChangeRequest.reformatSource(environment.getTrackedSource());
+        final ChangeRequest request = ChangeRequest.optimizeImports(environment.getTrackedSource());
         final CommitRequest applied = commitChange(environment, request);
 
         if(environment.hasLoggedError()){
@@ -28,7 +29,7 @@ public class FormatCommand extends VesperCommand {
     }
 
     @Override public String toString() {
-        return Objects.toStringHelper("FormatCommand")
+        return Objects.toStringHelper("OptimizeImportsCommand")
                 .toString();
     }
 }

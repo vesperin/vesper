@@ -7,10 +7,7 @@ import edu.ucsc.refactor.spi.CommitRequest;
 import edu.ucsc.refactor.spi.UnitLocator;
 import edu.ucsc.refactor.util.CommitHistory;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -21,6 +18,7 @@ public class Environment {
     final AtomicReference<Source>           origin;
     final AtomicReference<Configuration>    remoteConfig;
     final Queue<CommitRequest>              checkpoints;
+    final Queue<String>                     errors;
 
     /**
      * Constructs a new Interpreter's Environment.
@@ -30,8 +28,28 @@ public class Environment {
         origin          = new AtomicReference<Source>();
         remoteConfig    = new AtomicReference<Configuration>();
         checkpoints     = new LinkedList<CommitRequest>();
+        errors          = new LinkedList<String>();
     }
 
+    /**
+     * Adds the errors messages returned by an invalid change. After being returned, these
+     * message will be deleted.
+     *
+     * @param messages The logged errors messages
+     */
+    public void addError(List<String> messages) {
+        final StringBuilder whole = new StringBuilder(messages.size() * 1000);
+
+        final Iterator<String> iterator = messages.iterator();
+        while(iterator.hasNext()){
+            whole.append(iterator.next());
+            if(iterator.hasNext()){
+                whole.append(". ");
+            }
+        }
+
+        this.errors.add(whole.toString().trim());
+    }
 
     /**
      * Clears the environment.
@@ -76,6 +94,13 @@ public class Environment {
     }
 
     /**
+     * @return a recently caught error message.
+     */
+    public String getErrorMessage(){
+        return errors.remove();
+    }
+
+    /**
      * @return the tracked {@code Source}.
      */
     public Source getTrackedSource() {
@@ -112,6 +137,13 @@ public class Environment {
      */
     public Queue<CommitRequest> getCommittedRequests(){
         return checkpoints;
+    }
+
+    /**
+     * @return {@code true} if there is logged {@code error}.
+     */
+    public boolean hasLoggedError() {
+        return !this.errors.isEmpty();
     }
 
 
