@@ -5,11 +5,13 @@ import com.google.common.collect.Maps;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.*;
 import edu.ucsc.refactor.internal.detectors.UnusedFields;
+import edu.ucsc.refactor.internal.detectors.UnusedMethods;
 import edu.ucsc.refactor.internal.detectors.UnusedTypes;
 import edu.ucsc.refactor.spi.JavaParser;
 import edu.ucsc.refactor.util.Locations;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.junit.After;
 import org.junit.Before;
@@ -166,6 +168,52 @@ public class ChangersTest {
             assertThat(change.isValid(), is(true));
         }
     }
+
+
+    @Test public void testRemoveUnusedMethod(){
+        final Context context = new Context(
+                InternalUtil.createSourceWithUnusedMethodAndParameter()
+        );
+
+        parser.parseJava(context);
+
+        final UnusedMethods unusedMethods = new UnusedMethods();
+        final Set<Issue>    issues        = unusedMethods.detectIssues(context);
+
+        assertThat(issues.size(), is(1));
+
+        final RemoveUnusedMethods remove = new RemoveUnusedMethods();
+        for(Issue each : issues){
+            Change change = remove.createChange(each, Maps.<String, Parameter>newHashMap());
+            assertNotNull(change);
+            assertThat(change.isValid(), is(true));
+        }
+
+    }
+
+
+    @Test public void testTryRemovingUsedMethod(){
+        final Context context = new Context(
+                InternalUtil.createSourceWithJavaDocs()
+        );
+
+        parser.parseJava(context);
+
+        final ProgramUnitLocator locator   = new ProgramUnitLocator(context);
+        final List<Location>     locations = locator.locate(new MethodUnit("boom"));
+
+        final ProgramUnitLocation target      = (ProgramUnitLocation)locations.get(0);
+        final MethodDeclaration declaration   = (MethodDeclaration)target.getNode();
+
+        final Location            loc    = Locations.locate(declaration);
+        final RemoveUnusedMethods remove = new RemoveUnusedMethods();
+
+        final SingleEdit        edit        = SingleEdit.deleteMethod(new SourceSelection(loc));
+        edit.addNode(declaration);
+        final Change            change      = remove.createChange(edit, Maps.<String, Parameter>newHashMap());
+        assertThat(change.isValid(), is(false));
+    }
+
 
     @After public void tearDown() throws Exception {
         parser  = null;

@@ -5,11 +5,12 @@ import edu.ucsc.refactor.Change;
 import edu.ucsc.refactor.Parameter;
 import edu.ucsc.refactor.internal.Delta;
 import edu.ucsc.refactor.internal.SourceChange;
+import edu.ucsc.refactor.internal.util.AstUtil;
 import edu.ucsc.refactor.spi.Names;
 import edu.ucsc.refactor.spi.Smell;
 import edu.ucsc.refactor.spi.SourceChanger;
-import edu.ucsc.refactor.internal.util.AstUtil;
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
@@ -21,8 +22,6 @@ import java.util.Map;
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public class RemoveUnusedMethods extends SourceChanger {
-    private final static int METHOD_DECLARATION             = 0;
-
     /**
      * Instantiates a new {@link RemoveUnusedMethods} object.
      */
@@ -40,10 +39,12 @@ public class RemoveUnusedMethods extends SourceChanger {
 
         final SourceChange      change      = new SourceChange(cause, this, parameters);
         try {
-            final MethodDeclaration declaration = getMethodDeclaration(cause.getAffectedNodes());
-            final Delta             delta       = removeFromDeclaration(declaration);
 
-            change.getDeltas().add(delta);
+            final CompilationUnit root      = getCompilationUnit(cause);
+            final ASTRewrite      rewrite   = ASTRewrite.create(root.getAST());
+
+            change.getDeltas().add(removeUnusedMethods(root, rewrite, cause));
+
         } catch (Throwable ex){
             change.getErrors().add(ex.getMessage());
         }
@@ -51,20 +52,37 @@ public class RemoveUnusedMethods extends SourceChanger {
         return change;
     }
 
-    private static MethodDeclaration getMethodDeclaration(List<ASTNode> nodes){
-        final ASTNode node = nodes.get(METHOD_DECLARATION);
 
+    private Delta removeUnusedMethods(CompilationUnit root, ASTRewrite rewrite, CauseOfChange cause){
+        final boolean cameFromDetector = cause.getName().isSame(Smell.UNUSED_METHOD);
+
+        for(ASTNode affected : cause.getAffectedNodes()){
+            final MethodDeclaration declaration = getMethodDeclaration(affected);
+            if(cameFromDetector){
+               rewrite.remove(declaration, null);
+            } else {
+                final List<SimpleName>  usages  = AstUtil.findByNode(root, declaration.getName());
+                if(usages.size() > 1){
+                    throw new RuntimeException(
+                            declaration.getName().getIdentifier() +
+                                    " cannot be deleted. It is used somewhere in the Source."
+                    );
+                }
+            }
+        }
+
+
+
+        return createDelta(root, rewrite);
+    }
+
+
+    private static MethodDeclaration getMethodDeclaration(ASTNode node){
         if(node instanceof SimpleName){
             return AstUtil.parent(MethodDeclaration.class, node);
         }
 
-        return (MethodDeclaration) node;
+        return AstUtil.exactCast(MethodDeclaration.class, node);
     }
 
-
-    private Delta removeFromDeclaration(MethodDeclaration methodDeclaration) {
-        final ASTRewrite rewrite = ASTRewrite.create(methodDeclaration.getRoot().getAST());
-        rewrite.remove(methodDeclaration, null);
-        return createDelta(methodDeclaration, rewrite);
-    }
 }
