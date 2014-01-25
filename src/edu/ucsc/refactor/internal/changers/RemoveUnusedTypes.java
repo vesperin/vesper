@@ -71,7 +71,8 @@ public class RemoveUnusedTypes extends SourceChanger {
                 if(usages.size() > 1){
                     throw new RuntimeException(
                             declaration.getName().getIdentifier() +
-                                    " cannot be deleted. It is used throughout the Source."
+                                    " cannot be deleted. It is used somewhere" +
+                                    " in the Source."
                     );
                 }
             }

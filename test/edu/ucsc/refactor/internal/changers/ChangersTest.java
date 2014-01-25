@@ -6,7 +6,9 @@ import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.*;
 import edu.ucsc.refactor.internal.detectors.UnusedFields;
 import edu.ucsc.refactor.internal.detectors.UnusedMethods;
+import edu.ucsc.refactor.internal.detectors.UnusedParameters;
 import edu.ucsc.refactor.internal.detectors.UnusedTypes;
+import edu.ucsc.refactor.internal.util.AstUtil;
 import edu.ucsc.refactor.spi.JavaParser;
 import edu.ucsc.refactor.util.Locations;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -180,7 +182,7 @@ public class ChangersTest {
         final UnusedMethods unusedMethods = new UnusedMethods();
         final Set<Issue>    issues        = unusedMethods.detectIssues(context);
 
-        assertThat(issues.size(), is(1));
+        assertThat(issues.size(), is(2));
 
         final RemoveUnusedMethods remove = new RemoveUnusedMethods();
         for(Issue each : issues){
@@ -212,6 +214,55 @@ public class ChangersTest {
         edit.addNode(declaration);
         final Change            change      = remove.createChange(edit, Maps.<String, Parameter>newHashMap());
         assertThat(change.isValid(), is(false));
+    }
+
+
+
+    @Test public void testRemoveDetectedUnusedMethodParameter(){
+        final Context context = new Context(
+                InternalUtil.createSourceWithUnusedMethodAndParameter()
+        );
+
+        parser.parseJava(context);
+
+        final UnusedParameters unusedParameters = new UnusedParameters();
+        final Set<Issue>       issues           = unusedParameters.detectIssues(context);
+
+        assertThat(issues.size(), is(1));
+
+
+        final RemoveUnusedParameters remove = new RemoveUnusedParameters();
+        for(Issue each : issues){
+            Change change = remove.createChange(each, Maps.<String, Parameter>newHashMap());
+            assertNotNull(change);
+            assertThat(change.isValid(), is(true));
+        }
+    }
+
+
+    @Test public void testTryRemovingUsedMethodParameter(){
+        final Context context = new Context(
+                InternalUtil.createSourceWithUsedMethodAndParameter()
+        );
+
+        parser.parseJava(context);
+
+        final ProgramUnitLocator locator   = new ProgramUnitLocator(context);
+        final List<Location>     locations = locator.locate(new ParameterUnit("msg"));
+
+        final RemoveUnusedParameters remove = new RemoveUnusedParameters();
+        for(Location each : locations){
+            final ProgramUnitLocation target  = (ProgramUnitLocation)each;
+            final MethodDeclaration   method  = AstUtil.exactCast(MethodDeclaration.class, target.getNode().getParent());
+            if(method.getName().getIdentifier().equals("boom")){
+                final SingleEdit        edit        = SingleEdit.deleteParameter(new SourceSelection(each));
+                edit.addNode(target.getNode());
+                final Change            change      = remove.createChange(edit, Maps.<String, Parameter>newHashMap());
+                assertThat(change.isValid(), is(false));
+            }
+
+        }
+
     }
 
 

@@ -21,7 +21,7 @@ public class UnusedParameters extends IssueDetector {
 
 
     private final List<MethodDeclaration> methodDeclarations;
-    private final List<MethodInvocation>    methodInvocations;
+    private final List<MethodInvocation>  methodInvocations;
 
     /**
      * Instantiate a new issue detector.

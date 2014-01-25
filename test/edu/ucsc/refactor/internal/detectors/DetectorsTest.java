@@ -110,7 +110,7 @@ public class DetectorsTest {
         final UnusedMethods unusedMethods = new UnusedMethods();
         final Set<Issue>    issues        = unusedMethods.detectIssues(context);
 
-        assertThat(issues.size(), is(1));
+        assertThat(issues.size(), is(2));
     }
 
     @Test public void testDetectUnusedMethodParameter(){

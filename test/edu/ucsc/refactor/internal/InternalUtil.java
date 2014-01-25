@@ -86,6 +86,18 @@ public class InternalUtil {
                 "Name.java",
                 new StringBuilder("class Name {\n")
                         .append("\tvoid boom(String msg){}\n")
+                        .append("\tvoid baam(String msg){ boom(msg);}\n")
+                        .append("}")
+        );
+    }
+
+
+    public static Source createSourceWithUsedMethodAndParameter(){
+        return createSource(
+                "Name.java",
+                new StringBuilder("class Name {\n")
+                        .append("\tvoid boom(String msg){ System.out.println(msg);}\n")
+                        .append("\tvoid baam(String msg){ boom(msg);}\n")
                         .append("}")
         );
     }
