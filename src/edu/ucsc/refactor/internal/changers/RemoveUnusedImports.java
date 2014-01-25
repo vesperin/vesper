@@ -76,7 +76,7 @@ public class RemoveUnusedImports extends SourceChanger {
             final Set<String> importNames   = visitor.getImportNames();
             final Set<String> staticNames   = visitor.getStaticImportNames();
 
-            final Set<ASTNode> unusedImports    = AstUtil.getUnusedImports(root, importNames, staticNames);
+            final Set<ASTNode> unusedImports = AstUtil.getUnusedImports(root, importNames, staticNames);
             if(unusedImports.isEmpty()){
                 throw new RuntimeException("there is nothing to optimize");
             }
