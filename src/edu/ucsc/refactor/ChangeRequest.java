@@ -203,11 +203,23 @@ public class ChangeRequest {
     /**
      * Reformat source code change request with source as value.
      *
-     * @see {@link ChangeRequest#reformatSource(Source)}
+     * @see {@link SingleEdit#reformatCode(Source)}
      */
     public static ChangeRequest reformatSource(Source source){
         return ChangeRequest.forEdit(
                 SingleEdit.reformatCode(source)
+        );
+    }
+
+    /**
+     * Optimizes the import declarations of a {@code Source}, cleaning out any
+     * un-used imports.
+     *
+     * @see {@link SingleEdit#optimizeImports(Source)}
+     */
+    public static ChangeRequest optimizeImports(Source code){
+        return ChangeRequest.forEdit(
+                SingleEdit.optimizeImports(code)
         );
     }
 

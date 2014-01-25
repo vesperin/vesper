@@ -81,6 +81,19 @@ public class SingleEdit extends AbstractCauseOfChange {
         return new SingleEdit(Refactoring.DELETE_PARAMETER, selection);
     }
 
+    /**
+     * Optimizes the import declarations found in a {@code Source} code.
+     *
+     * @param code The source code whose import declarations will be optimized.
+     * @return The {@code SingleEdit}.
+     */
+    public static SingleEdit optimizeImports(Source code) {
+        return new SingleEdit(
+                Refactoring.DELETE_UNUSED_IMPORTS,
+                new SourceSelection(code, 0, code.getLength())
+        );
+    }
+
 
     /**
      * Renames a class or interface, which location can be inferred from {@code SourceSelection}

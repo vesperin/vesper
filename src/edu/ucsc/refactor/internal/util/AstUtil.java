@@ -2,6 +2,7 @@ package edu.ucsc.refactor.internal.util;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 import edu.ucsc.refactor.Location;
 import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.internal.visitors.LabelVisitor;
@@ -14,6 +15,7 @@ import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -119,6 +121,30 @@ public class AstUtil {
 
     public static <T extends ASTNode> T exactCast(Class<T> targetType, ASTNode object){
         return targetType.cast(object);
+    }
+
+
+    public static Set<ASTNode> getUnusedImports(CompilationUnit unit, Set<String> importNames, Set<String> staticNames){
+        @SuppressWarnings("unchecked")
+        final List<ImportDeclaration> totalImports = unit.imports();
+
+        final Set<ASTNode> result = Sets.newLinkedHashSet();
+
+        for(ImportDeclaration eachDeclaration : totalImports){
+
+            final Name name              = eachDeclaration.getName();
+            final boolean isNotAsterisk  = !eachDeclaration.toString().contains("*;");
+            final String target          = AstUtil.getSimpleNameIdentifier(name);
+
+
+            if(!importNames.contains(target) && (!staticNames.contains(target) || staticNames
+                    .isEmpty()) && isNotAsterisk){
+                result.add(eachDeclaration);
+            }
+        }
+
+        return result;
+
     }
 
 

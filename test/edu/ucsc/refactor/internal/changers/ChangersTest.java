@@ -79,6 +79,20 @@ public class ChangersTest {
         }
     }
 
+
+    @Test public void testChangerForOptimizeImports() throws Exception {
+        final Source  code    = InternalUtil.createGenerealSource();
+        final Context context = new Context(code);
+
+        parser.parseJava(context);
+
+        final RemoveUnusedImports remove = new RemoveUnusedImports();
+        final SingleEdit          edit   = SingleEdit.optimizeImports(code);
+        edit.addNode(context.getCompilationUnit());
+        final Change              change = remove.createChange(edit, Maps.<String, Parameter>newHashMap());
+        assertThat(change.isValid(), is(true));
+    }
+
     @After public void tearDown() throws Exception {
         parser  = null;
     }

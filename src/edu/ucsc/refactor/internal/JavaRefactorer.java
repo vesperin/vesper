@@ -131,12 +131,18 @@ public class JavaRefactorer implements Refactorer {
         // constructors and method declarations..
         if((visitor.getMatchedNode() instanceof CompilationUnit)
                 || visitor.getMatchedNode() == null){
-            final MethodDeclarationVisitor methods = new MethodDeclarationVisitor();
-            methods.includeConstructor(true);
-            context.accept(methods);
-            for(MethodDeclaration each : methods.getMethodDeclarations()){
-                edit.addNode(each);
+
+            if(cause.getName().isSame(Refactoring.DELETE_UNUSED_IMPORTS)){
+                edit.addNode(context.getCompilationUnit());
+            } else {
+                final MethodDeclarationVisitor methods = new MethodDeclarationVisitor();
+                methods.includeConstructor(true);
+                context.accept(methods);
+                for(MethodDeclaration each : methods.getMethodDeclarations()){
+                    edit.addNode(each);
+                }
             }
+
         } else {
             edit.addNode(visitor.getMatchedNode());
         }

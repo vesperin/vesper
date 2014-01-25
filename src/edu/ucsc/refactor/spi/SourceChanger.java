@@ -2,8 +2,10 @@ package edu.ucsc.refactor.spi;
 
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.*;
+import edu.ucsc.refactor.internal.util.AstUtil;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
@@ -134,6 +136,10 @@ public abstract class SourceChanger implements Changer {
         }
 
         return locations;
+    }
+
+    protected static CompilationUnit getCompilationUnit(CauseOfChange cause){
+        return AstUtil.parent(CompilationUnit.class, cause.getAffectedNodes().get(0));
     }
 
 

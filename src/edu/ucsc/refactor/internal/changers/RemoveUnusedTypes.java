@@ -5,10 +5,10 @@ import edu.ucsc.refactor.Change;
 import edu.ucsc.refactor.Parameter;
 import edu.ucsc.refactor.internal.Delta;
 import edu.ucsc.refactor.internal.SourceChange;
+import edu.ucsc.refactor.internal.util.AstUtil;
 import edu.ucsc.refactor.spi.Names;
 import edu.ucsc.refactor.spi.Smell;
 import edu.ucsc.refactor.spi.SourceChanger;
-import edu.ucsc.refactor.internal.util.AstUtil;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -66,7 +66,7 @@ public class RemoveUnusedTypes extends SourceChanger {
             if(cameFromDetector){
                rewrite.remove(declaration, null);
             }  else {
-                final List<SimpleName>        usages      = AstUtil.findByNode(root, declaration.getName());
+                final List<SimpleName>  usages  = AstUtil.findByNode(root, declaration.getName());
 
                 if(usages.size() > 1){
                     throw new RuntimeException(
@@ -80,10 +80,6 @@ public class RemoveUnusedTypes extends SourceChanger {
 
         return createDelta(root, rewrite);
 
-    }
-
-    private static CompilationUnit getCompilationUnit(CauseOfChange cause){
-        return AstUtil.parent(CompilationUnit.class, cause.getAffectedNodes().get(0));
     }
 
 }
