@@ -240,7 +240,7 @@ public class Environment {
 
                 final boolean isOrigin = each.equals(getTrackedSource());
 
-                final Source to         = getCodeRefactorer().rewind(each);
+                final Source to         = getCodeRefactorer().regress(each);
                 final Source indexed    = getCodeRefactorer().rewriteHistory(to);
 
                 final boolean isUpdateNeeded = !each.equals(indexed);
