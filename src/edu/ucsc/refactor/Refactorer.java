@@ -12,6 +12,18 @@ import java.util.List;
  */
 public interface Refactorer {
     /**
+     * Re-does any {@link Refactorer#regress(Source) undo-ed} changes made by the
+     * {@code Refactorer}.
+     *
+     * @param current The current Source.
+     * @return The {@code Source}'s next version, after the advance. Or the
+     *      same {@code current} if {@code current} is the only
+     *      available version of {@code Source}.
+     * @throws java.lang.NullPointerException if {@code Source} null.
+     */
+    Source advance(Source current);
+
+    /**
      * Applies a code change to a {@code Source} and then returns a {@link CommitRequest}, which
      * represents a set of applied changes, or "deltas", from one version of the {@code Source} to
      * the next.
@@ -60,16 +72,6 @@ public interface Refactorer {
      * @throws java.lang.NullPointerException if {@code Source} null.
      */
     void detectIssues(Source code);
-
-    /**
-     * Re-does any {@link Refactorer#rewind(Source) undo-ed} changes made by the
-     * {@code Refactorer}.
-     *
-     * @param current The current Source.
-     * @return The Source, after the forward
-     * @throws java.lang.NullPointerException if {@code Source} null.
-     */
-    Source forward(Source current);
 
     /**
      * Returns the list of {@code Source}s  tracked by this {@code Refactorer}.
@@ -164,8 +166,8 @@ public interface Refactorer {
      * </p>
      *
      * @param source THe current Source. This Source can be the same as the indexed Source, or
-     *    a Source product of the methods {@link Refactorer#rewind(Source)} or
-     *    {@link Refactorer#forward(Source)}.
+     *    a Source product of the methods {@link Refactorer#regress(Source)} or
+     *    {@link Refactorer#advance(Source)}.
      *
      * @return the indexed Source, after the rewrite.
      * @throws java.lang.NullPointerException if {@code Source} null.
@@ -177,8 +179,10 @@ public interface Refactorer {
      * Un-does the changes made by the {@code Refactorer}.
      *
      * @param current The current Source.
-     * @return The Source, after the rewind
+     * @return The {@code Source}'s previous version, after the regress. Or the
+     *      same {@code current} if {@code current} is the only
+     *      available version of {@code Source}.
      * @throws java.lang.NullPointerException if {@code Source} null.
      */
-    Source rewind(Source current);
+    Source regress(Source current);
 }

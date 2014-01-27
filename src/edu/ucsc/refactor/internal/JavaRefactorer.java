@@ -167,7 +167,6 @@ public class JavaRefactorer implements Refactorer {
         }
     }
 
-    // forward
     @Override public Source rewriteHistory(Source source) {
 
         final Source        from   = Preconditions.checkNotNull(source);
@@ -226,7 +225,7 @@ public class JavaRefactorer implements Refactorer {
         return from;
     }
 
-    @Override public Source forward(Source current) {
+    @Override public Source advance(Source current) {
         final CommitHistory history = getCommitHistory(current);
 
         for(Checkpoint each : history){
@@ -235,11 +234,11 @@ public class JavaRefactorer implements Refactorer {
             }
         }
 
-        // otherwise, there is nothing to forward (i.e., current is the latest version)
+        // otherwise, there is nothing to advance (i.e., current is the latest version)
         return current;
     }
 
-    @Override public Source rewind(Source current) {
+    @Override public Source regress(Source current) {
         final CommitHistory history = getCommitHistory(current);
 
         for(Checkpoint each : history){
