@@ -38,8 +38,14 @@ public class SelectedStatementNodesVisitor extends SelectedASTNodesVisitor {
         final Location selection  = getSelection();
 
 
-        invalidSelection(Locations.intersects(firstNode, selection)
+        final boolean isIntersecting = (Locations.intersects(firstNode, selection)
                 || Locations.intersects(secondNode, selection));
+
+        final boolean isNotInside    = !(Locations.begins(selection, firstNode.getStart())
+                && Locations.ends(selection, secondNode.getEnd()));
+
+
+        invalidSelection(isIntersecting && isNotInside);
 
         if(isSelectionCoveringValidStatements()){
             if (firstNode instanceof ArrayInitializer) {

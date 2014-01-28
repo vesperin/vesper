@@ -15,7 +15,7 @@ public class InternalUtil {
         return Locations.locateWord(code, word).get(0);
     }
 
-    public static Source createGenerealSource(){
+    public static Source createGeneralSource(){
         final String content = "import java.util.List; \n"
                 + "import java.util.Collection; \n"
                 + "class Name {\n"

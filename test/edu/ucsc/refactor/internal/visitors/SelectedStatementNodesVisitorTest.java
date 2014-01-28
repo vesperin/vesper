@@ -35,7 +35,7 @@ public class SelectedStatementNodesVisitorTest {
 
         final Location name = InternalUtil.locateWord(code, "Name");
 
-        final Location invalid = SourceLocation.createLocation(name.getSource(), name.getSource().getContents(), 6, 12);
+        final Location invalid = SourceLocation.createLocation(name.getSource(), name.getSource().getContents(), 6, 89);
 
         final SelectedStatementNodesVisitor statements = new SelectedStatementNodesVisitor(invalid, true);
         context.accept(statements);
@@ -116,6 +116,24 @@ public class SelectedStatementNodesVisitorTest {
 
         assertThat(statements.isSelectionCoveringValidStatements(), is(false));
 
+    }
+
+
+    @Test public void testExpansiveSelection(){
+        final Source code    = InternalUtil.createGeneralSource();
+        final Context context = new Context(code);
+
+        parser.parseJava(context);
+
+
+        final Location userSelection = SourceLocation.createLocation(code, code.getContents(), 88, 281);
+
+        final SelectedStatementNodesVisitor statements = new SelectedStatementNodesVisitor(userSelection, true);
+        context.accept(statements);
+        statements.checkIfSelectionCoversValidStatements();
+
+        assertThat(statements.getSelectedNodes().isEmpty(), is(false));
+        assertThat(statements.isSelectionCoveringValidStatements(), is(true));
     }
 
 

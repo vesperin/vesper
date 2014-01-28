@@ -125,9 +125,9 @@ public abstract class SelectedASTNodesVisitor extends SourceVisitor {
     @Override protected boolean visitNode(ASTNode node) {
         final Location nodeLocation = Locations.locate(node);
 
-        if(Locations.liesOutside(selectedArea, nodeLocation)) return false;
-
-        if(Locations.covers(selectedArea, nodeLocation)) {
+        if(Locations.liesOutside(selectedArea, nodeLocation)) {
+            return false;
+        } else if(Locations.covers(selectedArea, nodeLocation)) {
             if (isFirstNode()) {
                 handleFirstSelectedNode(node);
             } else {
@@ -135,9 +135,7 @@ public abstract class SelectedASTNodesVisitor extends SourceVisitor {
             }
 
             return traverseSelectedNode;
-        }
-
-        if(Locations.coveredBy(selectedArea, nodeLocation)){
+        } else if(Locations.coveredBy(selectedArea, nodeLocation)){
             lastCoveringNode = node;
             return true;
         } else if(Locations.endsIn(selectedArea, nodeLocation)){
