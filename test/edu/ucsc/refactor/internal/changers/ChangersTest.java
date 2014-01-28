@@ -89,7 +89,7 @@ public class ChangersTest {
 
 
     @Test public void testChangerForOptimizeImports() throws Exception {
-        final Source  code    = InternalUtil.createGenerealSource();
+        final Source  code    = InternalUtil.createGeneralSource();
         final Context context = new Context(code);
 
         parser.parseJava(context);

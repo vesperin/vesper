@@ -81,6 +81,17 @@ public class SingleEdit extends AbstractCauseOfChange {
         return new SingleEdit(Refactoring.DELETE_PARAMETER, selection);
     }
 
+
+    /**
+     * Deletes a code region, which location can be inferred from {@code SourceSelection}
+     *
+     * @param selection The selected region
+     * @return The {@code SingleEdit}.
+     */
+    public static SingleEdit deleteRegion(SourceSelection selection){
+        return new SingleEdit(Refactoring.DELETE_REGION, selection);
+    }
+
     /**
      * Optimizes the import declarations found in a {@code Source} code.
      *

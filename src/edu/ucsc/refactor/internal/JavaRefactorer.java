@@ -6,9 +6,11 @@ import com.google.common.collect.Maps;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.visitors.MethodDeclarationVisitor;
 import edu.ucsc.refactor.internal.visitors.SelectedASTNodeVisitor;
+import edu.ucsc.refactor.internal.visitors.SelectedStatementNodesVisitor;
 import edu.ucsc.refactor.spi.*;
 import edu.ucsc.refactor.util.CommitHistory;
 import edu.ucsc.refactor.util.Checkpoint;
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
@@ -122,30 +124,46 @@ public class JavaRefactorer implements Refactorer {
 
         getValidContexts().put(code, context);
 
-        final SelectedASTNodeVisitor visitor = new SelectedASTNodeVisitor(select.toLocation());
-        context.accept(visitor);
 
-        // it blows up with we want to reformat a CompilationUnit, since
-        // StructuralPropertyDescriptor in ASTRewrite. Therefore, here is a
-        // HACK that solves the issue: A compilation unit is the same as formatting all
-        // constructors and method declarations..
-        if((visitor.getMatchedNode() instanceof CompilationUnit)
-                || visitor.getMatchedNode() == null){
+        if(cause.getName().isSame(Refactoring.DELETE_REGION)){
+            final SelectedStatementNodesVisitor statements = new SelectedStatementNodesVisitor(select.toLocation(), true);
+            context.accept(statements);
+            statements.checkIfSelectionCoversValidStatements();
 
-            if(cause.getName().isSame(Refactoring.DELETE_UNUSED_IMPORTS)){
-                edit.addNode(context.getCompilationUnit());
-            } else {
-                final MethodDeclarationVisitor methods = new MethodDeclarationVisitor();
-                methods.includeConstructor(true);
-                context.accept(methods);
-                for(MethodDeclaration each : methods.getMethodDeclarations()){
+            if(statements.isSelectionCoveringValidStatements()){
+                for(ASTNode each : statements.getSelectedNodes()){
                     edit.addNode(each);
                 }
             }
 
-        } else {
-            edit.addNode(visitor.getMatchedNode());
+        }  else {
+            final SelectedASTNodeVisitor visitor = new SelectedASTNodeVisitor(select.toLocation());
+            context.accept(visitor);
+
+            // it blows up with we want to reformat a CompilationUnit, since
+            // StructuralPropertyDescriptor in ASTRewrite. Therefore, here is a
+            // HACK that solves the issue: A compilation unit is the same as formatting all
+            // constructors and method declarations..
+            if((visitor.getMatchedNode() instanceof CompilationUnit)
+                    || visitor.getMatchedNode() == null){
+
+                if(cause.getName().isSame(Refactoring.DELETE_UNUSED_IMPORTS)){
+                    edit.addNode(context.getCompilationUnit());
+                } else {
+                    final MethodDeclarationVisitor methods = new MethodDeclarationVisitor();
+                    methods.includeConstructor(true);
+                    context.accept(methods);
+                    for(MethodDeclaration each : methods.getMethodDeclarations()){
+                        edit.addNode(each);
+                    }
+                }
+
+            } else {
+                edit.addNode(visitor.getMatchedNode());
+            }
         }
+
+
 
         return edit;
     }
@@ -167,7 +185,6 @@ public class JavaRefactorer implements Refactorer {
         }
     }
 
-    // forward
     @Override public Source rewriteHistory(Source source) {
 
         final Source        from   = Preconditions.checkNotNull(source);
@@ -226,7 +243,7 @@ public class JavaRefactorer implements Refactorer {
         return from;
     }
 
-    @Override public Source forward(Source current) {
+    @Override public Source advance(Source current) {
         final CommitHistory history = getCommitHistory(current);
 
         for(Checkpoint each : history){
@@ -235,11 +252,11 @@ public class JavaRefactorer implements Refactorer {
             }
         }
 
-        // otherwise, there is nothing to forward (i.e., current is the latest version)
+        // otherwise, there is nothing to advance (i.e., current is the latest version)
         return current;
     }
 
-    @Override public Source rewind(Source current) {
+    @Override public Source regress(Source current) {
         final CommitHistory history = getCommitHistory(current);
 
         for(Checkpoint each : history){

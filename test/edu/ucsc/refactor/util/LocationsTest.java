@@ -50,6 +50,13 @@ public class LocationsTest {
         final Location b = SourceLocation.createLocation(SOURCE, CONTENT, 22, 67);
 
         assertThat(Locations.intersects(a, b), is(true));
+
+        final Location c = SourceLocation.createLocation(SOURCE, CONTENT, 0, 30);
+        final Location d = SourceLocation.createLocation(SOURCE, CONTENT, 0, 5);
+
+        assertThat(Locations.intersects(d, c), is(true));
+        assertThat(Locations.begins(c, d.getStart()), is(true));
+        assertThat(Locations.ends(c, d.getEnd()), is(false));
     }
 
     @Test public void testLocationsOneEndsInTheOther(){

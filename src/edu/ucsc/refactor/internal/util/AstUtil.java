@@ -2,6 +2,7 @@ package edu.ucsc.refactor.internal.util;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import edu.ucsc.refactor.Location;
 import edu.ucsc.refactor.Source;
@@ -14,6 +15,7 @@ import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -189,6 +191,19 @@ public class AstUtil {
 
         // Is the method at the same position as the other node?
         return (Locations.bothSame(nodeLocation, selection));
+    }
+
+    public static List<ASTNode> getSwitchCases(SwitchStatement node) {
+        final List<ASTNode> result = Lists.newArrayList();
+        for (Object element : node.statements()) {
+            if (element instanceof SwitchCase) {
+                final ASTNode each = (ASTNode) element;
+                final SwitchCase switchCase = exactCast(SwitchCase.class, each);
+                result.add(switchCase);
+
+            }
+        }
+        return result;
     }
 
 

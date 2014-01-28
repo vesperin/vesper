@@ -162,12 +162,25 @@ public class Locations {
      * @param position The other node's start position.
      * @return {@code true} if this node's location (base) covers a node at given start position.
      */
-    public static boolean matches(Location base, Position position){
+    public static boolean begins(Location base, Position position/*start position*/){
         final Position start    = base.getStart();
+
+        return start.getOffset() <= position.getOffset();
+
+    }
+
+
+    /**
+     * Returns {@code true} if this node's location covers a node at given start position.
+     *
+     * @param base The base location.
+     * @param position The other node's start position.
+     * @return {@code true} if this node's location (base) covers a node at given start position.
+     */
+    public static boolean ends(Location base, Position position/*end position*/){
         final Position end      = base.getEnd();
 
-        return start.getOffset() <= position.getOffset()
-                && position.getOffset() < end.getOffset();
+        return end.getOffset() <= position.getOffset();
 
     }
 
