@@ -58,8 +58,7 @@ public abstract class SelectedASTNodesVisitor extends SourceVisitor {
     }
 
     /**
-     *
-     * @return
+     * @return The first selected ASTNode.
      */
     public ASTNode getFirstSelectedNode() {
         if (!hasSelectedNodes()) return null;
@@ -67,8 +66,7 @@ public abstract class SelectedASTNodesVisitor extends SourceVisitor {
     }
 
     /**
-     *
-     * @return
+     * @return The last selected ASTNode.
      */
     public ASTNode getLastSelectedNode() {
         if (!hasSelectedNodes()) return null;
@@ -76,8 +74,7 @@ public abstract class SelectedASTNodesVisitor extends SourceVisitor {
     }
 
     /**
-     *
-     * @return
+     * @return {@code true} if the first selected node is an {@code Expression}.
      */
     public boolean isExpressionSelected() {
         return hasSelectedNodes()
@@ -85,8 +82,7 @@ public abstract class SelectedASTNodesVisitor extends SourceVisitor {
     }
 
     /**
-     *
-     * @return
+     * @return The Location mapping to a code selection.
      */
     protected Location getSelection() {
         return selectedArea;
