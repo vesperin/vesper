@@ -10,6 +10,6 @@ import io.airlift.airline.Command;
 @Command(name = "region", description = "Remove a specified source code range")
 public class RemoveRegionCommand extends RemoveCommand {
     @Override protected ChangeRequest createChangeRequest(SourceSelection selection) {
-        throw new UnsupportedOperationException("to be implemented");
+        return ChangeRequest.deleteRegion(selection);
     }
 }

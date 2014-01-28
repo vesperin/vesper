@@ -101,7 +101,7 @@ public class ChangeRequest {
 
 
     /**
-     * Delete a class change request with selection.
+     * Delete a class change request given selection.
      *
      * @see {@link SingleEdit#deleteClass(SourceSelection)}
      */
@@ -113,7 +113,7 @@ public class ChangeRequest {
 
 
     /**
-     * Delete a method change request with selection.
+     * Delete a method change request given selection.
      *
      * @see {@link SingleEdit#deleteMethod(SourceSelection)}
      */
@@ -125,7 +125,7 @@ public class ChangeRequest {
 
 
     /**
-     * Delete a field change request with selection.
+     * Delete a field change request given selection.
      *
      * @see {@link SingleEdit#deleteField(SourceSelection)}
      */
@@ -137,13 +137,25 @@ public class ChangeRequest {
 
 
     /**
-     * Delete a parameter change request with selection.
+     * Delete a parameter change request given selection.
      *
      * @see {@link SingleEdit#deleteParameter(SourceSelection)}
      */
     public static ChangeRequest deleteParameter(SourceSelection selection){
         return ChangeRequest.forEdit(
                 SingleEdit.deleteParameter(selection)
+        );
+    }
+
+
+    /**
+     * Delete a code region change request given selection.
+     *
+     * @see {@link SingleEdit#deleteRegion(SourceSelection)}
+     */
+    public static ChangeRequest deleteRegion(SourceSelection selection){
+        return ChangeRequest.forEdit(
+                SingleEdit.deleteRegion(selection)
         );
     }
 
