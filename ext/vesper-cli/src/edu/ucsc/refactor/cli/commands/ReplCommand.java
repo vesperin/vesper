@@ -108,7 +108,7 @@ public class ReplCommand extends VesperCommand {
                 continue;
             }
 
-            if(line.equals("repl")){
+            if(line.equals("ivp")){
                 interpreter.print(Interpreter.VERSION + ", yeah! that's me.\n");
                 continue; // no need to call it again
             }
