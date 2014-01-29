@@ -193,6 +193,42 @@ public class AstUtil {
         return (Locations.bothSame(nodeLocation, selection));
     }
 
+
+    public static List<ASTNode> getChildren(ASTNode node) {
+        final List<ASTNode> result = Lists.newArrayList();
+
+        List list = node.structuralPropertiesForType();
+
+        for(Object each : list){
+            final StructuralPropertyDescriptor descriptor = (StructuralPropertyDescriptor) each;
+            final Object child = node.getStructuralProperty(descriptor);
+
+            if (child instanceof List){
+                result.addAll(convert((List)child));
+            } else if (child instanceof ASTNode){
+                if(!(child instanceof Javadoc)){
+                    result.add((ASTNode)child);
+                }
+            }
+
+        }
+
+        return result;
+    }
+
+
+    private static List<ASTNode> convert(List list){
+        final List<ASTNode> result = Lists.newArrayList();
+        for(Object each : list){
+            final ASTNode node = (ASTNode) each;
+            if(!(node instanceof Javadoc)){
+                result.add(node);
+            }
+        }
+
+        return result;
+    }
+
     public static List<ASTNode> getSwitchCases(SwitchStatement node) {
         final List<ASTNode> result = Lists.newArrayList();
         for (Object element : node.statements()) {
