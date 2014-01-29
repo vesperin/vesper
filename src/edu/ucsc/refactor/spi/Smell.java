@@ -11,6 +11,7 @@ import java.util.*;
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public enum Smell implements Name {
+    DUPLICATED_CODE("Duplicate code", "Vesper has detected one or more duplicated declarations!"),
     UNFORMATTED_CODE("Unformatted code", "Vesper has detected unformatted code!"),
     UNUSED_TYPE("Unused type", "Vesper has detected one or more unused type declarations!"),
     UNUSED_METHOD("Unused method", "Vesper has detected one or more unused methods!"),

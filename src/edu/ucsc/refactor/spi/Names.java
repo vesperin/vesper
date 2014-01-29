@@ -13,6 +13,7 @@ public class Names {
 
     static {
         WARNING_RESPONSE_MAP.put(Smell.UNFORMATTED_CODE, Refactoring.REFORMAT_CODE);
+        WARNING_RESPONSE_MAP.put(Smell.DUPLICATED_CODE, Refactoring.DEDUPLICATE);
         WARNING_RESPONSE_MAP.put(Smell.UNUSED_FIELD, Refactoring.DELETE_FIELD);
         WARNING_RESPONSE_MAP.put(Smell.UNUSED_PARAMETER, Refactoring.DELETE_PARAMETER);
         WARNING_RESPONSE_MAP.put(Smell.UNUSED_METHOD, Refactoring.DELETE_METHOD);
