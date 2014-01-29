@@ -31,10 +31,11 @@ public class DuplicatedCode extends IssueDetector  {
 
         final DetectedClones clones = visitor.getClones();
 
-        for(List<DetectedClone> pair : clones){
+        for(List<DetectedClone> candidates : clones){
             final Issue issue = createIssue();
-            issue.addNode(pair.get(0).getParseTree());
-            issue.addNode(pair.get(1).getParseTree());
+            for(DetectedClone candidate : candidates){
+                issue.addNode(candidate.getParseTree());
+            }
         }
 
     }

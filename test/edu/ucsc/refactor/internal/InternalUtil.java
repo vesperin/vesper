@@ -80,8 +80,8 @@ public class InternalUtil {
                 new StringBuilder("class Name {\n")
                         .append("\t/** {@link Name#boom(String)} **/")
                         .append("\tvoid boom(){ System.out.println(1); }\n")
-//                        .append("\t/** {@link Name#baam(String)} **/")
                         .append("\tvoid baam(){ System.out.println(1); }\n")
+                        .append("\tvoid beem(){ System.out.println(1); }\n")
                         .append("}")
         );
     }
