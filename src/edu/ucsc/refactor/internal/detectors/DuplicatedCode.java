@@ -15,8 +15,8 @@ import java.util.List;
  */
 public class DuplicatedCode extends IssueDetector  {
 
-    private static final String STRATEGY_NAME        = Smell.UNUSED_IMPORTS.getKey();
-    private static final String STRATEGY_DESCRIPTION = Smell.UNUSED_IMPORTS.getSummary();
+    private static final String STRATEGY_NAME        = Smell.DUPLICATED_CODE.getKey();
+    private static final String STRATEGY_DESCRIPTION = Smell.DUPLICATED_CODE.getSummary();
 
     /**
      * Instantiate a new duplicated code detector.

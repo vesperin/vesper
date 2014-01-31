@@ -4,10 +4,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.*;
-import edu.ucsc.refactor.internal.detectors.UnusedFields;
-import edu.ucsc.refactor.internal.detectors.UnusedMethods;
-import edu.ucsc.refactor.internal.detectors.UnusedParameters;
-import edu.ucsc.refactor.internal.detectors.UnusedTypes;
+import edu.ucsc.refactor.internal.detectors.*;
 import edu.ucsc.refactor.internal.util.AstUtil;
 import edu.ucsc.refactor.spi.JavaParser;
 import edu.ucsc.refactor.util.Locations;
@@ -264,6 +261,31 @@ public class ChangersTest {
         }
 
     }
+
+
+    @Test public void testRemoveDuplicatedMethods(){
+        final Context context = new Context(
+                InternalUtil.createSourceWithDuplicatedMethods()
+        );
+
+        parser.parseJava(context);
+
+        final DuplicatedCode detector = new DuplicatedCode();
+        final Set<Issue>        issues   = detector.detectIssues(context);
+
+        assertThat(issues.size(), is(1));
+
+
+        final DeduplicateCode remove = new DeduplicateCode();
+        for(Issue each : issues){
+            Change change = remove.createChange(each, Maps.<String, Parameter>newHashMap());
+            assertNotNull(change);
+            assertThat(change.isValid(), is(true));
+        }
+
+    }
+
+
 
 
     @After public void tearDown() throws Exception {

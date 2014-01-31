@@ -15,7 +15,6 @@ import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -109,6 +108,22 @@ public class AstUtil {
     }
 
 
+    public static void copyArguments(List src, MethodInvocation dst) {
+        for (Object eachObj : src) {
+            final SingleVariableDeclaration next  = (SingleVariableDeclaration) eachObj;
+            final SingleVariableDeclaration param = AstUtil.copySubtree(
+                    SingleVariableDeclaration.class,
+                    dst.getAST(),
+                    next
+            );
+
+            //noinspection unchecked
+            dst.arguments().add(param); // unchecked warning
+        }
+    }
+
+
+
     public static void syncSourceProperty(Source updatedSource, ASTNode node) {
         if (node instanceof CompilationUnit) {
             node.setProperty(Source.SOURCE_FILE_PROPERTY, updatedSource);
@@ -196,6 +211,8 @@ public class AstUtil {
 
     public static List<ASTNode> getChildren(ASTNode node) {
         final List<ASTNode> result = Lists.newArrayList();
+
+        if(node == null){ return result; }
 
         List list = node.structuralPropertiesForType();
 
