@@ -22,7 +22,10 @@ public class DuplicateCodeVisitor extends SourceVisitor {
     final Source     code;
 
     /**
-     * Get the hash of a method (subtree) parse tree.
+     * Constructs a new {@code DuplicateCodeVisitor} with the actual
+     * source code as a value.
+     *
+     * @param code The {@code Source}
      */
     public DuplicateCodeVisitor(Source code){
         super(true);
@@ -64,7 +67,7 @@ public class DuplicateCodeVisitor extends SourceVisitor {
 
 
     /**
-     * Hash all the subtrees and add the hash to the hash bucket.
+     * Hash (using the node type) all the subtrees and add the value to the type bucket.
      *
      * @param tree Subtree to hash.
      */
