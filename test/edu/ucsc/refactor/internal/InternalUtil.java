@@ -82,6 +82,7 @@ public class InternalUtil {
                         .append("\tvoid boom(){ System.out.println(1); }\n")
                         .append("\tvoid baam(){ System.out.println(1); }\n")
                         .append("\tvoid beem(){ System.out.println(1); }\n")
+                        .append("\tvoid buum(){ baam(); }\n")
                         .append("}")
         );
     }

@@ -366,6 +366,20 @@ public class AstUtil {
     }
 
 
+    public static boolean hasVoidReturn(MethodDeclaration method){
+        if(method.getReturnType2().isPrimitiveType() ){
+            final PrimitiveType primitiveType = AstUtil.exactCast(
+                    PrimitiveType.class,
+                    method.getReturnType2()
+            );
+
+            return primitiveType.getPrimitiveTypeCode() == PrimitiveType.VOID;
+        }
+
+        return false;
+    }
+
+
     /**
      * Get all the AST nodes connected to a given binding. e.g. Declaration of a field and all
      * references. For types, this includes also the constructor declaration. For methods also

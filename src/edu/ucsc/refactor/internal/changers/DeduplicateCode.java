@@ -1,19 +1,25 @@
 package edu.ucsc.refactor.internal.changers;
 
+import com.google.common.collect.Iterables;
 import edu.ucsc.refactor.CauseOfChange;
 import edu.ucsc.refactor.Change;
 import edu.ucsc.refactor.Parameter;
 import edu.ucsc.refactor.internal.Delta;
 import edu.ucsc.refactor.internal.SourceChange;
 import edu.ucsc.refactor.internal.util.AstUtil;
+import edu.ucsc.refactor.internal.visitors.MethodInvocationVisitor;
 import edu.ucsc.refactor.spi.Names;
 import edu.ucsc.refactor.spi.Smell;
 import edu.ucsc.refactor.spi.SourceChanger;
-import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -57,45 +63,39 @@ public class DeduplicateCode extends SourceChanger {
 
         if (cloneNumber == 0) {
             throw new RuntimeException("calling deduplicate() when there are no detected clones");
-        } else if (cloneNumber == 1) {
-            // One method. So let the other code call that method.
+        } else if (cloneNumber >= 1) {
+            // The strategy this code follows to perform deduplication is the following:
+            // per duplicated method declaration, find all of its invocations. Then
+            // rename each found invocation using the name of the original method declaration.
+            // After that, remove the duplicated method declaration.
             final MethodDeclaration original    = AstUtil.exactCast(MethodDeclaration.class, nodes.get(0));
-            final MethodDeclaration duplicate   = AstUtil.exactCast(MethodDeclaration.class, nodes.get(1));
+            final Iterable<ASTNode> rest        = Iterables.skip(nodes, 1);
+            for(ASTNode eachClone : rest) {
+                final MethodDeclaration duplicate  = AstUtil.exactCast(MethodDeclaration.class, eachClone);
+                final MethodDeclaration copied     = AstUtil.copySubtree(MethodDeclaration.class, root.getAST(), duplicate);
+                final boolean           sameReturn = sameReturnType(original, copied);
 
-            // sanity check
-            final boolean sameReturn            = sameReturnType(original, duplicate);
-            if(!sameReturn) {
-                throw new RuntimeException("automatic deduplication cannot be done on methods "
-                        + "with different return types; please consider "
-                        + "manual deduplication."
-                );
+                if(!sameReturn) { // all or none. We don't do partial deduplication
+                    throw new RuntimeException("automatic deduplication cannot be done on methods "
+                            + "with different return types; please consider "
+                            + "manual deduplication."
+                    );
+                }
+
+
+                final MethodInvocationVisitor invokesOfDuplication = new MethodInvocationVisitor(copied.getName());
+                root.accept(invokesOfDuplication);
+                final Set<MethodInvocation>   invokes              = invokesOfDuplication.getMethodInvocations();
+
+                for(MethodInvocation each : invokes){
+                    final MethodInvocation copiedInvoke = AstUtil.copySubtree(MethodInvocation.class, root.getAST(), each);
+                    copiedInvoke.setName(root.getAST().newSimpleName(original.getName().getIdentifier()));
+                    rewrite.replace(each, copiedInvoke, null);
+                }
+
+
+                rewrite.remove(duplicate, null);
             }
-
-            final MethodDeclaration clone       = AstUtil.copySubtree(MethodDeclaration.class, root.getAST(), duplicate);
-            final AST ast = clone.getAST();
-
-            final Block block = ast.newBlock();
-
-            final MethodInvocation invocation       = ast.newMethodInvocation();
-            invocation.setName(ast.newSimpleName(original.getName().getIdentifier()));
-
-            AstUtil.copyArguments(duplicate.parameters(), invocation);
-
-            if(isVoidReturn(original)){
-                ExpressionStatement expressionStatement = ast.newExpressionStatement(invocation);
-                block.statements().add(expressionStatement);
-            } else {
-                final ReturnStatement  returnStatement  = ast.newReturnStatement();
-                returnStatement.setExpression(invocation);
-                block.statements().add(returnStatement);
-            }
-
-            clone.setBody(block);
-
-            rewrite.replace(duplicate, clone, null);
-        } else {
-            // TODO
-            // More methods. Remove one of the methods.
         }
 
         return createDelta(root, rewrite);
@@ -105,20 +105,4 @@ public class DeduplicateCode extends SourceChanger {
     private static boolean sameReturnType(MethodDeclaration a, MethodDeclaration b){
        return a.getReturnType2().resolveBinding() == b.getReturnType2().resolveBinding();
     }
-
-
-    private static boolean isVoidReturn(MethodDeclaration method){
-        if(method.getReturnType2().isPrimitiveType() ){
-            final PrimitiveType primitiveType = AstUtil.exactCast(
-                    PrimitiveType.class,
-                    method.getReturnType2()
-            );
-
-            return primitiveType.getPrimitiveTypeCode() == PrimitiveType.VOID;
-        }
-
-        return false;
-    }
-
-
 }
