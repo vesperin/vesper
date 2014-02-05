@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public class Source {
-    public static final String SOURCE_FILE_PROPERTY = "kae.source_file.source_file_property";
+    public static final String SOURCE_FILE_PROPERTY = "vesper.source_file.source_file_property";
 
     private final String        contents;
     private final String        description;

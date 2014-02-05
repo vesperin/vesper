@@ -4,15 +4,10 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import edu.ucsc.refactor.*;
-import edu.ucsc.refactor.internal.visitors.MethodDeclarationVisitor;
-import edu.ucsc.refactor.internal.visitors.SelectedASTNodeVisitor;
-import edu.ucsc.refactor.internal.visitors.SelectedStatementNodesVisitor;
 import edu.ucsc.refactor.spi.*;
-import edu.ucsc.refactor.util.CommitHistory;
 import edu.ucsc.refactor.util.Checkpoint;
-import org.eclipse.jdt.core.dom.ASTNode;
+import edu.ucsc.refactor.util.CommitHistory;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
 
 import java.util.*;
 import java.util.logging.Logger;
@@ -125,45 +120,12 @@ public class JavaRefactorer implements Refactorer {
         getValidContexts().put(code, context);
 
 
-        if(cause.getName().isSame(Refactoring.DELETE_REGION)){
-            final SelectedStatementNodesVisitor statements = new SelectedStatementNodesVisitor(select.toLocation(), true);
-            context.accept(statements);
-            statements.checkIfSelectionCoversValidStatements();
+        final UnitLocator           inferredUnitLocator = getLocator(context.getSource());
+        final List<NamedLocation>   namedLocations      = inferredUnitLocator.locate(new InferredUnit(select));
 
-            if(statements.isSelectionCoveringValidStatements()){
-                for(ASTNode each : statements.getSelectedNodes()){
-                    edit.addNode(each);
-                }
-            }
-
-        }  else {
-            final SelectedASTNodeVisitor visitor = new SelectedASTNodeVisitor(select.toLocation());
-            context.accept(visitor);
-
-            // it blows up with we want to reformat a CompilationUnit, since
-            // StructuralPropertyDescriptor in ASTRewrite. Therefore, here is a
-            // HACK that solves the issue: A compilation unit is the same as formatting all
-            // constructors and method declarations..
-            if((visitor.getMatchedNode() instanceof CompilationUnit)
-                    || visitor.getMatchedNode() == null){
-
-                if(cause.getName().isSame(Refactoring.DELETE_UNUSED_IMPORTS)){
-                    edit.addNode(context.getCompilationUnit());
-                } else {
-                    final MethodDeclarationVisitor methods = new MethodDeclarationVisitor();
-                    methods.includeConstructor(true);
-                    context.accept(methods);
-                    for(MethodDeclaration each : methods.getMethodDeclarations()){
-                        edit.addNode(each);
-                    }
-                }
-
-            } else {
-                edit.addNode(visitor.getMatchedNode());
-            }
+        for(NamedLocation eachNamedLocation : namedLocations){
+            edit.addNode(((ProgramUnitLocation)eachNamedLocation).getNode());
         }
-
-
 
         return edit;
     }
