@@ -25,7 +25,7 @@ public class ReformatSourceCode extends SourceChanger {
 
         final Change change = new SourceChange(cause, this, parameters);
         try {
-            for(ASTNode each : cause.getAffectedNodes()){
+            for(ASTNode each : cause.getAffectedNodes()){  // it should be one: the compilation unit
                 final Delta delta = reformat(each);
                 change.getDeltas().add(delta);
             }
@@ -38,15 +38,7 @@ public class ReformatSourceCode extends SourceChanger {
 
 
     private Delta reformat(ASTNode astNode) {
-
         final ASTRewrite rewrite = ASTRewrite.create(astNode.getAST());
-        final ASTNode replacement = ASTNode.copySubtree(
-                astNode.getAST(),
-                astNode
-        );
-
-        rewrite.replace(astNode, replacement, null);
-
         return createDelta(astNode, rewrite);
     }
 }
