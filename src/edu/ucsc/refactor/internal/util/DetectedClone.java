@@ -25,7 +25,7 @@ public class DetectedClone {
     }
 
     /**
-     * Get the set the Source.
+     * Get the set Source.
      *
      * @return the Source.
      */
