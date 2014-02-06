@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public class InferredUnit extends AbstractProgramUnit  {
+public class SelectedUnit extends AbstractProgramUnit  {
     private static final String WILD_CARD = "*";
 
     private final SourceSelection   selection;
@@ -23,7 +23,7 @@ public class InferredUnit extends AbstractProgramUnit  {
      * Construct a new {@code InferredUnit} program unit with a Java {@code Context}
      * and a {@code SourceSelection}.
      */
-    public InferredUnit(SourceSelection selection) {
+    public SelectedUnit(SourceSelection selection) {
         super(WILD_CARD);
         this.selection  = selection;
     }

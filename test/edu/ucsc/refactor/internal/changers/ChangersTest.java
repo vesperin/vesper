@@ -294,7 +294,7 @@ public class ChangersTest {
 
         final ProgramUnitLocator  locator   = new ProgramUnitLocator(context);
         final SourceSelection     selection = new SourceSelection(SourceLocation.createLocation(code, code.getContents(), 88, 281));
-        final List<NamedLocation> locations = locator.locate(new InferredUnit(selection));
+        final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
 
         final RemoveCodeRegion remove = new RemoveCodeRegion();
         final SingleEdit       edit   = SingleEdit.deleteRegion(selection);
@@ -320,7 +320,7 @@ public class ChangersTest {
 
         final ProgramUnitLocator  locator   = new ProgramUnitLocator(context);
         final SourceSelection     selection = new SourceSelection(SourceLocation.createLocation(code, code.getContents(), 88, 275));
-        final List<NamedLocation> locations = locator.locate(new InferredUnit(selection));
+        final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
         assertThat(locations.isEmpty(), is(true)); // it's empty since this is an invalid selection
     }
 

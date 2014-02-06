@@ -121,7 +121,7 @@ public class JavaRefactorer implements Refactorer {
 
         final UnitLocator           inferredUnitLocator = getLocator(context.getSource());
         final List<NamedLocation>   namedLocations      = inferredUnitLocator.locate(
-                new InferredUnit(select)
+                new SelectedUnit(select)
         );
 
         for(NamedLocation eachNamedLocation : namedLocations){
