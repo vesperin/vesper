@@ -75,6 +75,8 @@ public abstract class AbstractConfiguration implements Configuration {
         addSourceChanger(new RemoveUnusedTypes());
         addIssueDetector(new UnusedFields());
         addSourceChanger(new RemoveUnusedFields());
+        addIssueDetector(new DuplicatedCode());
+        addSourceChanger(new DeduplicateCode());
         addSourceChanger(new ReformatSourceCode());
         addSourceChanger(new RenameMethod());
         addSourceChanger(new RenameParam());

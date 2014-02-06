@@ -4,6 +4,7 @@ import edu.ucsc.refactor.Context;
 import edu.ucsc.refactor.Issue;
 import edu.ucsc.refactor.internal.EclipseJavaParser;
 import edu.ucsc.refactor.internal.InternalUtil;
+import edu.ucsc.refactor.internal.visitors.DuplicateCodeVisitor;
 import edu.ucsc.refactor.spi.JavaParser;
 import org.junit.After;
 import org.junit.Before;
@@ -178,6 +179,22 @@ public class DetectorsTest {
 
         assertThat(issues.size(), is(0));
     }
+
+
+    @Test public void testDuplicatedMethods(){
+        final Context context = new Context(
+                InternalUtil.createSourceWithDuplicatedMethods()
+        );
+
+        parser.parseJava(context);
+
+        final DuplicatedCode    detector = new DuplicatedCode();
+        final Set<Issue>        issues   = detector.detectIssues(context);
+
+        assertThat(issues.size(), is(1));
+    }
+
+
 
     @After public void tearDown() throws Exception {
         parser  = null;

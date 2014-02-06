@@ -26,6 +26,7 @@ public class Grammar {
                 .withCommand(OriginShow.class)
                 .withCommand(PublishCommand.class)
                 .withCommand(FormatCommand.class)
+                .withCommand(DeduplicateCommand.class)
                 .withCommand(OptimizeImportsCommand.class);
 
         builder.withGroup("whereis")

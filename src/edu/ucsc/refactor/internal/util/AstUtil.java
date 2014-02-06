@@ -15,7 +15,6 @@ import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -109,6 +108,22 @@ public class AstUtil {
     }
 
 
+    public static void copyArguments(List src, MethodInvocation dst) {
+        for (Object eachObj : src) {
+            final SingleVariableDeclaration next  = (SingleVariableDeclaration) eachObj;
+            final SingleVariableDeclaration param = AstUtil.copySubtree(
+                    SingleVariableDeclaration.class,
+                    dst.getAST(),
+                    next
+            );
+
+            //noinspection unchecked
+            dst.arguments().add(param); // unchecked warning
+        }
+    }
+
+
+
     public static void syncSourceProperty(Source updatedSource, ASTNode node) {
         if (node instanceof CompilationUnit) {
             node.setProperty(Source.SOURCE_FILE_PROPERTY, updatedSource);
@@ -191,6 +206,44 @@ public class AstUtil {
 
         // Is the method at the same position as the other node?
         return (Locations.bothSame(nodeLocation, selection));
+    }
+
+
+    public static List<ASTNode> getChildren(ASTNode node) {
+        final List<ASTNode> result = Lists.newArrayList();
+
+        if(node == null){ return result; }
+
+        List list = node.structuralPropertiesForType();
+
+        for(Object each : list){
+            final StructuralPropertyDescriptor descriptor = (StructuralPropertyDescriptor) each;
+            final Object child = node.getStructuralProperty(descriptor);
+
+            if (child instanceof List){
+                result.addAll(convert((List)child));
+            } else if (child instanceof ASTNode){
+                if(!(child instanceof Javadoc)){
+                    result.add((ASTNode)child);
+                }
+            }
+
+        }
+
+        return result;
+    }
+
+
+    private static List<ASTNode> convert(List list){
+        final List<ASTNode> result = Lists.newArrayList();
+        for(Object each : list){
+            final ASTNode node = (ASTNode) each;
+            if(!(node instanceof Javadoc)){
+                result.add(node);
+            }
+        }
+
+        return result;
     }
 
     public static List<ASTNode> getSwitchCases(SwitchStatement node) {
@@ -310,6 +363,20 @@ public class AstUtil {
         node.accept(visitor);
 
         return visitor.getSideEffectNodes().size() > 0;
+    }
+
+
+    public static boolean hasVoidReturn(MethodDeclaration method){
+        if(method.getReturnType2().isPrimitiveType() ){
+            final PrimitiveType primitiveType = AstUtil.exactCast(
+                    PrimitiveType.class,
+                    method.getReturnType2()
+            );
+
+            return primitiveType.getPrimitiveTypeCode() == PrimitiveType.VOID;
+        }
+
+        return false;
     }
 
 

@@ -4,10 +4,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.*;
-import edu.ucsc.refactor.internal.detectors.UnusedFields;
-import edu.ucsc.refactor.internal.detectors.UnusedMethods;
-import edu.ucsc.refactor.internal.detectors.UnusedParameters;
-import edu.ucsc.refactor.internal.detectors.UnusedTypes;
+import edu.ucsc.refactor.internal.detectors.*;
 import edu.ucsc.refactor.internal.util.AstUtil;
 import edu.ucsc.refactor.spi.JavaParser;
 import edu.ucsc.refactor.util.Locations;
@@ -263,6 +260,68 @@ public class ChangersTest {
 
         }
 
+    }
+
+
+    @Test public void testRemoveDuplicatedMethods(){
+        final Context context = new Context(
+                InternalUtil.createSourceWithDuplicatedMethods()
+        );
+
+        parser.parseJava(context);
+
+        final DuplicatedCode detector = new DuplicatedCode();
+        final Set<Issue>        issues   = detector.detectIssues(context);
+
+        assertThat(issues.size(), is(1));
+
+
+        final DeduplicateCode remove = new DeduplicateCode();
+        for(Issue each : issues){
+            Change change = remove.createChange(each, Maps.<String, Parameter>newHashMap());
+            assertNotNull(change);
+            assertThat(change.isValid(), is(true));
+        }
+
+    }
+
+
+    @Test public void testRemoveSelectedRegion(){
+        final Source  code    = InternalUtil.createGeneralSource();
+        final Context context = new Context(code);
+
+        parser.parseJava(context);
+
+        final ProgramUnitLocator  locator   = new ProgramUnitLocator(context);
+        final SourceSelection     selection = new SourceSelection(SourceLocation.createLocation(code, code.getContents(), 88, 281));
+        final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
+
+        final RemoveCodeRegion remove = new RemoveCodeRegion();
+        final SingleEdit       edit   = SingleEdit.deleteRegion(selection);
+
+
+        assertThat(locations.isEmpty(), is(false));
+
+        for(NamedLocation eachLocation : locations){
+            final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
+            edit.addNode(target.getNode());
+        }
+
+        final Change  change  = remove.createChange(edit, Maps.<String, Parameter>newHashMap());
+        assertThat(change.isValid(), is(true));
+    }
+
+
+    @Test public void testTryRemovingInvalidSelectedRegion(){
+        final Source  code    = InternalUtil.createGeneralSource();
+        final Context context = new Context(code);
+
+        parser.parseJava(context);
+
+        final ProgramUnitLocator  locator   = new ProgramUnitLocator(context);
+        final SourceSelection     selection = new SourceSelection(SourceLocation.createLocation(code, code.getContents(), 88, 275));
+        final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
+        assertThat(locations.isEmpty(), is(true)); // it's empty since this is an invalid selection
     }
 
 

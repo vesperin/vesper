@@ -73,6 +73,21 @@ public class InternalUtil {
         );
     }
 
+
+    public static Source createSourceWithDuplicatedMethods(){
+        return createSource(
+                "Name.java",
+                new StringBuilder("class Name {\n")
+                        .append("\t/** {@link Name#boom(String)} **/")
+                        .append("\tvoid boom(){ System.out.println(1); }\n")
+                        .append("\tvoid baam(){ System.out.println(1); }\n")
+                        .append("\tvoid beem(){ System.out.println(1); }\n")
+                        .append("\tvoid buum(){ baam(); }\n")
+                        .append("}")
+        );
+    }
+
+
     public static Source createSourceNoIssues(){
         return createSource(
                 "Name.java",
