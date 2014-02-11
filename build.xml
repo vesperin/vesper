@@ -9,9 +9,8 @@
     </path>
 
 
-    <target name="jar" depends="jar.withdeps, manifest" description="Build jar.">
-        <jar jarfile="${build.dir}/dist/vesper-${version}.jar"
-             manifest="${build.dir}/META-INF/MANIFEST.MF">
+    <target name="jar" depends="jar.withdeps" description="Build jar.">
+        <jar jarfile="${build.dir}/dist/vesper-${version}.jar">
             <zipfileset src="${build.dir}/${ant.project.name}-with-deps.jar"/>
         </jar>
     </target>
