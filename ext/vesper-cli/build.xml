@@ -13,7 +13,7 @@
         <dirname property="common.basedir" file="${ant.file.tasks}"/>
         <jar destfile="${build.dir}/${ant.project.name}-${version}.jar">
             <zipfileset src="${build.dir}/${ant.project.name}-with-deps.jar"
-                        excludes="edu/ucsc/refactor/internal/**,META-INF/**/*"/>
+                        excludes="META-INF/**/*"/>
         </jar>
     </target>
 
