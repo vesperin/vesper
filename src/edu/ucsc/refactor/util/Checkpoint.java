@@ -99,7 +99,7 @@ public class Checkpoint implements Comparable <Checkpoint> {
         comparison = this.getNameOfChange().getKey().compareTo(that.getNameOfChange().getKey());
         if (comparison != EQUAL) return comparison;
 
-        comparison = this.getCommitStatus().compareTo(that.getCommitStatus());
+        comparison = this.getCommitSummary().compareTo(that.getCommitSummary());
         if (comparison != EQUAL) return comparison;
 
         //all comparisons have yielded equality
@@ -145,7 +145,7 @@ public class Checkpoint implements Comparable <Checkpoint> {
     /**
      * @return The commit status
      */
-    public CommitSummary getCommitStatus(){
+    public CommitSummary getCommitSummary(){
         return status;
     }
 
@@ -180,7 +180,7 @@ public class Checkpoint implements Comparable <Checkpoint> {
                 .add("Before", getSourceBeforeChange())
                 .add("After", getSourceAfterChange())
                 .add("when", getTimestamp())
-                .add("isCommitted", getCommitStatus().isSuccess())
+                .add("isCommitted", getCommitSummary().isSuccess())
                 .toString();
     }
 }
