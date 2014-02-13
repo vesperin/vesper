@@ -179,7 +179,7 @@ public class Environment {
      * @return the unit result.
      */
     public Result unit(){
-        return Result.unit();
+        return Result.unitPackage();
     }
 
     /**
@@ -187,7 +187,7 @@ public class Environment {
      *
      * @param request The commit request to be collected.
      */
-    public void collect(CommitRequest request){
+    public void captureCommitRequest(CommitRequest request){
         checkpoints.add(request);
     }
 

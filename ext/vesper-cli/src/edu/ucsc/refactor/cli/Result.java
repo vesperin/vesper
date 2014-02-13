@@ -1,52 +1,31 @@
 package edu.ucsc.refactor.cli;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import edu.ucsc.refactor.Source;
-import edu.ucsc.refactor.spi.CommitStatus;
+import edu.ucsc.refactor.spi.CommitSummary;
 
-import java.util.List;
-import java.util.Map;
+import static edu.ucsc.refactor.spi.CommitSummary.forPendingCommit;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public class Result {
-    private final Map<Content, List<Object>> storage;
+    private final ResultType    type;
+    private final String        description;
+    private final CommitSummary summary;
+
 
     /**
      * Construct a {@code Result}.
      * @param key The type of content
      * @param value The content's value
      */
-    private Result(Content key, Object value){
-        this.storage = createMap(key);
-        if(value != null){
-            add(value);
-        }
+    private Result(ResultType key, CommitSummary value, String description){
+        this.type           = key;
+        this.summary        = value;
+        this.description    = description;
     }
 
-    private static Result createResult(Content content, Object value){
-        return new Result(content, value);
-    }
-
-
-    private static Map<Content, List<Object>> createMap(Content content){
-        return ImmutableMap.<Content, List<Object>> builder()
-                .put(content, Lists.newArrayList())
-                .build();
-    }
-
-    /**
-     * Creates an empty {@code Result} matching its content type.
-     *
-     * @param content the type of content to be stored in this package.
-     * @return a new Result object.
-     */
-    public static Result empty(Content content){
-        return createResult(content, null);
+    private static Result createResult(ResultType resultType, CommitSummary value, String description){
+        return new Result(resultType, value, description);
     }
 
 
@@ -57,154 +36,130 @@ public class Result {
      * @param message The error message.
      * @return a new failed Result
      */
-    public static Result failedPackage(String message){
-        return createResult(Content.ERROR, message);
+    public static Result failedPackage(String message, CommitSummary summary){
+        return createResult(ResultType.ERROR, summary, message);
     }
 
-
     /**
-     * Creates a Success Result, which will consist of only the submitted commit status
-     * object and no error message.
+     * Creates a Failed Result, which will consist of only the error message and
+     * no commit request.
      *
-     * @param status The commit status
+     * @param message The error message.
      * @return a new failed Result
      */
-    public static Result committedPackage(CommitStatus status){
-        return createResult(Content.COMMIT, status);
+    public static Result failedPackage(String message){
+        return failedPackage(message, CommitSummary.forFailedCommit(message));
     }
 
 
     /**
-     * Creates a Source Result, which will consist of only the submitted source code
-     * object and no error message.
+     * Creates an Info Result, which will consist of only the submitted commit status
+     * object and an info message.
      *
-     * @param request The Source
-     * @return a new source Result
-     */
-    public static Result sourcePackage(Source request){
-        return createResult(Content.SOURCE, request);
-    }
-
-
-    /**
-     * Creates an Info Result, which will consist of only the submitted info
-     * object and no error message.
-     *
-     * @param request The Info message
+     * @param message The info message
+     * @param status The commit status
      * @return a new info Result
      */
-    public static Result infoPackage(String request){
-        return createResult(Content.INFO, request);
+    public static Result infoPackage(String message, CommitSummary status){
+        return createResult(ResultType.INFO, status, message);
+    }
+
+    /**
+     * Creates an info package.
+     *
+     * @param message the message to be wrapped in the result.
+     * @return a new Result package.
+     */
+    public static Result infoPackage(String message){
+        return infoPackage(message, forPendingCommit());
     }
 
 
     /**
-     * Creates a nothing-to-report Result.
+     * Creates an info package.
      *
-     * @return a new nothing-to-report Result
+     * @param status The CommitSummary
+     * @return a new info Result package.
      */
-    public static Result unit(){
+    public static Result infoPackage(CommitSummary status){
+        return createResult(ResultType.INFO, status, status.getMessage());
+    }
+
+
+    /**
+     * Creates a warning package.
+     *
+     * @param message The warning message.
+     * @return a new warning Result package.
+     */
+    public static Result warningPackage(String message){
+        return createResult(ResultType.WARNING, forPendingCommit(), message);
+    }
+
+
+    /**
+     * Creates the Unit Result.
+     *
+     * @return a new Unit Result.
+     */
+    public static Result unitPackage(){
         return infoPackage("()");
     }
 
 
     /**
-     * Adds content to the package.
-     *
-     * @param value the Content's value.
-     * @throws NullPointerException if <tt>key</tt> or <tt>value</tt> are <tt>null</tt>
+     * @return The Result type
      */
-    public final void add(Object value) {
-        Preconditions.checkNotNull(value, "called add() with a null content value" );
-        getValue().add(value);
-    }
-
-
-    /**
-     * Removes a content from the package.
-     * @param key the key to be deleted.
-     * @throws NullPointerException if <tt>key</tt> is <tt>null</tt>
-     */
-    public List<Object> delete(Content key) {
-        Preconditions.checkNotNull(key, "called delete() with a null key");
-
-        return storage.remove(key);
+    public ResultType getType(){
+        return type;
     }
 
     /**
-     * @return The current content type.
+     * @return The Result description
      */
-    public Content getKey(){
-        Preconditions.checkState(storage.size() == 1, "Result is supposed to be a singleton container.");
-        return Preconditions.checkNotNull(Iterables.getFirst(storage.keySet(), null), "getKey() return null");
-
+    public String getDescription(){
+        return description;
     }
 
     /**
-     * Gets the value of this content.
-     *
-     * @return The value stored for this content.
+     * @return The commit summary
      */
-    public List<Object> getValue(){
-        return storage.get(getKey());
-    }
-
-
-    /**
-     * @return {@code true} if this is failed result package, false otherwise.
-     */
-    public boolean isError(){
-        return storage.containsKey(Content.ERROR);
+    public CommitSummary getCommitSummary(){
+        return summary;
     }
 
     /**
-     * @return {@code true} if this is an info result package, false otherwise.
+     * @return {@code true} if it is an info result, {@code false} otherwise.
      */
     public boolean isInfo(){
-        return storage.containsKey(Content.INFO);
+        return getType() == ResultType.INFO;
     }
 
     /**
-     * @return {@code true} if this is a 'list of issues' result package, false otherwise.
+     * @return {@code true} if it is an error result, {@code false} otherwise.
      */
-    public boolean isIssuesList(){
-        return storage.containsKey(Content.ISSUES);
+    public boolean isError(){
+        return getType() == ResultType.ERROR;
     }
 
-
     /**
-     * @return {@code true} if this is a commit request result package, false otherwise.
+     * @return {@code true} if it is a warning result, {@code false} otherwise.
      */
-    public boolean isCommit(){
-        return storage.containsKey(Content.COMMIT);
-    }
-
-
-    /**
-     * @return {@code true} if this is a Source result package, false otherwise.
-     */
-    public boolean isSource(){
-        return storage.containsKey(Content.SOURCE);
+    public boolean isWarning(){
+        return getType() == ResultType.WARNING;
     }
 
 
     @Override public String toString() {
-        return storage.toString();
+        return getType() + ":" + getDescription();
     }
 
     /**
      * The type of content to be stored.
      */
-    public enum Content {
-        /** Info Content **/
+    public enum ResultType {
         INFO,
-        /** List of detected issues **/
-        ISSUES,
-        /** Error Content **/
-        ERROR,
-        /** Commit Request Content **/
-        COMMIT,
-        /** Source file **/
-        SOURCE
+        WARNING,
+        ERROR
     }
 }

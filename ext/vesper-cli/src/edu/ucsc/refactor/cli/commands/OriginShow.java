@@ -18,7 +18,7 @@ public class OriginShow extends VesperCommand {
             return environment.unit();
         }
 
-        return Result.sourcePackage(environment.getTrackedSource());
+        return Result.infoPackage(environment.getTrackedSource().getContents());
     }
 
     @Override public String toString() {

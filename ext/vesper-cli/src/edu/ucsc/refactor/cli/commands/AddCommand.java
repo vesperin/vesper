@@ -71,7 +71,7 @@ public class AddCommand extends VesperCommand {
         );
 
 
-        return Result.sourcePackage(environment.getTrackedSource());
+        return Result.infoPackage(String.format("%s is now being tracked by Vesper", name));
     }
 
     @Override public String toString() {

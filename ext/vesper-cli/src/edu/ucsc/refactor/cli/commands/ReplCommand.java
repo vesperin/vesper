@@ -51,7 +51,7 @@ public class ReplCommand extends VesperCommand {
             }
 
             if(runRepl(credential, environment, prompt)){
-                return Result.sourcePackage(environment.getTrackedSource());
+                return Result.infoPackage(environment.getTrackedSource().getContents());
             }
 
         } catch (Throwable ex){
@@ -121,7 +121,7 @@ public class ReplCommand extends VesperCommand {
                 continue;
             }
 
-            if("log".equals(line) && result.isCommit()){
+            if("log".equals(line)){
                 interpreter.printResult(result);
                 continue;
             }

@@ -1,9 +1,9 @@
 package edu.ucsc.refactor.cli;
 
-import edu.ucsc.refactor.Issue;
-import edu.ucsc.refactor.Source;
+import com.google.common.util.concurrent.Atomics;
+import edu.ucsc.refactor.Credential;
 
-import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * A very basic CLI Interpreter.
@@ -17,12 +17,23 @@ public class Interpreter {
     final Parser      parser;
     final Environment environment;
 
+    final AtomicReference<Credential> credential;
+
     /**
      * Construct a new Vesper's interpreter.
      */
     public Interpreter(){
-        parser      = new Parser();
-        environment = new Environment();
+        this(Credential.none());
+    }
+
+    /**
+     * Construct a new Vesper's interpreter.
+     * @param accessInfo The appropriate credentials to gist service.
+     */
+    public Interpreter(Credential accessInfo){
+        parser          = new Parser();
+        environment     = new Environment();
+        this.credential = Atomics.newReference(accessInfo);
     }
 
     /**
@@ -79,19 +90,19 @@ public class Interpreter {
      * @param result The text to be printed.
      */
     public void printResult(Result result) {
-        if(result.isError()){
-            printError(result);
-        } else if (result.isInfo()){
+        if(result.isInfo()){
             printInfo(result);
-        } else if (result.isIssuesList()){
-            printIssueList(result);
-        } else if(result.isSource()){
-            printSource(result);
-        } else if(result.isCommit()){
-            printCommit(result);
-        } else {  // todo(Huascar) should I throw an error instead?
+        } else if(result.isWarning()){
+            printWarning(result.getDescription());
+        } else if(result.isError()){
+            printError(result);
+        } else {
             printResult("()");
         }
+    }
+
+    private void printWarning(String description) {
+        System.out.println("? " + description);
     }
 
 
@@ -105,14 +116,6 @@ public class Interpreter {
         System.out.println(result);
     }
 
-    void printCommit(Result result){
-        final List<Object> values = result.getValue();
-
-        for(Object each : values){
-            print(String.valueOf(each));
-        }
-    }
-
 
     /**
      * Prints an error to the screen.
@@ -124,39 +127,17 @@ public class Interpreter {
     }
 
     void printError(Result result) {
-        final List<Object> values = result.getValue();
-
-        for(Object each : values){
-            printError(String.valueOf(each));
-        }
+        printError(result.getDescription());
     }
 
     void printInfo(Result result) {
-        final List<Object> values = result.getValue();
+        final boolean pending  = result.getCommitSummary().isPending();
+        final boolean canceled = result.getCommitSummary().isCanceled();
 
-        for(Object each : values){
-            printResult(String.valueOf(each));
-        }
-    }
-
-
-    void printIssueList(Result result){
-        final List<Object> values = result.getValue();
-
-        for(int i = 0; i < values.size(); i++){
-            print(String.valueOf(i + 1) + ". ");
-            final Issue issue = (Issue)values.get(i);
-            print(issue.getName().getKey() + ".");
-            print("\n");
-        }
-    }
-
-    void printSource(Result result){
-        final List<Object> values = result.getValue();
-
-        for(Object each : values){
-            final Source src = (Source) each;
-            printResult(src.getContents());
+        if(pending | canceled){ // if they are what they say they are, then we don't have an updated source
+            printResult(result.getDescription());
+        } else {
+            printResult(result.getCommitSummary().more());
         }
     }
 }

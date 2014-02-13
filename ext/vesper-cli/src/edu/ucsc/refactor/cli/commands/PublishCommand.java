@@ -44,7 +44,7 @@ public class PublishCommand extends VesperCommand {
             );
         } else {
             while(!skipped.isEmpty()){
-                environment.collect(skipped.remove());
+                environment.captureCommitRequest(skipped.remove());
             }
 
             return Result.infoPackage(

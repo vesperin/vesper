@@ -26,10 +26,10 @@ public class ResetCommand extends VesperCommand {
 
         if(patterns != null && patterns.size() == 1){
             final Source indexed = environment.resetSource(patterns.get(0));
-            return Result.sourcePackage(indexed);
+            return Result.infoPackage(String.format("%s's index has moved to original version", indexed.getName()));
         } else {
             environment.reset();
-            return Result.sourcePackage(environment.getTrackedSource()); // show the new origin
+            return Result.infoPackage(String.format("%s's index has moved to original version", environment.getTrackedSource().getName())); // show the new origin
         }
     }
 

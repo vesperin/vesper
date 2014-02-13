@@ -8,6 +8,8 @@ import edu.ucsc.refactor.util.Checkpoint;
 import edu.ucsc.refactor.util.CommitHistory;
 import io.airlift.airline.Command;
 
+import java.util.Iterator;
+
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
@@ -18,12 +20,23 @@ public class LogCommand extends VesperCommand {
 
 
         final CommitHistory entire      = environment.getCommitHistory();
-        final Result        commits     = Result.empty(Result.Content.COMMIT);
-
-        for(Checkpoint each : entire){
-            commits.add(each.getCommitStatus());
+        if(entire.isEmpty()){
+            return Result.unitPackage();
         }
 
-        return commits;
+        final StringBuilder toScreen = new StringBuilder(entire.size() * 10000);
+
+        final Iterator<Checkpoint> itr = entire.iterator();
+        while(itr.hasNext()){
+            final Checkpoint c = itr.next();
+
+            toScreen.append(c.getCommitSummary().more());
+
+            if(itr.hasNext()){
+                toScreen.append("\n\t\t");
+            }
+        }
+
+        return Result.infoPackage(toScreen.toString());
     }
 }
