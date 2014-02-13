@@ -5,7 +5,7 @@ import edu.ucsc.refactor.cli.results.*;
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public interface ResultVisitor {
+public interface ResultProcessorVisitor {
     /**
      * Visits an info result
      */

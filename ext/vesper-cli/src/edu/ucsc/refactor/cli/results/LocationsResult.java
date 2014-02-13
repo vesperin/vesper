@@ -3,7 +3,7 @@ package edu.ucsc.refactor.cli.results;
 import com.google.common.collect.ImmutableList;
 import edu.ucsc.refactor.NamedLocation;
 import edu.ucsc.refactor.cli.Result;
-import edu.ucsc.refactor.cli.ResultVisitor;
+import edu.ucsc.refactor.cli.ResultProcessorVisitor;
 
 import java.util.List;
 
@@ -25,7 +25,7 @@ public class LocationsResult implements Result {
         this.locations  = locations;
     }
 
-    @Override public void accepts(ResultVisitor visitor) {
+    @Override public void accepts(ResultProcessorVisitor visitor) {
         visitor.visit(this);
     }
 

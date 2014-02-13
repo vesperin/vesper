@@ -1,6 +1,6 @@
 package edu.ucsc.refactor;
 
-import edu.ucsc.refactor.cli.Interpreter;
+import edu.ucsc.refactor.cli.*;
 
 import static com.google.common.base.Objects.firstNonNull;
 
@@ -14,11 +14,17 @@ public class Cli {
     private Cli(){}
 
     public static void main(String[] args) {
+
+        final Parser      parser      = new Parser();
         final Interpreter interpreter = new Interpreter();
 
         try {
 
-            interpreter.eval(interpreter.process(args));
+            final VesperCommand command = parser.parse(args);
+            final Result        result  = interpreter.eval(command);
+
+            ResultProcessor.process(result);
+
         } catch (Throwable e) {
             System.out.println(firstNonNull(e.getMessage(), "Unknown command line parser error"));
             System.exit(EXIT_PERMANENT);

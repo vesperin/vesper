@@ -72,10 +72,11 @@ public class ReplCommand extends VesperCommand {
         InputStreamReader converter = new InputStreamReader(System.in);
         BufferedReader in = new BufferedReader(converter);
 
-        Interpreter interpreter = new Interpreter();
+        final Repl repl = new Repl(new Parser(), new Interpreter());
+
 
         if(credential != null){
-            interpreter.enableUpstream(credential);
+            repl.authorizeUpstreamAccess(credential);
         }
 
 
@@ -97,37 +98,37 @@ public class ReplCommand extends VesperCommand {
                     // environment (scope), and then clear the local
                     // environment.
                     global.restart();
-                    global.track(interpreter.getEnvironment().getOrigin());
-                    interpreter.clears();
-                    interpreter.print("quitting " + Interpreter.VERSION + " Good bye!\n");
+                    global.track(repl.getEnvironment().getOrigin());
+                    repl.clears();
+                    repl.print("quitting " + Interpreter.VERSION + " Good bye!\n");
                     return true; // exiting ivr
                 }
             }
 
             if (line.equals("help")) {
-                interpreter.process("help");
+                repl.process("help");
                 continue;
             }
 
             if(line.equals("ivp")){
-                interpreter.print(Interpreter.VERSION + ", yeah! that's me.\n");
+                repl.print(Interpreter.VERSION + ", yeah! that's me.\n");
                 continue; // no need to call it again
             }
 
 
             try {
-                result = interpreter.processSingleExpression(line);
+                result = repl.processSingleLine(line);
             } catch (ParseException ex){
-                interpreter.printError("Unknown command");
+                repl.printError("Unknown command");
                 continue;
             }
 
             if("log".equals(line)){
-                interpreter.eval(result);
+                ResultProcessor.process(result);
                 continue;
             }
 
-            interpreter.eval(result);
+            ResultProcessor.process(result);
         }
 
     }
@@ -137,5 +138,76 @@ public class ReplCommand extends VesperCommand {
         return Objects.toStringHelper("ReplCommand")
                 .add("config", config)
                 .toString();
+    }
+
+
+    private static class Repl {
+        private final Parser        parser;
+        private final Interpreter   interpreter;
+
+        Repl(Parser parser, Interpreter interpreter){
+            this.parser      = parser;
+            this.interpreter = interpreter;
+        }
+
+        public final void authorizeUpstreamAccess(Credential newCredential){
+            interpreter.authorizeUpstreamAccess(newCredential);
+        }
+
+        /**
+         * Flush out any info stored in the interpreter.
+         */
+        void clears(){
+            interpreter.clears();
+        }
+
+
+        Environment getEnvironment(){
+            return interpreter.getEnvironment();
+        }
+
+
+        /**
+         * Prints a text to the screen.
+         *
+         * @param text The text to be printed.
+         */
+        public void print(String text) {
+            System.out.print(text);
+        }
+
+        /**
+         * Evaluate an expression and return its result.
+         *
+         * @param expression The expression to be evaluated
+         * @return The {@code Result} of this evaluation.
+         * @throws RuntimeException if unable to evaluate this expression.
+         */
+        public Result processSingleLine(String expression) throws RuntimeException {
+            final VesperCommand command = parser.parse(expression);
+            return interpreter.eval(command);
+        }
+
+        /**
+         * Evaluate an array of command arguments. Each argument in the set represent a
+         * token that will be evaluated by {@link Parser#parse(String...)}
+         *
+         * @param args The array of arguments to be evaluated.
+         * @return The {@code Result} of this evaluation.
+         * @throws RuntimeException if unable to evaluate this array of arguments.
+         */
+        public Result process(String... args) throws RuntimeException {
+            final VesperCommand command = parser.parse(args);
+            return interpreter.eval(command);
+        }
+
+        /**
+         * Prints an error message to the screen.
+         *
+         * @param error the error message.
+         */
+        public void printError(String error) {
+            System.out.println("! " + error);
+        }
     }
 }

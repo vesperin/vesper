@@ -1,7 +1,7 @@
 package edu.ucsc.refactor.cli.results;
 
 import edu.ucsc.refactor.cli.Result;
-import edu.ucsc.refactor.cli.ResultVisitor;
+import edu.ucsc.refactor.cli.ResultProcessorVisitor;
 import edu.ucsc.refactor.spi.CommitSummary;
 
 /**
@@ -29,7 +29,7 @@ public class CommitSummaryInfoResult implements Result {
         return summary;
     }
 
-    @Override public void accepts(ResultVisitor visitor) {
+    @Override public void accepts(ResultProcessorVisitor visitor) {
         visitor.visit(this);
     }
 

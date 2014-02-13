@@ -5,8 +5,8 @@ import edu.ucsc.refactor.cli.results.*;
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public abstract class SkeletonResultVisitor implements ResultVisitor {
-    protected SkeletonResultVisitor(){}
+public abstract class SkeletonResultProcessorVisitor implements ResultProcessorVisitor {
+    protected SkeletonResultProcessorVisitor(){}
 
     @Override public void visit(InfoResult info) {}
 
