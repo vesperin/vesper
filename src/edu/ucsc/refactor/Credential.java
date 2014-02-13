@@ -40,6 +40,13 @@ public final class Credential {
      */
     public String getPassword() { return password; }
 
+    /**
+     * @return {@code true} if no credentials have been set, {@code false} otherwise.
+     */
+    public boolean isNoneCredential(){
+        return "NONE".equals(getUsername()) && "NONE".equals(getPassword());
+    }
+
     @Override public String toString() {
         return Objects.toStringHelper("Credential")
                 .add("username", getUsername())
