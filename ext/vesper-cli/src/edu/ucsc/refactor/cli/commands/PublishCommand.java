@@ -6,7 +6,7 @@ import edu.ucsc.refactor.cli.Environment;
 import edu.ucsc.refactor.cli.Result;
 import edu.ucsc.refactor.cli.VesperCommand;
 import edu.ucsc.refactor.spi.CommitRequest;
-import edu.ucsc.refactor.spi.CommitStatus;
+import edu.ucsc.refactor.spi.CommitSummary;
 import io.airlift.airline.Command;
 
 import java.util.Queue;
@@ -25,9 +25,9 @@ public class PublishCommand extends VesperCommand {
         final StringBuilder details = new StringBuilder();
         while(!requests.isEmpty()){
             final CommitRequest request = requests.remove();
-            final CommitStatus status  = environment.getCodeRefactorer().publish(request).getStatus();
+            final CommitSummary status  = environment.getCodeRefactorer().publish(request).getCommitSummary();
 
-            if(status.isAborted()){
+            if(status.isFailure()){
                 skipped.add(request);
             } else {
                 details.append(status.more());
