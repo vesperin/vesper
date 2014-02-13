@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import edu.ucsc.refactor.cli.Environment;
 import edu.ucsc.refactor.cli.Result;
 import edu.ucsc.refactor.cli.VesperCommand;
+import edu.ucsc.refactor.cli.results.Results;
 import edu.ucsc.refactor.spi.CommitRequest;
 import edu.ucsc.refactor.spi.CommitSummary;
 import io.airlift.airline.Command;
@@ -38,7 +39,7 @@ public class PublishCommand extends VesperCommand {
         }
 
         if(requests.isEmpty() && skipped.isEmpty()){
-            return Result.infoPackage(
+            return Results.infoResult(
                     "\nGreat!, all commits have been published. See details:\n"
                             + details.toString()
             );
@@ -47,7 +48,7 @@ public class PublishCommand extends VesperCommand {
                 environment.enqueueCommitRequest(skipped.remove());
             }
 
-            return Result.infoPackage(
+            return Results.infoResult(
                     "A total of "
                             + environment.getCommittedRequests().size()
                             + " commits were not published. Tried again later."

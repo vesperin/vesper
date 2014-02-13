@@ -5,6 +5,7 @@ import edu.ucsc.refactor.Note;
 import edu.ucsc.refactor.cli.Environment;
 import edu.ucsc.refactor.cli.Result;
 import edu.ucsc.refactor.cli.VesperCommand;
+import edu.ucsc.refactor.cli.results.Results;
 import io.airlift.airline.Arguments;
 import io.airlift.airline.Command;
 
@@ -26,6 +27,6 @@ public class NoteAdd extends VesperCommand {
                 new Note(/*[1,2]*/noteToAdd)
         );
 
-        return environment.unit();
+        return Results.unit();
     }
 }

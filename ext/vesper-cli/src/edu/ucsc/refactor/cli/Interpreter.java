@@ -12,12 +12,14 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class Interpreter {
 
-    public static final String VERSION = "Vesper v0.0.0";
+    public  static final String         VERSION = "Vesper v0.0.0";
+    private static final ResultVisitor  VISITOR = new SysResultVisitor();
 
     final Parser      parser;
     final Environment environment;
 
     final AtomicReference<Credential> credential;
+
 
     /**
      * Construct a new Vesper's interpreter.
@@ -31,9 +33,31 @@ public class Interpreter {
      * @param accessInfo The appropriate credentials to gist service.
      */
     public Interpreter(Credential accessInfo){
-        parser          = new Parser();
-        environment     = new Environment();
-        this.credential = Atomics.newReference(accessInfo);
+        this.parser         = new Parser();
+        this.environment    = new Environment();
+        this.credential     = Atomics.newReference(accessInfo);
+
+        if(!isNoneCredential(this.credential.get())){
+            enableUpstream(this.credential.get());
+        }
+    }
+
+    /**
+     * Enable remote commits by providing a credential.
+     *
+     * @param newCredential Access credential to a remote repository.
+     */
+    public final void enableUpstream(Credential newCredential){
+        if(newCredential == null || newCredential.isNoneCredential()) return;
+        if(this.credential.compareAndSet(this.credential.get(), newCredential)){
+            getEnvironment().enableUpstream(this.credential.get());
+        }
+    }
+
+
+    private static boolean isNoneCredential(Credential credential){
+        return credential != null && credential.isNoneCredential();
+
     }
 
     /**
@@ -43,7 +67,7 @@ public class Interpreter {
      * @return The {@code Result} of this evaluation.
      * @throws RuntimeException if unable to evaluate this expression.
      */
-    public Result evaluateAndReturn(String expression) throws RuntimeException {
+    public Result processSingleExpression(String expression) throws RuntimeException {
         return parser.parse(expression).call(environment);
     }
 
@@ -55,7 +79,7 @@ public class Interpreter {
      * @return The {@code Result} of this evaluation.
      * @throws RuntimeException if unable to evaluate this array of arguments.
      */
-    public Result eval(String... args) throws RuntimeException {
+    public Result process(String... args) throws RuntimeException {
         return parser.parse(args).call(environment);
     }
 
@@ -84,60 +108,25 @@ public class Interpreter {
         System.out.print(text);
     }
 
-    /**
-     * Prints a result to the screen.
-     *
-     * @param result The text to be printed.
-     */
-    public void printResult(Result result) {
-        if(result.isInfo()){
-            printInfo(result);
-        } else if(result.isWarning()){
-            printWarning(result.getDescription());
-        } else if(result.isError()){
-            printError(result);
-        } else {
-            printResult("()");
-        }
+    public void eval(Result result, ResultVisitor evaluator){
+        result.accepts(evaluator);
     }
-
-    private void printWarning(String description) {
-        System.out.println("? " + description);
-    }
-
 
     /**
      * Prints a result to the screen.
      *
      * @param result The text to be printed.
      */
-    public void printResult(String result) {
-        System.out.print("= ");
-        System.out.println(result);
+    public void eval(Result result) {
+        eval(result, VISITOR);
     }
-
 
     /**
-     * Prints an error to the screen.
+     * Prints an error message to the screen.
      *
-     * @param message The error message to be printed.
+     * @param error the error message.
      */
-    public void printError(String message) {
-        System.out.println("! " + message);
-    }
-
-    void printError(Result result) {
-        printError(result.getDescription());
-    }
-
-    void printInfo(Result result) {
-        final boolean pending  = result.getCommitSummary().isPending();
-        final boolean canceled = result.getCommitSummary().isCanceled();
-
-        if(pending | canceled){ // if they are what they say they are, then we don't have an updated source
-            printResult(result.getDescription());
-        } else {
-            printResult(result.getCommitSummary().more());
-        }
+    public void printError(String error) {
+        System.out.println("! " + error);
     }
 }

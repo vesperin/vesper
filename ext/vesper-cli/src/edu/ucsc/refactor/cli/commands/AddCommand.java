@@ -9,6 +9,7 @@ import edu.ucsc.refactor.cli.Environment;
 import edu.ucsc.refactor.cli.Result;
 import edu.ucsc.refactor.cli.SourceFileReader;
 import edu.ucsc.refactor.cli.VesperCommand;
+import edu.ucsc.refactor.cli.results.Results;
 import edu.ucsc.refactor.util.StringUtil;
 import io.airlift.airline.Arguments;
 import io.airlift.airline.Command;
@@ -59,7 +60,7 @@ public class AddCommand extends VesperCommand {
         if(environment.isSourceTracked()){
             // ask to continue
             if (!ask("Are you sure you would like to REPLACE the existing SOURCE?", false)) {
-                return environment.unit();
+                return Results.unit();
             }
         }
 
@@ -70,8 +71,7 @@ public class AddCommand extends VesperCommand {
                 )
         );
 
-
-        return Result.infoPackage(String.format("%s is now being tracked by Vesper", name));
+        return Results.infoResult(String.format("%s is now being tracked by Vesper", name));
     }
 
     @Override public String toString() {

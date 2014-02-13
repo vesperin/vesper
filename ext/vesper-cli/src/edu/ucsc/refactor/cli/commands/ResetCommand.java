@@ -6,6 +6,7 @@ import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.cli.Environment;
 import edu.ucsc.refactor.cli.Result;
 import edu.ucsc.refactor.cli.VesperCommand;
+import edu.ucsc.refactor.cli.results.Results;
 import io.airlift.airline.Arguments;
 import io.airlift.airline.Command;
 
@@ -26,10 +27,10 @@ public class ResetCommand extends VesperCommand {
 
         if(patterns != null && patterns.size() == 1){
             final Source indexed = environment.resetSource(patterns.get(0));
-            return Result.infoPackage(String.format("%s's index has moved to original version", indexed.getName()));
+            return Results.infoResult(String.format("%s's index has moved to original version", indexed.getName()));
         } else {
             environment.reset();
-            return Result.infoPackage(String.format("%s's index has moved to original version", environment.getOrigin().getName())); // show the new origin
+            return Results.infoResult(String.format("%s's index has moved to original version", environment.getOrigin().getName())); // show the new origin
         }
     }
 

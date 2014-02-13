@@ -3,7 +3,7 @@ package edu.ucsc.refactor.cli;
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public interface Result {
+public interface InterpreterResult {
     /**
      * Accepts a non-null {@code ResultVisitor}.
      *

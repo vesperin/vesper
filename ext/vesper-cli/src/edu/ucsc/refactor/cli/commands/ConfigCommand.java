@@ -5,6 +5,7 @@ import com.google.common.base.Preconditions;
 import edu.ucsc.refactor.cli.Environment;
 import edu.ucsc.refactor.cli.Result;
 import edu.ucsc.refactor.cli.VesperCommand;
+import edu.ucsc.refactor.cli.results.Results;
 import io.airlift.airline.Arguments;
 import io.airlift.airline.Command;
 
@@ -43,11 +44,11 @@ public class ConfigCommand  extends VesperCommand {
 
         if(allSet){
             if(globalOptions.verbose){
-                return Result.infoPackage("Ok, credentials have been set!\n");
+                return Results.infoResult("Ok, credentials have been set!\n");
             }
         }
 
-        return environment.unit();
+        return Results.unit();
     }
 
     @Override public String toString() {

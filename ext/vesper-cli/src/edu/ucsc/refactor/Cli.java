@@ -17,9 +17,8 @@ public class Cli {
         final Interpreter interpreter = new Interpreter();
 
         try {
-            interpreter.printResult(
-                    interpreter.eval(args)
-            );
+
+            interpreter.eval(interpreter.process(args));
         } catch (Throwable e) {
             System.out.println(firstNonNull(e.getMessage(), "Unknown command line parser error"));
             System.exit(EXIT_PERMANENT);

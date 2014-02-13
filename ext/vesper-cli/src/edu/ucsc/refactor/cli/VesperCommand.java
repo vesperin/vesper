@@ -7,6 +7,7 @@ import com.google.common.collect.Iterables;
 import edu.ucsc.refactor.ChangeRequest;
 import edu.ucsc.refactor.SourceSelection;
 import edu.ucsc.refactor.Vesper;
+import edu.ucsc.refactor.cli.results.Results;
 import edu.ucsc.refactor.spi.CommitRequest;
 import io.airlift.airline.Inject;
 
@@ -41,11 +42,11 @@ public abstract class VesperCommand {
             if(globalOptions.verbose){
                 throw new RuntimeException(ex);
             } else {
-                return Result.failedPackage(firstNonNull(ex.getMessage(), "Unknown error"));
+                return Results.errorResult(firstNonNull(ex.getMessage(), "Unknown error"));
             }
         }
 
-        return firstNonNull(result, environment.unit());
+        return firstNonNull(result, Results.unit());
     }
 
 
@@ -68,8 +69,11 @@ public abstract class VesperCommand {
 
     protected Result createResultPackage(CommitRequest applied){
         return (globalOptions.verbose
-                ? Result.infoPackage(applied.getCommitSummary())
-                : Result.unitPackage()
+                ? Results.commitSummaryInfo(
+                    "commit summary for " + applied.getCommitSummary().getMessage(),
+                    applied.getCommitSummary()
+                  )
+                : Results.unit()
         );
     }
 

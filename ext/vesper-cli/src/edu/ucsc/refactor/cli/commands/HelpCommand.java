@@ -4,6 +4,7 @@ import com.google.common.base.Objects;
 import edu.ucsc.refactor.cli.Environment;
 import edu.ucsc.refactor.cli.Result;
 import edu.ucsc.refactor.cli.VesperCommand;
+import edu.ucsc.refactor.cli.results.Results;
 import io.airlift.airline.Command;
 import io.airlift.airline.Help;
 import io.airlift.airline.Inject;
@@ -18,7 +19,7 @@ public class HelpCommand extends VesperCommand {
 
     @Override public Result execute(Environment environment) throws RuntimeException {
         help.call();
-        return environment.unit(); // nothing to show
+        return Results.unit(); // nothing to show
     }
 
     @Override public String toString() {

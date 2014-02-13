@@ -247,13 +247,6 @@ public class Environment {
     }
 
     /**
-     * @return the unit result.
-     */
-    public Result unit(){
-        return Result.unitPackage();
-    }
-
-    /**
      * Collects commit requests for later publishing.
      *
      * @param request The commit request to be collected.

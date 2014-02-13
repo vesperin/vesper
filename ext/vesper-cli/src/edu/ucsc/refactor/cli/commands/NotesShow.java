@@ -5,6 +5,8 @@ import edu.ucsc.refactor.Note;
 import edu.ucsc.refactor.cli.Environment;
 import edu.ucsc.refactor.cli.Result;
 import edu.ucsc.refactor.cli.VesperCommand;
+import edu.ucsc.refactor.cli.results.NotesResult;
+import edu.ucsc.refactor.cli.results.Results;
 import edu.ucsc.refactor.util.Notes;
 import io.airlift.airline.Command;
 
@@ -17,15 +19,15 @@ public class NotesShow extends VesperCommand {
         ensureValidState(environment);
 
         final Notes         notes   = environment.getOrigin().getNotes();
-        final StringBuilder text    = new StringBuilder();
 
-        text.append("\n");
-        int count = 1;
-        for(Note each : notes){
-            text.append(count++).append(". ").append(each.getContent()).append("\n");
+        if(notes.isEmpty()){
+            return Results.unit();
         }
 
-        return Result.infoPackage(text.toString());
+        return Results.notesResult(
+                String.format("Found %d notes:\n\t\t", notes.size()),
+               notes
+        );
     }
 
     @Override public String toString() {
