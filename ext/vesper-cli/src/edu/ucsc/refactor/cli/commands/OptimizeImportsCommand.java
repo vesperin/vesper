@@ -18,10 +18,10 @@ public class OptimizeImportsCommand extends VesperCommand {
         ensureValidState(environment);
 
 
-        final ChangeRequest request = ChangeRequest.optimizeImports(environment.getTrackedSource());
+        final ChangeRequest request = ChangeRequest.optimizeImports(environment.getOrigin());
         final CommitRequest applied = commitChange(environment, request);
 
-        if(environment.hasLoggedError()){
+        if(environment.isErrorFree()){
             return Result.failedPackage(environment.getErrorMessage());
         }
 

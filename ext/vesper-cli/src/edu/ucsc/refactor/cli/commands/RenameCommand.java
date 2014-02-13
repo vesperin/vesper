@@ -36,7 +36,7 @@ public abstract class RenameCommand extends VesperCommand {
         final ChangeRequest request   = createChangeRequest(selection, tail);
         final CommitRequest applied   = commitChange(environment, request);
 
-        if(environment.hasLoggedError()){
+        if(environment.isErrorFree()){
             return Result.failedPackage(environment.getErrorMessage());
         }
 

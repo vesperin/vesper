@@ -23,9 +23,9 @@ public class PublishCommand extends VesperCommand {
         final Queue<CommitRequest> skipped  = Lists.newLinkedList();
 
         final StringBuilder details = new StringBuilder();
-        while(!requests.isEmpty()){
-            final CommitRequest request = requests.remove();
-            final CommitSummary status  = environment.getCodeRefactorer().publish(request).getCommitSummary();
+        while(!environment.isFilledWithRequests()){
+            final CommitRequest request = environment.dequeueCommitRequest();
+            final CommitSummary status  = environment.publish(request);
 
             if(status.isFailure()){
                 skipped.add(request);
@@ -44,7 +44,7 @@ public class PublishCommand extends VesperCommand {
             );
         } else {
             while(!skipped.isEmpty()){
-                environment.captureCommitRequest(skipped.remove());
+                environment.enqueueCommitRequest(skipped.remove());
             }
 
             return Result.infoPackage(

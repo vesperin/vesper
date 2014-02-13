@@ -17,10 +17,10 @@ public class FormatCommand extends VesperCommand {
         ensureValidState(environment);
 
 
-        final ChangeRequest request = ChangeRequest.reformatSource(environment.getTrackedSource());
+        final ChangeRequest request = ChangeRequest.reformatSource(environment.getOrigin());
         final CommitRequest applied = commitChange(environment, request);
 
-        if(environment.hasLoggedError()){
+        if(environment.isErrorFree()){
             return Result.failedPackage(environment.getErrorMessage());
         }
 

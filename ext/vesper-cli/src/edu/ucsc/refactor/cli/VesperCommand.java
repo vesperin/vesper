@@ -4,7 +4,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
-import edu.ucsc.refactor.Change;
 import edu.ucsc.refactor.ChangeRequest;
 import edu.ucsc.refactor.SourceSelection;
 import edu.ucsc.refactor.Vesper;
@@ -57,20 +56,12 @@ public abstract class VesperCommand {
     }
 
     protected CommitRequest commitChange(Environment environment, ChangeRequest request){
-        final Change        change  = environment.getCodeRefactorer().createChange(request);
-        final CommitRequest applied = environment.getCodeRefactorer().apply(change);
-        if(applied != null){
-            environment.update(applied.getCommitSummary().getSource());
-            environment.captureCommitRequest(applied);
-        } else {
-            environment.addError(change.getErrors());
-        }
-        return applied;
+        return environment.perform(request);
     }
 
     protected static void ensureValidState(Environment environment){
         Preconditions.checkNotNull(environment, "No environment available");
-        Preconditions.checkNotNull(environment.getTrackedSource(), "No source code available");
+        Preconditions.checkNotNull(environment.getOrigin(), "No source code available");
         Preconditions.checkNotNull(environment.getCodeRefactorer(), "No refactorer available");
     }
 
@@ -88,7 +79,7 @@ public abstract class VesperCommand {
         final int start = Integer.valueOf(rangeSplit.iterator().next());
         final int end   = Integer.valueOf(Iterables.getLast(rangeSplit));
 
-        return new SourceSelection(environment.getTrackedSource(), start, end);
+        return new SourceSelection(environment.getOrigin(), start, end);
     }
 
 

@@ -16,7 +16,7 @@ public class NotesShow extends VesperCommand {
     @Override public Result execute(Environment environment) throws RuntimeException {
         ensureValidState(environment);
 
-        final Notes notes   = environment.getTrackedSource().getNotes();
+        final Notes         notes   = environment.getOrigin().getNotes();
         final StringBuilder text    = new StringBuilder();
 
         text.append("\n");

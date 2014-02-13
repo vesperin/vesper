@@ -20,7 +20,7 @@ public class DeduplicateCommand extends VesperCommand {
     @Override public Result execute(Environment environment) throws Exception {
         ensureValidState(environment);
 
-        final List<Issue> issues = environment.getCodeRefactorer().getIssues(environment.getTrackedSource());
+        final List<Issue> issues = environment.getIssues();
         if(issues.isEmpty()){
             return environment.unit();
         }
@@ -34,7 +34,7 @@ public class DeduplicateCommand extends VesperCommand {
             }
         }
 
-        if(environment.hasLoggedError()){
+        if(environment.isErrorFree()){
             return Result.failedPackage(environment.getErrorMessage());
         }
 

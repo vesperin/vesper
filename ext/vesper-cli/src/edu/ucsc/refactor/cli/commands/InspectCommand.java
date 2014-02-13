@@ -30,7 +30,7 @@ public class InspectCommand extends VesperCommand {
 
 
         if(environment.isSourceTracked() && inspectOrigin){
-            final List<Issue> issues = environment.getCodeRefactorer().getIssues(environment.getTrackedSource());
+            final List<Issue> issues = environment.getIssues();
 
             if(!issues.isEmpty()){
                 final StringBuilder toIssues = new StringBuilder(String.format("Found %d issues in this source:\n\t\t", issues.size() ));

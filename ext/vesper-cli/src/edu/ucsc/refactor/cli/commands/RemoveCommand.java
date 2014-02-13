@@ -44,7 +44,7 @@ public abstract class RemoveCommand extends VesperCommand {
         final ChangeRequest request   = createChangeRequest(selection);
         final CommitRequest applied   = commitChange(environment, request);
 
-        if(environment.hasLoggedError()){
+        if(environment.isErrorFree()){
             return Result.failedPackage(environment.getErrorMessage());
         }
 

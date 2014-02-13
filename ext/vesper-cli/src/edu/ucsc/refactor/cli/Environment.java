@@ -4,6 +4,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.spi.CommitRequest;
+import edu.ucsc.refactor.spi.CommitSummary;
+import edu.ucsc.refactor.spi.ProgramUnit;
 import edu.ucsc.refactor.spi.UnitLocator;
 import edu.ucsc.refactor.util.CommitHistory;
 
@@ -51,19 +53,10 @@ public class Environment {
         this.errors.add(whole.toString().trim());
     }
 
-    /**
-     * Clears the environment.
-     */
-    public void clear() {
-        this.refactorer.set(null);
-        this.origin.set(null);
-        this.remoteConfig.set(null);
-        this.checkpoints.clear();
-    }
-
 
     /**
      * Enable remote commits by providing a credential.
+     *
      * @param username the username
      * @param password the password
      * @return {@code true} if the upstream access was enabled, {@code false} otherwise.
@@ -73,7 +66,6 @@ public class Environment {
                 && enableUpstream(new Credential(username, password));
 
     }
-
 
     /**
      * Enable remote commits by providing a credential.
@@ -93,6 +85,7 @@ public class Environment {
         return true;
     }
 
+
     /**
      * @return a recently caught error message.
      */
@@ -103,15 +96,65 @@ public class Environment {
     /**
      * @return the tracked {@code Source}.
      */
-    public Source getTrackedSource() {
+    public Source getOrigin() {
         return origin.get();
+    }
+
+    /**
+     * Un-tracked a given Source, which may be the base Source.
+     *
+     * @param code The Source
+     */
+    public void untrack(Source code){
+        if(code.equals(getOrigin())){
+            restart();
+        }
+    }
+
+
+    /**
+     * Perform a ChangeRequest and then returns the committed request.
+     *
+     * @param request The ChangeRequest to be performed.
+     * @return the committed request.
+     */
+    public CommitRequest perform(ChangeRequest request){
+        final Change        change  = getCodeRefactorer().createChange(request);
+        final CommitRequest applied = getCodeRefactorer().apply(change);
+        if(applied != null){
+            update(applied.getCommitSummary().getSource());
+            enqueueCommitRequest(applied);
+        } else {
+            addError(change.getErrors());
+        }
+        return applied;
+    }
+
+    /**
+     * Re-starts the environment.
+     */
+    public void restart() {
+        this.refactorer.set(null);
+        this.origin.set(null);
+        this.remoteConfig.set(null);
+        this.checkpoints.clear();
+    }
+
+    /**
+     * Lookup for a given program unit.
+     *
+     * @param unit The program unit to be searched.
+     * @return The locations where the program unit was found.
+     */
+    public List<NamedLocation> lookup(ProgramUnit unit){
+        return getCodeLocator().locate(unit);
     }
 
     /**
      * @return The Unit locator
      */
     public UnitLocator getCodeLocator(){
-        return getCodeRefactorer().getLocator(getTrackedSource());
+        return getCodeRefactorer().getLocator(getOrigin());
     }
 
     /**
@@ -120,8 +163,27 @@ public class Environment {
     public CommitHistory getCommitHistory(){
         return (getCodeRefactorer() == null
                 ? new CommitHistory()
-                : getCodeRefactorer().getCommitHistory(getTrackedSource())
+                : getCodeRefactorer().getCommitHistory(getOrigin())
         );
+    }
+
+    /**
+     * Get all the detected issues in the tracked Source
+     *
+     * @return The list of issues.
+     */
+    public List<Issue> getIssues(){
+        return getCodeRefactorer().getIssues(getOrigin());
+    }
+
+    /**
+     * Publishes a commit request.
+     *
+     * @param commitRequest The commit request to be published to a remote upstream.
+     * @return The updated commit summary.
+     */
+    public CommitSummary publish(CommitRequest commitRequest){
+        return getCodeRefactorer().publish(commitRequest).getCommitSummary();
     }
 
 
@@ -133,16 +195,25 @@ public class Environment {
     }
 
     /**
+     * @return {@code true} if there are requests to be published, {@code false} otherwise.
+     */
+    public boolean isFilledWithRequests(){
+        return !getCommittedRequests().isEmpty();
+    }
+
+
+    /**
      * @return a {@code Queue} of committed requests.
      */
     public Queue<CommitRequest> getCommittedRequests(){
         return checkpoints;
     }
 
+
     /**
      * @return {@code true} if there is logged {@code error}.
      */
-    public boolean hasLoggedError() {
+    public boolean isErrorFree() {
         return !this.errors.isEmpty();
     }
 
@@ -166,8 +237,8 @@ public class Environment {
         if(origin != null){
             final Configuration remote      = remoteConfig.get();
             final Refactorer    refactorer  = remote == null
-                    ? Vesper.createRefactorer(getTrackedSource())
-                    : Vesper.createRefactorer(remote, getTrackedSource());
+                    ? Vesper.createRefactorer(getOrigin())
+                    : Vesper.createRefactorer(remote, getOrigin());
 
             this.refactorer.set(refactorer);
         } else {
@@ -187,8 +258,15 @@ public class Environment {
      *
      * @param request The commit request to be collected.
      */
-    public void captureCommitRequest(CommitRequest request){
+    public void enqueueCommitRequest(CommitRequest request){
         checkpoints.add(request);
+    }
+
+    /**
+     * @return the de-queued CommitRequest.
+     */
+    public CommitRequest dequeueCommitRequest(){
+        return getCommittedRequests().remove();
     }
 
     /**
@@ -199,7 +277,7 @@ public class Environment {
     public void update(Source updatedSource) {
         // if origin != null, then refactorer.source === origin
         this.origin.set(updatedSource);
-        assert isTracked(getTrackedSource());
+        assert isTracked(getOrigin());
     }
 
     /**
@@ -221,7 +299,7 @@ public class Environment {
      * Reset current Source to its first version.
      */
     public void reset() {
-        resetSource(getTrackedSource().getName());
+        resetSource(getOrigin().getName());
     }
 
     /**
@@ -238,7 +316,7 @@ public class Environment {
         for(Source each : all){
             if(each.getName().equals(name)){
 
-                final boolean isOrigin = each.equals(getTrackedSource());
+                final boolean isOrigin  = each.equals(getOrigin());
 
                 final Source to         = getCodeRefactorer().regress(each);
                 final Source indexed    = getCodeRefactorer().rewriteHistory(to);

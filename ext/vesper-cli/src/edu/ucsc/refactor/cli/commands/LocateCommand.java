@@ -7,7 +7,6 @@ import edu.ucsc.refactor.cli.Environment;
 import edu.ucsc.refactor.cli.Result;
 import edu.ucsc.refactor.cli.VesperCommand;
 import edu.ucsc.refactor.spi.ProgramUnit;
-import edu.ucsc.refactor.spi.UnitLocator;
 import io.airlift.airline.Arguments;
 
 import java.util.Iterator;
@@ -27,10 +26,9 @@ public abstract class LocateCommand extends VesperCommand {
         Preconditions.checkArgument(patterns.size() == 1);
 
         final String        name    = patterns.get(0);
-        final UnitLocator   locator = environment.getCodeLocator();
 
-        final List<NamedLocation>    locations   = locator.locate(programUnit(name));
-        final StringBuilder     message     = new StringBuilder();
+        final List<NamedLocation>       locations   = environment.lookup(programUnit(name));
+        final StringBuilder             message     = new StringBuilder();
 
         final Iterator<NamedLocation> itr = locations.iterator();
         message.append("at").append("(");

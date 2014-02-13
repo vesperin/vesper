@@ -29,7 +29,7 @@ public class ResetCommand extends VesperCommand {
             return Result.infoPackage(String.format("%s's index has moved to original version", indexed.getName()));
         } else {
             environment.reset();
-            return Result.infoPackage(String.format("%s's index has moved to original version", environment.getTrackedSource().getName())); // show the new origin
+            return Result.infoPackage(String.format("%s's index has moved to original version", environment.getOrigin().getName())); // show the new origin
         }
     }
 

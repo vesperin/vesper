@@ -51,7 +51,7 @@ public class ReplCommand extends VesperCommand {
             }
 
             if(runRepl(credential, environment, prompt)){
-                return Result.infoPackage(environment.getTrackedSource().getContents());
+                return Result.infoPackage(environment.getOrigin().getContents());
             }
 
         } catch (Throwable ex){
@@ -95,8 +95,8 @@ public class ReplCommand extends VesperCommand {
                     // bubble up changes done in REPL mode to the global
                     // environment (scope), and then clear the local
                     // environment.
-                    global.clear();
-                    global.track(interpreter.getEnvironment().getTrackedSource());
+                    global.restart();
+                    global.track(interpreter.getEnvironment().getOrigin());
                     interpreter.clears();
                     interpreter.print("quitting " + Interpreter.VERSION + " Good bye!\n");
                     return true; // exiting ivr
