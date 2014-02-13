@@ -5,11 +5,11 @@ package edu.ucsc.refactor.cli;
  */
 public interface Result {
     /**
-     * Accepts a non-null {@code ResultVisitor}.
+     * Accepts a non-null {@code ResultProcessorVisitor}.
      *
-     * @param visitor The {@link ResultVisitor}
+     * @param visitor The {@link ResultProcessorVisitor}
      */
-    void accepts(ResultVisitor visitor);
+    void accepts(ResultProcessorVisitor visitor);
 
     /**
      * @return a brief description of result.

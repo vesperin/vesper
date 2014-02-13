@@ -12,7 +12,7 @@ import java.util.Iterator;
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public class SysResultVisitor extends SkeletonResultVisitor {
+public class SysResultVisitor extends SkeletonResultProcessorVisitor {
     @Override public void visit(InfoResult info) {
         System.out.println("= " + info);
     }

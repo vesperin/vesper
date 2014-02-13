@@ -12,12 +12,9 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class Interpreter {
 
-    public  static final String         VERSION = "Vesper v0.0.0";
-    private static final ResultVisitor  VISITOR = new SysResultVisitor();
+    public  static final String       VERSION = "Vesper v0.0.0";
 
-    final Parser      parser;
-    final Environment environment;
-
+    final Environment                 environment;
     final AtomicReference<Credential> credential;
 
 
@@ -25,20 +22,19 @@ public class Interpreter {
      * Construct a new Vesper's interpreter.
      */
     public Interpreter(){
-        this(Credential.none());
+        this(Credential.none(), new Environment());
     }
 
     /**
      * Construct a new Vesper's interpreter.
      * @param accessInfo The appropriate credentials to gist service.
      */
-    public Interpreter(Credential accessInfo){
-        this.parser         = new Parser();
-        this.environment    = new Environment();
+    public Interpreter(Credential accessInfo, Environment environment){
+        this.environment    = environment;
         this.credential     = Atomics.newReference(accessInfo);
 
         if(!isNoneCredential(this.credential.get())){
-            enableUpstream(this.credential.get());
+            authorizeUpstreamAccess(this.credential.get());
         }
     }
 
@@ -47,41 +43,34 @@ public class Interpreter {
      *
      * @param newCredential Access credential to a remote repository.
      */
-    public final void enableUpstream(Credential newCredential){
+    public final void authorizeUpstreamAccess(Credential newCredential){
         if(newCredential == null || newCredential.isNoneCredential()) return;
         if(this.credential.compareAndSet(this.credential.get(), newCredential)){
             getEnvironment().enableUpstream(this.credential.get());
         }
     }
 
-
-    private static boolean isNoneCredential(Credential credential){
-        return credential != null && credential.isNoneCredential();
-
+    /**
+     * Evaluate a command given some default environment.
+     *
+     * @param command The vesper command
+     * @return a generated result
+     */
+    public Result eval(VesperCommand command){
+        return eval(command, environment);
     }
 
     /**
-     * Evaluate an expression and return its result.
+     * Evaluate a command given some environment.
      *
-     * @param expression The expression to be evaluated
-     * @return The {@code Result} of this evaluation.
-     * @throws RuntimeException if unable to evaluate this expression.
+     * @param command The vesper command
+     * @param environment The vesper environment
+     * @return a generated result
      */
-    public Result processSingleExpression(String expression) throws RuntimeException {
-        return parser.parse(expression).call(environment);
+    public Result eval(VesperCommand command, Environment environment){
+        return command.call(environment);
     }
 
-    /**
-     * Evaluate an array of command arguments. Each argument in the set represent a
-     * token that will be evaluated by {@link Parser#parse(String...)}
-     *
-     * @param args The array of arguments to be evaluated.
-     * @return The {@code Result} of this evaluation.
-     * @throws RuntimeException if unable to evaluate this array of arguments.
-     */
-    public Result process(String... args) throws RuntimeException {
-        return parser.parse(args).call(environment);
-    }
 
     /**
      * clears the environment.
@@ -89,6 +78,7 @@ public class Interpreter {
     public void clears() {
         environment.restart();
     }
+
 
     /**
      * Gets the current environment set for this Interpreter.
@@ -99,34 +89,8 @@ public class Interpreter {
         return environment;
     }
 
-    /**
-     * Prints a text to the screen.
-     *
-     * @param text The text to be printed.
-     */
-    public void print(String text) {
-        System.out.print(text);
-    }
+    private static boolean isNoneCredential(Credential credential){
+        return credential != null && credential.isNoneCredential();
 
-    public void eval(Result result, ResultVisitor evaluator){
-        result.accepts(evaluator);
-    }
-
-    /**
-     * Prints a result to the screen.
-     *
-     * @param result The text to be printed.
-     */
-    public void eval(Result result) {
-        eval(result, VISITOR);
-    }
-
-    /**
-     * Prints an error message to the screen.
-     *
-     * @param error the error message.
-     */
-    public void printError(String error) {
-        System.out.println("! " + error);
     }
 }

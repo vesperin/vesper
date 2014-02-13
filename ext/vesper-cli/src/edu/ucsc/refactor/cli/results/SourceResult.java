@@ -2,7 +2,7 @@ package edu.ucsc.refactor.cli.results;
 
 import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.cli.Result;
-import edu.ucsc.refactor.cli.ResultVisitor;
+import edu.ucsc.refactor.cli.ResultProcessorVisitor;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -22,7 +22,7 @@ public class SourceResult implements Result {
         this.source  = source;
     }
 
-    @Override public void accepts(ResultVisitor visitor) {
+    @Override public void accepts(ResultProcessorVisitor visitor) {
         visitor.visit(this);
     }
 
