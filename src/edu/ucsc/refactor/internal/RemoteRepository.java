@@ -5,10 +5,9 @@ import edu.ucsc.refactor.Credential;
 import edu.ucsc.refactor.Note;
 import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.spi.CommitRequest;
-import edu.ucsc.refactor.spi.CommitStatus;
+import edu.ucsc.refactor.spi.CommitSummary;
 import edu.ucsc.refactor.spi.Name;
 import edu.ucsc.refactor.spi.Upstream;
-import edu.ucsc.refactor.util.CommitInformation;
 import edu.ucsc.refactor.util.Notes;
 import edu.ucsc.refactor.util.StringUtil;
 import org.eclipse.egit.github.core.Comment;
@@ -55,7 +54,7 @@ public class RemoteRepository implements Upstream {
         if(!request.isValid()) return request;
 
         try {
-            final Source updatedSource = request.getSource();
+            final Source updatedSource = request.getCommitSummary().getSource();
             Gist gist = new GistBuilder(service)
                     .content(updatedSource.getContents())
                     .file(updatedSource)
@@ -66,20 +65,23 @@ public class RemoteRepository implements Upstream {
             // fill out the `more` information
             final Name info = ((AbstractCommitRequest)request).getChange().getCause().getName();
 
-            ((AbstractCommitRequest)request).updateStatus(
-                    CommitStatus.succeededStatus(
-                            new CommitInformation()
-                                    .commit(gist.getId())
-                                    .author(getUser())
-                                    .url(gist.getUrl())
-                                    .date(gist.getCreatedAt())
-                                    .comment(info.getKey(), info.getSummary())
+            ((LocalCommitRequest)request).updateCommitSummary(
+                    CommitSummary.forSuccessfulCommit(
+                            gist.getId(),
+                            getUser(),
+                            gist.getCreatedAt(),
+                            updatedSource,
+                            gist.getUrl(),
+                            info.getKey() + ":" + info.getSummary()
                     )
             );
 
             return request;
         } catch (Throwable ex){
-            request.abort(ex.getMessage());
+            ((LocalCommitRequest)request).updateCommitSummary(
+                    CommitSummary.forFailedCommit(ex.getMessage())
+            );
+
             return request;
         }
 

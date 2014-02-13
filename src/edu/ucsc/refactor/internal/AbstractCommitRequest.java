@@ -5,7 +5,7 @@ import com.google.common.io.Files;
 import edu.ucsc.refactor.Change;
 import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.spi.CommitRequest;
-import edu.ucsc.refactor.spi.CommitStatus;
+import edu.ucsc.refactor.spi.CommitSummary;
 import edu.ucsc.refactor.internal.util.AstUtil;
 import org.eclipse.jdt.core.dom.ASTNode;
 
@@ -25,7 +25,7 @@ public abstract class AbstractCommitRequest implements CommitRequest {
     private final Queue<Delta>              load;
     private final AtomicReference<Source>   fileMatchingLastDelta;
 
-    private CommitStatus                    status;
+    protected CommitSummary                 status;
 
     /**
      * Creates a new {@link AbstractCommitRequest}
@@ -40,7 +40,7 @@ public abstract class AbstractCommitRequest implements CommitRequest {
         }
 
         this.fileMatchingLastDelta  = new AtomicReference<Source>();
-        this.status                 = CommitStatus.unknownStatus();
+        this.status                 = CommitSummary.forPendingCommit();
     }
 
 
@@ -83,7 +83,7 @@ public abstract class AbstractCommitRequest implements CommitRequest {
 
     @Override public boolean isValid() { return this.change.isValid(); }
 
-    @Override public Source getSource() {
+    public Source getSource() {
         assert this.fileMatchingLastDelta.get() != null;
 
         return this.fileMatchingLastDelta.get();
@@ -94,15 +94,10 @@ public abstract class AbstractCommitRequest implements CommitRequest {
     protected Change getChange() { return this.change; }
 
 
-    @Override public CommitStatus getStatus() { return this.status; }
+    @Override public CommitSummary getCommitSummary() { return this.status; }
 
 
     @Override public String more() { return status.more(); }
-
-
-    protected void updateStatus(CommitStatus status){
-        this.status = this.status.update(status);
-    }
 
     protected boolean updateSource(Source src){
         return this.fileMatchingLastDelta.compareAndSet(

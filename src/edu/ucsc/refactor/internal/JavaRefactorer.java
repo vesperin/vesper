@@ -55,7 +55,7 @@ public class JavaRefactorer implements Refactorer {
                 final Source before = change.getSource();
                 beforeCommit(before);
                 applied.commit();
-                final Source after = applied.getSource();
+                final Source after = applied.getCommitSummary().getSource();
                 afterCommit(change.getCause().getName(), before, applied);
                 detectIssues(after);
                 return applied;

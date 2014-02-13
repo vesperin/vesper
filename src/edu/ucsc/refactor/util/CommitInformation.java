@@ -37,8 +37,8 @@ public class CommitInformation {
     }
 
 
-    public CommitInformation comment(String key, String message){
-        return add(key, message + "\n");
+    public CommitInformation comment(String message){
+        return add("", message + "\n");
     }
 
     public CommitInformation error(String message){
