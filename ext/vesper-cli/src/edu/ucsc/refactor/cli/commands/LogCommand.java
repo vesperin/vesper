@@ -4,9 +4,13 @@ import com.google.common.base.Preconditions;
 import edu.ucsc.refactor.cli.Environment;
 import edu.ucsc.refactor.cli.Result;
 import edu.ucsc.refactor.cli.VesperCommand;
+import edu.ucsc.refactor.cli.results.CommitHistoryResult;
+import edu.ucsc.refactor.cli.results.Results;
 import edu.ucsc.refactor.util.Checkpoint;
 import edu.ucsc.refactor.util.CommitHistory;
 import io.airlift.airline.Command;
+
+import java.util.Iterator;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -17,13 +21,15 @@ public class LogCommand extends VesperCommand {
         Preconditions.checkNotNull(environment);
 
 
-        final CommitHistory entire      = environment.getCommitHistory();
-        final Result        commits     = Result.empty(Result.Content.COMMIT);
+        final CommitHistory entire  = environment.getCommitHistory();
 
-        for(Checkpoint each : entire){
-            commits.add(each.getCommitStatus());
+        if(entire.isEmpty()){
+            return Results.unit();
         }
 
-        return commits;
+        return Results.commitHistoryResult(
+                String.format("Commit history consisting of %d checkpoints:\n\t\t", entire.size()),
+                entire
+        );
     }
 }

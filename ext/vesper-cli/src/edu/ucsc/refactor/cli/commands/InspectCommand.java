@@ -7,6 +7,7 @@ import edu.ucsc.refactor.Issue;
 import edu.ucsc.refactor.cli.Environment;
 import edu.ucsc.refactor.cli.Result;
 import edu.ucsc.refactor.cli.VesperCommand;
+import edu.ucsc.refactor.cli.results.Results;
 import io.airlift.airline.Arguments;
 import io.airlift.airline.Command;
 
@@ -28,19 +29,19 @@ public class InspectCommand extends VesperCommand {
                 || "java".equals(Files.getFileExtension(name));
 
 
-        final Result result = Result.empty(Result.Content.ISSUES);
         if(environment.isSourceTracked() && inspectOrigin){
-            final List<Issue> issues = environment.getCodeRefactorer().getIssues(environment.getTrackedSource());
-            if(issues.isEmpty()){
-                return environment.unit();
+            final List<Issue> issues = environment.getIssues();
+
+            if(!issues.isEmpty()){
+                return Results.issuesResult(
+                        String.format("Found %d issues in this source:\n\t\t", issues.size()),
+                        issues
+                );
             }
 
-            for(Issue each : issues){
-                result.add(each);
-            }
         }
 
-        return result;
+        return Results.unit();
 
     }
 

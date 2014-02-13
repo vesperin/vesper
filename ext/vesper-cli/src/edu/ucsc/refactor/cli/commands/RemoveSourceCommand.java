@@ -5,6 +5,7 @@ import edu.ucsc.refactor.ChangeRequest;
 import edu.ucsc.refactor.SourceSelection;
 import edu.ucsc.refactor.cli.Environment;
 import edu.ucsc.refactor.cli.Result;
+import edu.ucsc.refactor.cli.results.Results;
 import io.airlift.airline.Command;
 
 /**
@@ -19,15 +20,15 @@ public class RemoveSourceCommand extends RemoveCommand {
         if(file){
             // ask to continue
             if (!ask("Are you sure you would like to remove the origin?", false)) {
-                return environment.unit();
+                return Results.unit();
             }
 
             environment.track(null);
 
-            return Result.infoPackage("origin was removed!\n");
+            return Results.infoResult("origin was removed!\n");
         }
 
-        return Result.infoPackage("There is nothing to remove!\n");
+        return Results.infoResult("There is nothing to remove!\n");
     }
 
     @Override protected ChangeRequest createChangeRequest(SourceSelection selection) {

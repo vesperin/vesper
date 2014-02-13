@@ -4,9 +4,8 @@ import edu.ucsc.refactor.Change;
 import edu.ucsc.refactor.Note;
 import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.spi.CommitRequest;
-import edu.ucsc.refactor.spi.CommitStatus;
+import edu.ucsc.refactor.spi.CommitSummary;
 import edu.ucsc.refactor.spi.Name;
-import edu.ucsc.refactor.util.CommitInformation;
 import edu.ucsc.refactor.util.StringUtil;
 import org.eclipse.jdt.core.dom.ASTNode;
 
@@ -35,8 +34,8 @@ public class LocalCommitRequest extends AbstractCommitRequest {
         this.timeOfCommit = new AtomicLong(Long.MIN_VALUE);
     }
 
-    @Override public CommitRequest abort(String reason) {
-        updateStatus(CommitStatus.abortedStatus(reason));
+    CommitRequest abort(String reason) {
+        updateCommitSummary(CommitSummary.forCanceledCommit(reason));
         return this;
     }
 
@@ -79,19 +78,24 @@ public class LocalCommitRequest extends AbstractCommitRequest {
 
             final Date  date  = new Date(commitTimestamp());
 
-            updateStatus(
-                    CommitStatus.succeededStatus(
-                            new CommitInformation()
-                                    .commit("(local)")
-                                    .author(username)
-                                    .date(date)
-                                    .comment(info.getKey(), info.getSummary())
+            updateCommitSummary(
+                    CommitSummary.forSuccessfulCommit(
+                            username,
+                            date,
+                            info.getKey() + ":" + info.getSummary(),
+                            updatedSource
                     )
             );
 
             return this;
         } catch (Throwable ex){
-            abort(ex.getMessage());
+
+            updateCommitSummary(
+                    CommitSummary.forFailedCommit(
+                            ex.getMessage()
+                    )
+            );
+
             LOGGER.throwing("unable to commit change", "commit()", ex);
 
             throw new RuntimeException(ex);
@@ -99,11 +103,20 @@ public class LocalCommitRequest extends AbstractCommitRequest {
 
     }
 
+
+    protected void updateCommitSummary(CommitSummary status){
+        this.status = this.status.updateSummary(status);
+    }
+
     private void tick(){
         timeOfCommit.set(System.nanoTime());
     }
 
-    @Override public long commitTimestamp() {
+    /**
+     * @return the time of commit in milliseconds,
+     *      Long.MIN_VALUE if it has not been committed.
+     */
+    public long commitTimestamp() {
         return timeOfCommit.get();
     }
 }

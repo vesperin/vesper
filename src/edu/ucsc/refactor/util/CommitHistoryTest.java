@@ -1,7 +1,7 @@
 package edu.ucsc.refactor.util;
 
 import edu.ucsc.refactor.Source;
-import edu.ucsc.refactor.spi.CommitStatus;
+import edu.ucsc.refactor.spi.CommitSummary;
 import edu.ucsc.refactor.spi.Refactoring;
 import org.junit.Before;
 import org.junit.Test;
@@ -109,7 +109,6 @@ public class CommitHistoryTest {
                before,
                after,
                System.nanoTime(),
-               CommitStatus.succeededStatus(new CommitInformation().commit("yeah"))
-       );
+               CommitSummary.forPendingCommit());
     }
 }

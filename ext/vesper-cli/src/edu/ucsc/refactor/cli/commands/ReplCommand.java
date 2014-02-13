@@ -4,6 +4,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import edu.ucsc.refactor.Credential;
 import edu.ucsc.refactor.cli.*;
+import edu.ucsc.refactor.cli.results.Results;
 import io.airlift.airline.Arguments;
 import io.airlift.airline.Command;
 import io.airlift.airline.Option;
@@ -51,14 +52,14 @@ public class ReplCommand extends VesperCommand {
             }
 
             if(runRepl(credential, environment, prompt)){
-                return Result.sourcePackage(environment.getTrackedSource());
+                return Results.infoResult(environment.getOrigin().getContents());
             }
 
         } catch (Throwable ex){
             throw new RuntimeException(ex);
         }
 
-        return environment.unit();
+        return Results.unit();
     }
 
     private static boolean runRepl(Credential credential, Environment global, boolean simplePrompt) throws IOException {
@@ -74,7 +75,7 @@ public class ReplCommand extends VesperCommand {
         Interpreter interpreter = new Interpreter();
 
         if(credential != null){
-            interpreter.getEnvironment().enableUpstream(credential);
+            interpreter.enableUpstream(credential);
         }
 
 
@@ -95,8 +96,8 @@ public class ReplCommand extends VesperCommand {
                     // bubble up changes done in REPL mode to the global
                     // environment (scope), and then clear the local
                     // environment.
-                    global.clear();
-                    global.track(interpreter.getEnvironment().getTrackedSource());
+                    global.restart();
+                    global.track(interpreter.getEnvironment().getOrigin());
                     interpreter.clears();
                     interpreter.print("quitting " + Interpreter.VERSION + " Good bye!\n");
                     return true; // exiting ivr
@@ -104,7 +105,7 @@ public class ReplCommand extends VesperCommand {
             }
 
             if (line.equals("help")) {
-                interpreter.eval("help");
+                interpreter.process("help");
                 continue;
             }
 
@@ -115,18 +116,18 @@ public class ReplCommand extends VesperCommand {
 
 
             try {
-                result = interpreter.evaluateAndReturn(line);
+                result = interpreter.processSingleExpression(line);
             } catch (ParseException ex){
                 interpreter.printError("Unknown command");
                 continue;
             }
 
-            if("log".equals(line) && result.isCommit()){
-                interpreter.printResult(result);
+            if("log".equals(line)){
+                interpreter.eval(result);
                 continue;
             }
 
-            interpreter.printResult(result);
+            interpreter.eval(result);
         }
 
     }

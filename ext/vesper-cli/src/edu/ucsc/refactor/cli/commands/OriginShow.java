@@ -4,6 +4,7 @@ import com.google.common.base.Objects;
 import edu.ucsc.refactor.cli.Environment;
 import edu.ucsc.refactor.cli.Result;
 import edu.ucsc.refactor.cli.VesperCommand;
+import edu.ucsc.refactor.cli.results.Results;
 import io.airlift.airline.Command;
 
 /**
@@ -15,10 +16,13 @@ public class OriginShow extends VesperCommand {
         ensureValidState(environment);
 
         if(!environment.isSourceTracked()){
-            return environment.unit();
+            return Results.unit();
         }
 
-        return Result.sourcePackage(environment.getTrackedSource());
+        return Results.sourceResult(
+                String.format("Found %s source", environment.getOrigin().getName()),
+                environment.getOrigin()
+        );
     }
 
     @Override public String toString() {

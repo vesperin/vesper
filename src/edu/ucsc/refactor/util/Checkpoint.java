@@ -4,7 +4,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.spi.CommitRequest;
-import edu.ucsc.refactor.spi.CommitStatus;
+import edu.ucsc.refactor.spi.CommitSummary;
 import edu.ucsc.refactor.spi.Name;
 
 /**
@@ -15,7 +15,7 @@ public class Checkpoint implements Comparable <Checkpoint> {
     private final Source        before;
     private final Source        after;
     private final long          timeStamp;
-    private final CommitStatus  status;
+    private final CommitSummary status;
 
 
     /**
@@ -28,9 +28,9 @@ public class Checkpoint implements Comparable <Checkpoint> {
     private Checkpoint(Name name, Source before, CommitRequest applied){
         this.name       = Preconditions.checkNotNull(name);
         this.before     = Preconditions.checkNotNull(before);
-        this.after      = Preconditions.checkNotNull(applied.getSource());
-        this.timeStamp  = Preconditions.checkNotNull(applied.commitTimestamp());
-        this.status     = Preconditions.checkNotNull(applied.getStatus());
+        this.after      = Preconditions.checkNotNull(applied.getCommitSummary().getSource());
+        this.timeStamp  = Preconditions.checkNotNull(applied.getCommitSummary().getCommittedAt().getTime());
+        this.status     = Preconditions.checkNotNull(applied.getCommitSummary());
     }
 
     /**
@@ -42,7 +42,7 @@ public class Checkpoint implements Comparable <Checkpoint> {
      * @param timeStamp  The commit timestamp
      * @param status  The commit status.
      */
-    Checkpoint(Name name, Source before, Source after, long timeStamp, CommitStatus status){
+    Checkpoint(Name name, Source before, Source after, long timeStamp, CommitSummary status){
         this.name       = Preconditions.checkNotNull(name);
         this.before     = Preconditions.checkNotNull(before);
         this.after      = Preconditions.checkNotNull(after);
@@ -99,7 +99,7 @@ public class Checkpoint implements Comparable <Checkpoint> {
         comparison = this.getNameOfChange().getKey().compareTo(that.getNameOfChange().getKey());
         if (comparison != EQUAL) return comparison;
 
-        comparison = this.getCommitStatus().compareTo(that.getCommitStatus());
+        comparison = this.getCommitSummary().compareTo(that.getCommitSummary());
         if (comparison != EQUAL) return comparison;
 
         //all comparisons have yielded equality
@@ -145,7 +145,7 @@ public class Checkpoint implements Comparable <Checkpoint> {
     /**
      * @return The commit status
      */
-    public CommitStatus getCommitStatus(){
+    public CommitSummary getCommitSummary(){
         return status;
     }
 
@@ -180,7 +180,7 @@ public class Checkpoint implements Comparable <Checkpoint> {
                 .add("Before", getSourceBeforeChange())
                 .add("After", getSourceAfterChange())
                 .add("when", getTimestamp())
-                .add("isCommitted", getCommitStatus().isCommitted())
+                .add("isCommitted", getCommitSummary().isSuccess())
                 .toString();
     }
 }

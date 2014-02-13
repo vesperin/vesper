@@ -4,10 +4,10 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
-import edu.ucsc.refactor.Change;
 import edu.ucsc.refactor.ChangeRequest;
 import edu.ucsc.refactor.SourceSelection;
 import edu.ucsc.refactor.Vesper;
+import edu.ucsc.refactor.cli.results.Results;
 import edu.ucsc.refactor.spi.CommitRequest;
 import io.airlift.airline.Inject;
 
@@ -42,11 +42,11 @@ public abstract class VesperCommand {
             if(globalOptions.verbose){
                 throw new RuntimeException(ex);
             } else {
-                return Result.failedPackage(firstNonNull(ex.getMessage(), "Unknown error"));
+                return Results.errorResult(firstNonNull(ex.getMessage(), "Unknown error"));
             }
         }
 
-        return firstNonNull(result, environment.unit());
+        return firstNonNull(result, Results.unit());
     }
 
 
@@ -57,26 +57,24 @@ public abstract class VesperCommand {
     }
 
     protected CommitRequest commitChange(Environment environment, ChangeRequest request){
-        final Change        change  = environment.getCodeRefactorer().createChange(request);
-        final CommitRequest applied = environment.getCodeRefactorer().apply(change);
-        if(applied != null){
-            environment.update(applied.getSource());
-            environment.collect(applied);
-        } else {
-            environment.addError(change.getErrors());
-        }
-        return applied;
+        return environment.perform(request);
     }
 
     protected static void ensureValidState(Environment environment){
         Preconditions.checkNotNull(environment, "No environment available");
-        Preconditions.checkNotNull(environment.getTrackedSource(), "No source code available");
+        Preconditions.checkNotNull(environment.getOrigin(), "No source code available");
         Preconditions.checkNotNull(environment.getCodeRefactorer(), "No refactorer available");
     }
 
 
     protected Result createResultPackage(CommitRequest applied){
-        return globalOptions.verbose ? Result.committedPackage(applied.getStatus()) : Result.unit();
+        return (globalOptions.verbose
+                ? Results.commitSummaryInfo(
+                    "commit summary for " + applied.getCommitSummary().getMessage(),
+                    applied.getCommitSummary()
+                  )
+                : Results.unit()
+        );
     }
 
     protected SourceSelection createSelection(Environment environment, String head){
@@ -85,7 +83,7 @@ public abstract class VesperCommand {
         final int start = Integer.valueOf(rangeSplit.iterator().next());
         final int end   = Integer.valueOf(Iterables.getLast(rangeSplit));
 
-        return new SourceSelection(environment.getTrackedSource(), start, end);
+        return new SourceSelection(environment.getOrigin(), start, end);
     }
 
 

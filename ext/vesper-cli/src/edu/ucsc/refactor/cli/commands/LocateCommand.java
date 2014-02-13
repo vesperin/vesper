@@ -6,11 +6,10 @@ import edu.ucsc.refactor.NamedLocation;
 import edu.ucsc.refactor.cli.Environment;
 import edu.ucsc.refactor.cli.Result;
 import edu.ucsc.refactor.cli.VesperCommand;
+import edu.ucsc.refactor.cli.results.Results;
 import edu.ucsc.refactor.spi.ProgramUnit;
-import edu.ucsc.refactor.spi.UnitLocator;
 import io.airlift.airline.Arguments;
 
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -27,29 +26,16 @@ public abstract class LocateCommand extends VesperCommand {
         Preconditions.checkArgument(patterns.size() == 1);
 
         final String        name    = patterns.get(0);
-        final UnitLocator   locator = environment.getCodeLocator();
 
-        final List<NamedLocation>    locations   = locator.locate(programUnit(name));
-        final StringBuilder     message     = new StringBuilder();
-
-        final Iterator<NamedLocation> itr = locations.iterator();
-        message.append("at").append("(");
-
-        while(itr.hasNext()){
-            final NamedLocation each = itr.next();
-            message.append("[");
-            message.append(each.getStart().getOffset())
-                    .append(",").append(each.getEnd().getOffset())
-                    .append(",").append(each.getName());
-            message.append("]");
-            if(itr.hasNext()){
-                message.append(", ");
-            }
+        final List<NamedLocation>       locations   = environment.lookup(programUnit(name));
+        if(locations.isEmpty()){
+            return Results.unit();
         }
 
-        message.append(")");
-
-        return Result.infoPackage(message.toString());
+        return Results.locationsResult(
+                String.format("Found %d locations in this source:\n\t\t", locations.size()),
+                locations
+        );
     }
 
     protected abstract ProgramUnit programUnit(String name);

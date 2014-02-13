@@ -76,7 +76,7 @@ public class VesperTest {
         assertNotNull(applied);
 
         final CommitRequest published = refactorer.publish(applied);
-        assertEquals(published.getStatus(), applied.getStatus());
+        assertEquals(published.getCommitSummary(), applied.getCommitSummary());
 
         final CommitRequest anotherPublished = refactorer.publish(
                 applied,

@@ -7,6 +7,7 @@ import edu.ucsc.refactor.SourceSelection;
 import edu.ucsc.refactor.cli.Environment;
 import edu.ucsc.refactor.cli.Result;
 import edu.ucsc.refactor.cli.VesperCommand;
+import edu.ucsc.refactor.cli.results.Results;
 import edu.ucsc.refactor.spi.CommitRequest;
 import io.airlift.airline.Arguments;
 
@@ -36,8 +37,8 @@ public abstract class RenameCommand extends VesperCommand {
         final ChangeRequest request   = createChangeRequest(selection, tail);
         final CommitRequest applied   = commitChange(environment, request);
 
-        if(environment.hasLoggedError()){
-            return Result.failedPackage(environment.getErrorMessage());
+        if(environment.isErrorFree()){
+            return Results.errorResult(environment.getErrorMessage());
         }
 
         return createResultPackage(

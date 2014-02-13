@@ -5,6 +5,7 @@ import edu.ucsc.refactor.Issue;
 import edu.ucsc.refactor.cli.Environment;
 import edu.ucsc.refactor.cli.Result;
 import edu.ucsc.refactor.cli.VesperCommand;
+import edu.ucsc.refactor.cli.results.Results;
 import edu.ucsc.refactor.spi.Names;
 import edu.ucsc.refactor.spi.Refactoring;
 import edu.ucsc.refactor.spi.Smell;
@@ -20,9 +21,9 @@ public class DeduplicateCommand extends VesperCommand {
     @Override public Result execute(Environment environment) throws Exception {
         ensureValidState(environment);
 
-        final List<Issue> issues = environment.getCodeRefactorer().getIssues(environment.getTrackedSource());
+        final List<Issue> issues = environment.getIssues();
         if(issues.isEmpty()){
-            return environment.unit();
+            return Results.unit();
         }
 
         for(Issue each : issues){
@@ -34,10 +35,10 @@ public class DeduplicateCommand extends VesperCommand {
             }
         }
 
-        if(environment.hasLoggedError()){
-            return Result.failedPackage(environment.getErrorMessage());
+        if(environment.isErrorFree()){
+            return Results.errorResult(environment.getErrorMessage());
         }
 
-        return environment.unit();
+        return Results.unit();
     }
 }
