@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class Interpreter {
 
-    public  static final String       VERSION = "Vesper v0.0.0";
+    public  static final String       VERSION = "Vesper v0.2";
 
     final Environment                 environment;
     final AtomicReference<Credential> credential;
