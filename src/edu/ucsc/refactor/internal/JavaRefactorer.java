@@ -314,7 +314,7 @@ public class JavaRefactorer implements Refactorer {
                 "this refactorer is not setup yet for remote publishing"
         );
 
-        final Repository remote = new UpstreamRepository(this.host.getStorageKey());
+        final Repository remote = new Upstream(this.host.getStorageKey());
 
         return publish(Preconditions.checkNotNull(localCommit), remote);
     }

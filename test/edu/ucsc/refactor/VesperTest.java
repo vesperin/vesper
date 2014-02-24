@@ -1,7 +1,7 @@
 package edu.ucsc.refactor;
 
 import edu.ucsc.refactor.internal.HostImpl;
-import edu.ucsc.refactor.internal.UpstreamRepository;
+import edu.ucsc.refactor.internal.Upstream;
 import edu.ucsc.refactor.util.Commit;
 import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.Gist;
@@ -80,7 +80,7 @@ public class VesperTest {
 
         final Commit anotherPublished = refactorer.publish(
                 applied,
-                new UpstreamRepository(new Credential("lala", "lala"), new LocalGistService())
+                new Upstream(new Credential("lala", "lala"), new LocalGistService())
         );
 
         assertNotNull(anotherPublished);

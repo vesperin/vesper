@@ -23,7 +23,7 @@ import java.util.Map;
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public class UpstreamRepository implements Repository {
+public class Upstream implements Repository {
     private final Credential    credential;
     private final GistService   service;
 
@@ -33,17 +33,17 @@ public class UpstreamRepository implements Repository {
      *
      * @param credential Authentication information.
      */
-    public UpstreamRepository(Credential credential){
+    public Upstream(Credential credential){
         this(credential, new GistService());
     }
 
     /**
-     * Construct a new UpstreamRepository
+     * Construct a new Upstream
      *
      * @param credential The storage service key
      * @param service The GistService object
      */
-    public UpstreamRepository(Credential credential, GistService service){
+    public Upstream(Credential credential, GistService service){
 
         if(credential != null && "None".equals(credential.getUsername())){
             service.getClient().setCredentials(credential.getUsername(), credential.getPassword());
