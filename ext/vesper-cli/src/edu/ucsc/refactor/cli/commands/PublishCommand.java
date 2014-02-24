@@ -6,8 +6,9 @@ import edu.ucsc.refactor.cli.Result;
 import edu.ucsc.refactor.cli.VesperCommand;
 import edu.ucsc.refactor.cli.results.Results;
 import edu.ucsc.refactor.util.Commit;
-import edu.ucsc.refactor.util.CommitHistory;
 import io.airlift.airline.Command;
+
+import java.util.List;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -17,20 +18,32 @@ public class PublishCommand extends VesperCommand {
     @Override public Result execute(Environment environment) throws RuntimeException {
         ensureValidState(environment);
 
-        final StringBuilder details = new StringBuilder();
-        final CommitHistory current = environment.getCommitHistory();
-        for(Commit eachCommit : current){ // in order
-            final Commit pushed = environment.publish(eachCommit);
+        final StringBuilder     details     = new StringBuilder();
 
-            if(pushed.isValidCommit()){
-                environment.forgetCommit(pushed);
-                details.append(pushed.getCommitSummary().more());
-                if(!environment.getCommitHistory().isEmpty()){
-                    details.append("\n");
+        try {
+            final List<Commit>    toReview  = environment.publishCommitHistory();
+
+            for(Commit eachCommit : toReview){ // in order
+
+                if(eachCommit.isValidCommit()){
+                    environment.forgetCommit(eachCommit);
+                    details.append(eachCommit.getCommitSummary().more());
+                    if(!environment.getCommitHistory().isEmpty()){
+                        details.append("\n");
+                    }
                 }
             }
-        }
 
+
+            return createAppropriateResult(environment, details);
+
+        } catch (Throwable ex){
+            return Results.errorResult(ex.getMessage());
+        }
+    }
+
+
+    private Result createAppropriateResult(Environment environment, StringBuilder details){
 
         if(environment.getCommitHistory().isEmpty()){
             return Results.infoResult(
@@ -45,6 +58,7 @@ public class PublishCommand extends VesperCommand {
             );
         }
     }
+
 
     @Override public String toString() {
         return Objects.toStringHelper("PublishCommand")

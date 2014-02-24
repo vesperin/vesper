@@ -3,21 +3,33 @@ package edu.ucsc.refactor;
 import edu.ucsc.refactor.spi.Repository;
 import edu.ucsc.refactor.util.Commit;
 
+import java.util.List;
+
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public interface CommitPublisher {
     /**
-     * Publishes local changes, wrapped in a local commit, to a remote upstream.
+     * Publishes all local commits using a default repository; a repository setup in
+     * advanced.
      *
-     * @param localCommit The local commit
-     * @return The commit with updated status. This status contains
-     *      info related to the publishing of this commit to a remote repository.
-     * @throws java.lang.NullPointerException if {@code Commit} null.
-     * @throws java.lang.IllegalArgumentException if {@code Vesper} lacks of the right
-     *      credentials (!= null) to publish a local commit to a remote repository.
+     * @return The list of commits to be deleted.
+     * @throws java.lang.NullPointerException if {@code repository} is null.
+     * @throws java.lang.IllegalStateException if no remote access; e.g., {@code credentials}
+     *      has been provided.
      */
-    Commit publish(Commit localCommit);
+    List<Commit> publish();
+
+    /**
+     * Publishes local changes, wrapped in a locally committed request, to a remote upstream
+     * and the return tue request with an updated status.
+     *
+     * @return The list of commits to be deleted.
+     * @throws java.lang.NullPointerException if {@code repository} is null.
+     * @throws java.lang.IllegalStateException if no remote access; e.g., {@code credentials}
+     *      has been provided.
+     */
+    List<Commit> publish(Repository to);
 
     /**
      * Publishes local changes, wrapped in a locally committed request, to a remote upstream

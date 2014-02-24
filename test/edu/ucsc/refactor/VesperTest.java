@@ -75,12 +75,24 @@ public class VesperTest {
         final Commit applied = refactorer.apply(first);
         assertNotNull(applied);
 
-        final Commit published = refactorer.publish(applied);
+        final CommitPublisher publisher = refactorer.getCommitPublisher(src);
+
+        final Commit published = publisher.publish(
+                applied,
+                new Upstream(
+                        new Credential("lala", "lala"),
+                        new LocalGistService()
+                )
+        );
+
         assertEquals(published.getCommitSummary(), applied.getCommitSummary());
 
-        final Commit anotherPublished = refactorer.publish(
+        final Commit anotherPublished = publisher.publish(
                 applied,
-                new Upstream(new Credential("lala", "lala"), new LocalGistService())
+                new Upstream(
+                        new Credential("lala", "lala"),
+                        new LocalGistService()
+                )
         );
 
         assertNotNull(anotherPublished);

@@ -108,6 +108,14 @@ public class Environment {
         }
     }
 
+    /**
+     * @return The list of pushed commits. These commits can now be
+     * flushed out of the {@code Refactorer}'s commit history
+     */
+    public List<Commit> publishCommitHistory(){
+        return getCommitPublisher().publish();
+    }
+
 
     /**
      * Perform a ChangeRequest and then returns the committed request.
@@ -146,9 +154,10 @@ public class Environment {
     }
 
     /**
+     * Deletes a commit from a commit history.
      *
-     * @param commit
-     * @return
+     * @param commit The commit to be deleted.
+     * @return {@code true} if commit was deleted, {@code false} otherwise.
      */
     public boolean forgetCommit(Commit commit) {
         return getCodeRefactorer().getCommitHistory(getOrigin()).delete(commit);
@@ -181,13 +190,10 @@ public class Environment {
     }
 
     /**
-     * Publishes a commit request.
-     *
-     * @param commit The commit request to be published to a remote upstream.
-     * @return The updated commit summary.
+     * @return The Commit Publisher
      */
-    public Commit publish(Commit commit){
-        return getCodeRefactorer().publish(commit);
+    public CommitPublisher getCommitPublisher() {
+        return getCodeRefactorer().getCommitPublisher(getOrigin());
     }
 
 

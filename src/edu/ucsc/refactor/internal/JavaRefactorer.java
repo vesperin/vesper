@@ -2,6 +2,7 @@ package edu.ucsc.refactor.internal;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.spi.*;
@@ -308,22 +309,14 @@ public class JavaRefactorer implements Refactorer {
         return new ProgramUnitLocator(getValidContexts().get(readSource));
     }
 
-    @Override public Commit publish(Commit localCommit){
-        Preconditions.checkState(
-                this.host.isRemoteUpstreamEnabled(),
-                "this refactorer is not setup yet for remote publishing"
-        );
-
-        final Repository remote = new Upstream(this.host.getStorageKey());
-
-        return publish(Preconditions.checkNotNull(localCommit), remote);
-    }
-
-    @Override public Commit publish(Commit request, Repository upstream) {
-        return Preconditions.checkNotNull(upstream).push(
-                Preconditions.checkNotNull(request)
+    @Override public CommitPublisher getCommitPublisher(Source src) {
+        return new CommitHistoryPublisher(
+                getCommitHistory(src),
+                this.host.getStorageKey(),
+                this.host.isRemoteUpstreamEnabled()
         );
     }
+
 
     @Override public List<Change> recommendChanges(Source code) {
         final List<Change> recommendations = new ArrayList<Change>();
@@ -423,7 +416,7 @@ public class JavaRefactorer implements Refactorer {
     }
 
     /**
-     * Helper class that allow {@code Refactorer} to change a given {@code Source}s
+     * Helper class that allows the {@code Refactorer} to change a given {@code Source}s
      * because of found {@code Issue}s or triggered {@code SingleEdit}s.
      */
     static class SourceChanging {
@@ -480,6 +473,53 @@ public class JavaRefactorer implements Refactorer {
          */
         List<SourceChanger> getChangers() {
             return changers;
+        }
+    }
+
+    /**
+     * Helper class used to publish all the commits that belong to a given
+     * {@code CommitHistory}
+     */
+    static class CommitHistoryPublisher implements CommitPublisher {
+        final CommitHistory history;
+        final Credential    credential;
+        final boolean       isRemotePublishingEnabled;
+
+        CommitHistoryPublisher(CommitHistory history, Credential credential, boolean isRemotePublishingEnabled){
+            this.history                    = history;
+            this.credential                 = credential;
+            this.isRemotePublishingEnabled  = isRemotePublishingEnabled;
+        }
+
+        @Override public List<Commit> publish() {
+            return publish(new Upstream(credential));
+        }
+
+        @Override public List<Commit> publish(Repository to) {
+
+            Preconditions.checkState(
+                    isRemotePublishingEnabled,
+                    "this refactorer is not setup yet for remote publishing"
+            );
+
+            final List<Commit> commitsToDelete = Lists.newArrayList();
+            for(Commit eachCommit : history){ // in order
+
+                final Commit pushed = publish(eachCommit, to);
+
+                if(pushed.isValidCommit()){
+                    commitsToDelete.add(pushed);
+                }
+            }
+
+            return commitsToDelete;
+        }
+
+
+        @Override public Commit publish(Commit request, Repository upstream) {
+            return Preconditions.checkNotNull(upstream).push(
+                    Preconditions.checkNotNull(request)
+            );
         }
     }
 }
