@@ -1,11 +1,13 @@
 package edu.ucsc.refactor;
 
+import com.google.common.collect.Lists;
 import edu.ucsc.refactor.internal.HostImpl;
 import edu.ucsc.refactor.internal.Upstream;
 import edu.ucsc.refactor.util.Commit;
 import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.Gist;
 import org.eclipse.egit.github.core.GistFile;
+import org.eclipse.egit.github.core.GistRevision;
 import org.eclipse.egit.github.core.service.GistService;
 import org.junit.Test;
 
@@ -128,6 +130,8 @@ public class VesperTest {
             gist.setFiles(Collections.singletonMap("Name.java", file));
             gist.setCreatedAt(new Date());
             gist.setUrl("http://gist.github.com/lala/123456");
+            final List<GistRevision> history = Lists.newArrayList(new GistRevision().setVersion("19C"));
+            gist.setHistory(history);
             return gist;
         }
 

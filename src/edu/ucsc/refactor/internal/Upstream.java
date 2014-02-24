@@ -1,6 +1,10 @@
 package edu.ucsc.refactor.internal;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import edu.ucsc.refactor.Credential;
 import edu.ucsc.refactor.Note;
 import edu.ucsc.refactor.Source;
@@ -9,21 +13,28 @@ import edu.ucsc.refactor.spi.Name;
 import edu.ucsc.refactor.spi.Repository;
 import edu.ucsc.refactor.util.Commit;
 import edu.ucsc.refactor.util.Notes;
+import edu.ucsc.refactor.util.SourceHistory;
 import edu.ucsc.refactor.util.StringUtil;
 import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.Gist;
 import org.eclipse.egit.github.core.GistFile;
+import org.eclipse.egit.github.core.GistRevision;
 import org.eclipse.egit.github.core.service.GistService;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
+import java.util.logging.Logger;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public class Upstream implements Repository {
+    private static final Logger LOGGER = Logger.getLogger(Upstream.class.getName());
+
     private final Credential    credential;
     private final GistService   service;
 
@@ -89,6 +100,69 @@ public class Upstream implements Repository {
         }
 
         return commit;
+    }
+
+    @Override public SourceHistory pull(String thatHistory) {
+        try {
+            Preconditions.checkArgument(!StringUtil.isStringEmpty(thatHistory), "invalid source id");
+
+            final Gist gist = service.getGist(thatHistory);
+            final List<GistRevision> revisions = gist.getHistory();
+
+            final SourceHistory history = new SourceHistory();
+
+            for(GistRevision revision : revisions){
+                addSourceFromUrl(history, thatHistory, revision.getVersion(), revision.getUrl());
+            }
+
+
+            return history;
+
+        } catch (Throwable ex){
+            LOGGER.throwing("Unable to pull history", "pull()", ex);
+            return new SourceHistory();
+        }
+    }
+
+
+    // Read from a URL and return the content in a String
+    public static void addSourceFromUrl(SourceHistory history, String sourceId, String version, String urlString) throws IOException {
+        String jsonContent = readUrlContent(urlString);
+
+        final JsonElement jsonElement           = new JsonParser().parse(jsonContent);
+        final JsonObject  elementAsJsonObject   = jsonElement.getAsJsonObject();
+        final JsonObject  fileObject            = elementAsJsonObject.get("files").getAsJsonObject();
+
+        for(Map.Entry<String, JsonElement> each : fileObject.entrySet()){
+
+            final String     fileName   = each.getKey();
+            final JsonObject eachFile   = fileObject.get(fileName).getAsJsonObject();
+
+            if(eachFile.has("content")){
+                // todo(Huascar) there must be some process that will finish the updating of
+                // these retrieved sources (e.g., adding their comments.
+                final Source src = new Source(fileName, eachFile.get("content").getAsString());
+                src.setId(sourceId);
+                src.setVersion(version);
+                history.add(src);
+            }
+        }
+    }
+
+
+    private static String readUrlContent(String urlString) throws IOException {
+        final URL     url  = new URL(urlString);
+        final Scanner scan = new Scanner(url.openStream());
+
+        String content = "";
+
+        while (scan.hasNext()){
+            content += scan.nextLine();
+        }
+
+        scan.close();
+
+        return content;
     }
 
     private static void sync(Source src, Gist gist) throws IOException {
@@ -192,8 +266,12 @@ public class Upstream implements Repository {
                         service.createComment(result.getId(), eachNote.getContent());
                     }
 
+                    this.code.setVersion(Iterables.get(result.getHistory(), 0).getVersion());
+
                 } else {
                     if(isDirty(this, remote)){
+
+                        // anything below is about creating revisions to file
 
                         for(String each : remote.getFiles().keySet()){ // ONLY one file
                             remote.getFiles().get(each).setContent(content);
@@ -212,6 +290,8 @@ public class Upstream implements Repository {
                         for(Note eachNote : newNotes){
                             service.createComment(result.getId(), eachNote.getContent());
                         }
+
+                        this.code.setVersion(Iterables.getLast(result.getHistory()).getVersion());
                     }
                 }
             } catch (Throwable ex){

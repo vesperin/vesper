@@ -23,6 +23,7 @@ public class Source {
     private final AtomicReference<String> name;
     private final AtomicReference<String> id;
 
+    private final AtomicReference<String> version;
     private final AtomicReference<String> signature;
 
     /**
@@ -53,6 +54,7 @@ public class Source {
         this.id          = new AtomicReference<String>();
         this.notes       = new Notes();
         this.signature   = new AtomicReference<String>();
+        this.version     = new AtomicReference<String>();
     }
 
     /**
@@ -179,6 +181,13 @@ public class Source {
      */
     public String getUniqueSignature(){ return this.signature.get(); }
 
+    /**
+     * @return The Source version.
+     */
+    public String getVersion(){
+        return version.get();
+    }
+
 
     @Override public int hashCode() {
         return Objects.hashCode(getName(), getContents());
@@ -224,6 +233,15 @@ public class Source {
      */
     public boolean setSignature(String signature){
         return this.signature.compareAndSet(this.signature.get(), signature);
+    }
+
+    /**
+     *
+     * @param version
+     * @return
+     */
+    public boolean setVersion(String version){
+        return this.version.compareAndSet(this.version.get(), version);
     }
 
     @Override public String toString() {

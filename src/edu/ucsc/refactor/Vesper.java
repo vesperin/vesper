@@ -1,7 +1,9 @@
 package edu.ucsc.refactor;
 
 import edu.ucsc.refactor.internal.HostImpl;
+import edu.ucsc.refactor.internal.InternalCommitHistoryFetcherCreator;
 import edu.ucsc.refactor.internal.InternalRefactorerCreator;
+import edu.ucsc.refactor.spi.Repository;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -71,7 +73,18 @@ import java.util.List;
  *     final CommitRequest published = refactorer.publish(applied);
  *     System.out.println(published.more());
  *
- *     // IV. More?
+ *     // IV. Retrieving the CommitHistory of a Source (previously curated)
+ *
+ *     final SourceHistoryFetcher fetcher = Vesper.createSourceHistoryFetcher(new Upstream(...), "123456");
+ *
+ *     final SourceHistory history = fetcher.fetchSourceHistory();
+ *
+ *     // iterating over the history is a just a matter of a simple for-each loop
+ *     for(Source eachSrc : history){
+ *         System.out.println(eachSrc.getName());
+ *     }
+ *
+ *     // V. More?
  *
  *     // see {@code Refactorer}'s API for more details.
  *
@@ -87,6 +100,19 @@ public final class Vesper {
      * Private constructor to prevent instantiation.
      */
     private Vesper(){}
+
+    /**
+     * Creates a commit history fetcher for the given repository and source id.
+     *
+     * @param repository The remote repository.
+     * @param sourceId   The {@code Source}'s id.
+     * @return a new SourceHistoryFetcher.
+     */
+    public static SourceHistoryFetcher createSourceHistoryFetcher(Repository repository, String sourceId){
+        return new InternalCommitHistoryFetcherCreator(repository)
+                .addSourceId(sourceId)
+                .build();
+    }
 
     /**
      * Creates a refactorer for the given set of sources.
