@@ -5,7 +5,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.spi.*;
-import edu.ucsc.refactor.util.Checkpoint;
+import edu.ucsc.refactor.util.Commit;
 import edu.ucsc.refactor.util.CommitHistory;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
@@ -43,7 +43,7 @@ public class JavaRefactorer implements Refactorer {
         this.timeline   = Maps.newHashMap();
     }
 
-    @Override public CommitRequest apply(Change change) {
+    @Override public Commit apply(Change change) {
         Preconditions.checkNotNull(change, "apply() method has received a null change" );
 
         final CommitRequest applied = change.perform();
@@ -52,13 +52,9 @@ public class JavaRefactorer implements Refactorer {
 
         if(applied.isValid()){
             try {
-                final Source before = change.getSource();
-                beforeCommit(before);
-                applied.commit();
-                final Source after = applied.getCommitSummary().getSource();
-                afterCommit(change.getCause().getName(), before, applied);
-                detectIssues(after);
-                return applied;
+                final Commit commit = applied.commit();
+                detectIssues(onAppliedCommit(commit));
+                return commit;
             } catch (RuntimeException ex){
                 LOGGER.throwing("Unable to commit change", "apply()", ex);
                 return null; // nothing was committed
@@ -69,28 +65,34 @@ public class JavaRefactorer implements Refactorer {
     }
 
 
-    private void beforeCommit(Source before){
+    private Source onAppliedCommit(Commit commit){
+        createCommitHistory(commit);
+        populateCommitHistory(commit);
+        return commit.getSourceAfterChange();
+    }
+
+
+    private void createCommitHistory(Commit commit){
+        final Source before = commit.getSourceBeforeChange();
         if(!timeline.containsKey(before.getUniqueSignature())){  // the signature should have been generated during compilation.
             this.timeline.put(before.getUniqueSignature(), new CommitHistory());
         }
     }
 
 
-    private void afterCommit(Name name, Source before, CommitRequest applied){
-        final Checkpoint checkpoint = Checkpoint.createCheckpoint(name, before, applied);
-
+    private void populateCommitHistory(Commit commit){
         // clear current issue registry for source
-        getIssueRegistry().remove(checkpoint.getSourceBeforeChange());
-        getValidContexts().remove(checkpoint.getSourceBeforeChange());
+        getIssueRegistry().remove(commit.getSourceBeforeChange());
+        getValidContexts().remove(commit.getSourceBeforeChange());
 
-        final String key = checkpoint.getUniqueSignature();
+        final String key = commit.getUniqueSignature();
 
         Preconditions.checkState(
                 timeline.containsKey(key),
                 "At this point the Source unique signature should have been recorded."
         );
 
-        timeline.get(key).add(checkpoint);
+        timeline.get(key).add(commit);
     }
 
     @Override public Change createChange(ChangeRequest request) {
@@ -155,8 +157,8 @@ public class JavaRefactorer implements Refactorer {
 
         if(entire.isEmpty()) { return source; }
 
-        final Checkpoint    first  = entire.first();
-        final Checkpoint    last   = entire.last();
+        final Commit first  = entire.first();
+        final Commit last   = entire.last();
 
 
         if(first.getSourceBeforeChange().equals(from)) { // base case
@@ -170,7 +172,7 @@ public class JavaRefactorer implements Refactorer {
 
         final CommitHistory sandwiched = entire.slice(first, false, last, false);
 
-        for(Checkpoint each : sandwiched){
+        for(Commit each : sandwiched){
 
             if(each.getSourceAfterChange().equals(from)){
                 final CommitHistory sliced = entire.slice(each);
@@ -209,7 +211,7 @@ public class JavaRefactorer implements Refactorer {
     @Override public Source advance(Source current) {
         final CommitHistory history = getCommitHistory(current);
 
-        for(Checkpoint each : history){
+        for(Commit each : history){
             if(each.getSourceBeforeChange().equals(current)){
                 return each.getSourceAfterChange();
             }
@@ -222,7 +224,7 @@ public class JavaRefactorer implements Refactorer {
     @Override public Source regress(Source current) {
         final CommitHistory history = getCommitHistory(current);
 
-        for(Checkpoint each : history){
+        for(Commit each : history){
             if(each.getSourceAfterChange().equals(current)){
                 return each.getSourceBeforeChange();
             }
@@ -306,20 +308,19 @@ public class JavaRefactorer implements Refactorer {
         return new ProgramUnitLocator(getValidContexts().get(readSource));
     }
 
-    @Override public CommitRequest publish(CommitRequest localCommit){
-        final Upstream upstream = (this.host.isRemoteUpstreamEnabled()
-                ? new RemoteRepository(this.host.getStorageKey())
-                : new LocalRepository(this.host.getStorageKey())
+    @Override public Commit publish(Commit localCommit){
+        Preconditions.checkState(
+                this.host.isRemoteUpstreamEnabled(),
+                "this refactorer is not setup yet for remote publishing"
         );
 
-        return publish(
-                Preconditions.checkNotNull(localCommit),
-                upstream
-        );
+        final Repository remote = new UpstreamRepository(this.host.getStorageKey());
+
+        return publish(Preconditions.checkNotNull(localCommit), remote);
     }
 
-    @Override public CommitRequest publish(CommitRequest request, Upstream upstream) {
-        return Preconditions.checkNotNull(upstream).publish(
+    @Override public Commit publish(Commit request, Repository upstream) {
+        return Preconditions.checkNotNull(upstream).push(
                 Preconditions.checkNotNull(request)
         );
     }

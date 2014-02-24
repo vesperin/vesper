@@ -18,7 +18,7 @@ public class Source {
 
     private final String        contents;
     private final String        description;
-    private final Notes notes;
+    private final Notes         notes;
 
     private final AtomicReference<String> name;
     private final AtomicReference<String> id;
@@ -53,6 +53,32 @@ public class Source {
         this.id          = new AtomicReference<String>();
         this.notes       = new Notes();
         this.signature   = new AtomicReference<String>();
+    }
+
+    /**
+     * Creates a copy of {@code Source} from a seed {@code Source}
+     * and some new content.
+     *
+     * @param seed The seed {@code Source}
+     * @param newContent The new {@code Source}'s content.
+     * @return The {@code Source}
+     */
+    public static Source from(Source seed, String newContent){
+        final Source  copy  = new Source(
+                seed.getName(),
+                newContent,
+                seed.getDescription()
+        );
+
+        copy.setId(seed.getId());
+        copy.setSignature(seed.getUniqueSignature());
+
+        for(Note each : seed.getNotes()){
+            copy.addNote(each);
+        }
+
+
+        return copy;
     }
 
     /**

@@ -1,8 +1,8 @@
 package edu.ucsc.refactor;
 
-import edu.ucsc.refactor.spi.CommitRequest;
+import edu.ucsc.refactor.spi.Repository;
 import edu.ucsc.refactor.spi.UnitLocator;
-import edu.ucsc.refactor.spi.Upstream;
+import edu.ucsc.refactor.util.Commit;
 import edu.ucsc.refactor.util.CommitHistory;
 
 import java.util.List;
@@ -24,7 +24,7 @@ public interface Refactorer {
     Source advance(Source current);
 
     /**
-     * Applies a code change to a {@code Source} and then returns a {@link CommitRequest}, which
+     * Applies a code change to a {@code Source} and then returns a {@link Commit}, which
      * represents a set of applied changes, or "deltas", from one version of the {@code Source} to
      * the next.
      *
@@ -39,12 +39,13 @@ public interface Refactorer {
      * invoke the {@link Refactorer#getIssues(Source)} method.
      * </p>
      *
+     *
      * @param change The change to be applied
-     * @return The committed request, null if the {@link CommitRequest} could not
-     *      be committed.
+     * @return The applied commit, null if the {@link Commit} could not
+     *      be applied.
      * @throws java.lang.NullPointerException if change is null.
      */
-    CommitRequest apply(Change change);
+    Commit apply(Change change);
 
     /**
      * Creates a code change in response to a {@code ChangeRequest}. This request describes
@@ -116,28 +117,28 @@ public interface Refactorer {
     UnitLocator getLocator(Source src);
 
     /**
-     * Publishes local changes, wrapped in a locally committed request, to a remote upstream.
+     * Publishes local changes, wrapped in a local commit, to a remote upstream.
      *
-     * @param localCommit The request (locally committed)
-     * @return The request with updated status (remotely committed). This status contains
-     *      info related to the remote commit.
-     * @throws java.lang.NullPointerException if {@code CommitRequest} null.
+     * @param localCommit The local commit
+     * @return The commit with updated status. This status contains
+     *      info related to the publishing of this commit to a remote repository.
+     * @throws java.lang.NullPointerException if {@code Commit} null.
      * @throws java.lang.IllegalArgumentException if {@code Vesper} lacks of the right
      *      credentials (!= null) to publish a local commit to a remote repository.
      */
-    CommitRequest publish(CommitRequest localCommit);
+    Commit publish(Commit localCommit);
 
     /**
      * Publishes local changes, wrapped in a locally committed request, to a remote upstream
      * and the return tue request with an updated status.
      *
-     * @param request A valid commit request (locally committed and with no errors).
+     * @param localCommit A valid commit (locally committed and with no errors).
      * @param upstream The upstream.
-     * @return The request (remotely committed)
-     * @throws java.lang.NullPointerException if {@code request} or {@code upstream} are null.
-     * @throws java.lang.IllegalStateException if the request has already been remotely committed.
+     * @return The commit with updated status.
+     * @throws java.lang.NullPointerException if {@code localCommit} or {@code upstream} are null.
+     * @throws java.lang.IllegalStateException if the commit has already been remotely committed.
      */
-    CommitRequest publish(CommitRequest request, Upstream upstream);
+    Commit publish(Commit localCommit, Repository upstream);
 
     /**
      * Recommends changes for a {@code Source} based on a list of found {@code issues}.

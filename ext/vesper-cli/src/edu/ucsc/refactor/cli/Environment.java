@@ -3,10 +3,9 @@ package edu.ucsc.refactor.cli;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import edu.ucsc.refactor.*;
-import edu.ucsc.refactor.spi.CommitRequest;
-import edu.ucsc.refactor.spi.CommitSummary;
 import edu.ucsc.refactor.spi.ProgramUnit;
 import edu.ucsc.refactor.spi.UnitLocator;
+import edu.ucsc.refactor.util.Commit;
 import edu.ucsc.refactor.util.CommitHistory;
 
 import java.util.*;
@@ -19,7 +18,6 @@ public class Environment {
     final AtomicReference<Refactorer>       refactorer;
     final AtomicReference<Source>           origin;
     final AtomicReference<Configuration>    remoteConfig;
-    final Queue<CommitRequest>              checkpoints;
     final Queue<String>                     errors;
 
     /**
@@ -29,7 +27,6 @@ public class Environment {
         refactorer      = new AtomicReference<Refactorer>();
         origin          = new AtomicReference<Source>();
         remoteConfig    = new AtomicReference<Configuration>();
-        checkpoints     = new LinkedList<CommitRequest>();
         errors          = new LinkedList<String>();
     }
 
@@ -118,12 +115,11 @@ public class Environment {
      * @param request The ChangeRequest to be performed.
      * @return the committed request.
      */
-    public CommitRequest perform(ChangeRequest request){
-        final Change        change  = getCodeRefactorer().createChange(request);
-        final CommitRequest applied = getCodeRefactorer().apply(change);
+    public Commit perform(ChangeRequest request){
+        final Change change  = getCodeRefactorer().createChange(request);
+        final Commit applied = getCodeRefactorer().apply(change);
         if(applied != null){
-            update(applied.getCommitSummary().getSource());
-            enqueueCommitRequest(applied);
+            update(applied.getSourceAfterChange());
         } else {
             addError(change.getErrors());
         }
@@ -137,7 +133,6 @@ public class Environment {
         this.refactorer.set(null);
         this.origin.set(null);
         this.remoteConfig.set(null);
-        this.checkpoints.clear();
     }
 
     /**
@@ -148,6 +143,15 @@ public class Environment {
      */
     public List<NamedLocation> lookup(ProgramUnit unit){
         return getCodeLocator().locate(unit);
+    }
+
+    /**
+     *
+     * @param commit
+     * @return
+     */
+    public boolean forgetCommit(Commit commit) {
+        return getCodeRefactorer().getCommitHistory(getOrigin()).delete(commit);
     }
 
     /**
@@ -179,11 +183,11 @@ public class Environment {
     /**
      * Publishes a commit request.
      *
-     * @param commitRequest The commit request to be published to a remote upstream.
+     * @param commit The commit request to be published to a remote upstream.
      * @return The updated commit summary.
      */
-    public CommitSummary publish(CommitRequest commitRequest){
-        return getCodeRefactorer().publish(commitRequest).getCommitSummary();
+    public Commit publish(Commit commit){
+        return getCodeRefactorer().publish(commit);
     }
 
 
@@ -192,21 +196,6 @@ public class Environment {
      */
     public Refactorer getCodeRefactorer() {
         return refactorer.get();
-    }
-
-    /**
-     * @return {@code true} if there are requests to be published, {@code false} otherwise.
-     */
-    public boolean isFilledWithRequests(){
-        return !getCommittedRequests().isEmpty();
-    }
-
-
-    /**
-     * @return a {@code Queue} of committed requests.
-     */
-    public Queue<CommitRequest> getCommittedRequests(){
-        return checkpoints;
     }
 
 
@@ -244,22 +233,6 @@ public class Environment {
         } else {
             this.refactorer.set(null);
         }
-    }
-
-    /**
-     * Collects commit requests for later publishing.
-     *
-     * @param request The commit request to be collected.
-     */
-    public void enqueueCommitRequest(CommitRequest request){
-        checkpoints.add(request);
-    }
-
-    /**
-     * @return the de-queued CommitRequest.
-     */
-    public CommitRequest dequeueCommitRequest(){
-        return getCommittedRequests().remove();
     }
 
     /**

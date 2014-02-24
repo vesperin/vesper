@@ -4,13 +4,9 @@ import com.google.common.base.Preconditions;
 import edu.ucsc.refactor.cli.Environment;
 import edu.ucsc.refactor.cli.Result;
 import edu.ucsc.refactor.cli.VesperCommand;
-import edu.ucsc.refactor.cli.results.CommitHistoryResult;
 import edu.ucsc.refactor.cli.results.Results;
-import edu.ucsc.refactor.util.Checkpoint;
 import edu.ucsc.refactor.util.CommitHistory;
 import io.airlift.airline.Command;
-
-import java.util.Iterator;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)

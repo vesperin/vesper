@@ -4,7 +4,7 @@ import edu.ucsc.refactor.Issue;
 import edu.ucsc.refactor.NamedLocation;
 import edu.ucsc.refactor.Note;
 import edu.ucsc.refactor.cli.results.*;
-import edu.ucsc.refactor.util.Checkpoint;
+import edu.ucsc.refactor.util.Commit;
 import edu.ucsc.refactor.util.Notes;
 
 import java.util.Iterator;
@@ -87,9 +87,9 @@ public class SysResultVisitor extends SkeletonResultProcessorVisitor {
 
         final StringBuilder toScreen = new StringBuilder(history.getCommitHistory().size() * 10000);
 
-        final Iterator<Checkpoint> itr = history.getCommitHistory().iterator();
+        final Iterator<Commit> itr = history.getCommitHistory().iterator();
         while(itr.hasNext()){
-            final Checkpoint c = itr.next();
+            final Commit c = itr.next();
 
             toScreen.append(c.getCommitSummary().more());
 

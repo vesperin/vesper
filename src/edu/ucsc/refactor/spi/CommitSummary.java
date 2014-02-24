@@ -2,7 +2,6 @@ package edu.ucsc.refactor.spi;
 
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Atomics;
-import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.util.CommitInformation;
 
 import java.util.Date;
@@ -19,7 +18,6 @@ public class CommitSummary implements Comparable <CommitSummary> {
     private final AtomicReference<Date>         committedAt;
     private final AtomicReference<String>       url;
     private final AtomicReference<String>       id;
-    private final AtomicReference<Source>       sourceCode;
 
 
     /**
@@ -34,7 +32,6 @@ public class CommitSummary implements Comparable <CommitSummary> {
 
         this.userName       = Atomics.newReference("(pending)");
         this.url            = Atomics.newReference("(pending)");
-        this.sourceCode     = Atomics.newReference(null);
         this.id             = Atomics.newReference("(local)");
         this.committedAt    = Atomics.newReference();
     }
@@ -62,15 +59,13 @@ public class CommitSummary implements Comparable <CommitSummary> {
     public static CommitSummary forSuccessfulCommit(
             String username,
             Date committedAt,
-            String message,
-            Source code
+            String message
     ){
 
         return forSuccessfulCommit(
                 "(local)",
                 username,
                 committedAt,
-                code,
                 "(pending)",
                 message
         );
@@ -82,7 +77,6 @@ public class CommitSummary implements Comparable <CommitSummary> {
      * @param id            commit identifier.
      * @param username      who committed this.
      * @param committedAt   when was this committed
-     * @param code          the updated source code.
      * @param url           where one can locate the updated source.
      * @param message       what was committed
      *
@@ -92,7 +86,6 @@ public class CommitSummary implements Comparable <CommitSummary> {
             String id,
             String username,
             Date committedAt,
-            Source code,
             String url,
             String message
     ){
@@ -101,7 +94,6 @@ public class CommitSummary implements Comparable <CommitSummary> {
         summary.addId(id);
         summary.addUsername(username);
         summary.addCommittedAt(committedAt);
-        summary.addSource(code);
         summary.addUrl(url);
         return summary;
     }
@@ -142,17 +134,12 @@ public class CommitSummary implements Comparable <CommitSummary> {
         this.id.compareAndSet(this.id.get(), id);
     }
 
-    void addSource(Source code){
-        this.sourceCode.compareAndSet(this.sourceCode.get(), code);
-    }
-
 
     public CommitSummary updateSummary(CommitSummary status){
         final CommitSummary summary = new CommitSummary(status.type, status.message);
         summary.addId(status.getCommitId());
         summary.addUsername(status.getUsername());
         summary.addCommittedAt(status.getCommittedAt());
-        summary.addSource(status.getSource());
         summary.addUrl(status.getUrl());
         return summary;
     }
@@ -171,12 +158,6 @@ public class CommitSummary implements Comparable <CommitSummary> {
         return this.message;
     }
 
-    /**
-     * @return the updated Source by commit.
-     */
-    public Source getSource(){
-        return this.sourceCode.get();
-    }
 
     /**
      * @return the url where the updated Source resides.
@@ -224,7 +205,7 @@ public class CommitSummary implements Comparable <CommitSummary> {
 
 
     /**
-     * @return {@code true} if this is an unknown status.
+     * @return {@code true} if this is the pending status.
      */
     public boolean isPending(){
         return this.type.isSame(CommitStatus.PENDING);

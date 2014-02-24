@@ -3,7 +3,6 @@ package edu.ucsc.refactor;
 import edu.ucsc.refactor.spi.IssueDetector;
 import edu.ucsc.refactor.spi.JavaParser;
 import edu.ucsc.refactor.spi.SourceChanger;
-import edu.ucsc.refactor.spi.Upstream;
 
 import java.util.List;
 

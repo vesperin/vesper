@@ -8,7 +8,7 @@ import edu.ucsc.refactor.ChangeRequest;
 import edu.ucsc.refactor.SourceSelection;
 import edu.ucsc.refactor.Vesper;
 import edu.ucsc.refactor.cli.results.Results;
-import edu.ucsc.refactor.spi.CommitRequest;
+import edu.ucsc.refactor.util.Commit;
 import io.airlift.airline.Inject;
 
 import java.io.IOException;
@@ -56,7 +56,7 @@ public abstract class VesperCommand {
         }
     }
 
-    protected CommitRequest commitChange(Environment environment, ChangeRequest request){
+    protected Commit commitChange(Environment environment, ChangeRequest request){
         return environment.perform(request);
     }
 
@@ -67,7 +67,7 @@ public abstract class VesperCommand {
     }
 
 
-    protected Result createResultPackage(CommitRequest applied){
+    protected Result createResultPackage(Commit applied){
         return (globalOptions.verbose
                 ? Results.commitSummaryInfo(
                     "commit summary for " + applied.getCommitSummary().getMessage(),

@@ -1,8 +1,8 @@
 package edu.ucsc.refactor;
 
 import edu.ucsc.refactor.internal.HostImpl;
-import edu.ucsc.refactor.internal.RemoteRepository;
-import edu.ucsc.refactor.spi.CommitRequest;
+import edu.ucsc.refactor.internal.UpstreamRepository;
+import edu.ucsc.refactor.util.Commit;
 import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.Gist;
 import org.eclipse.egit.github.core.GistFile;
@@ -48,7 +48,7 @@ public class VesperTest {
 
         final Change first = suggestedChanges.get(0);
 
-        final CommitRequest applied = refactorer.apply(first);
+        final Commit applied = refactorer.apply(first);
         assertNotNull(applied);
 
     }
@@ -72,19 +72,19 @@ public class VesperTest {
         assertThat(suggestedChanges.isEmpty(), is(false));
 
         final Change first = suggestedChanges.get(0);
-        final CommitRequest applied = refactorer.apply(first);
+        final Commit applied = refactorer.apply(first);
         assertNotNull(applied);
 
-        final CommitRequest published = refactorer.publish(applied);
+        final Commit published = refactorer.publish(applied);
         assertEquals(published.getCommitSummary(), applied.getCommitSummary());
 
-        final CommitRequest anotherPublished = refactorer.publish(
+        final Commit anotherPublished = refactorer.publish(
                 applied,
-                new RemoteRepository(new Credential("lala", "lala"), new LocalGistService())
+                new UpstreamRepository(new Credential("lala", "lala"), new LocalGistService())
         );
 
         assertNotNull(anotherPublished);
-        System.out.println(anotherPublished.more());
+        System.out.println(anotherPublished.getCommitSummary().more());
 
     }
 
@@ -98,6 +98,7 @@ public class VesperTest {
     static class ShallowConfiguration extends AbstractConfiguration {
         @Override protected void configure() {
             installDefaultSettings();
+            addCredentials(new Credential("lala", "lala"));
         }
     }
 
@@ -105,8 +106,7 @@ public class VesperTest {
     static class LocalGistService extends GistService {
         static Comment comment = new Comment();
 
-        @Override
-        public Gist createGist(Gist gist) throws IOException {
+        @Override public Gist createGist(Gist gist) throws IOException {
             final GistFile file = new GistFile();
             file.setContent(UPDATED);
             file.setFilename("Name.java");
@@ -119,25 +119,21 @@ public class VesperTest {
             return gist;
         }
 
-        @Override
-        public Gist getGist(String id) throws IOException {
+        @Override public Gist getGist(String id) throws IOException {
             return null;
         }
 
-        @Override
-        public Comment createComment(String gistId, String comment) throws IOException {
+        @Override public Comment createComment(String gistId, String comment) throws IOException {
             LocalGistService.comment.setId(0L);
             LocalGistService.comment.setBody(null);
             return LocalGistService.comment.setBody(comment).setId(new Random().nextLong());
         }
 
-        @Override
-        public List<Comment> getComments(String gistId) throws IOException {
+        @Override public List<Comment> getComments(String gistId) throws IOException {
             return Collections.emptyList();
         }
 
-        @Override
-        public Gist updateGist(Gist gist) throws IOException {
+        @Override public Gist updateGist(Gist gist) throws IOException {
             return gist;
         }
     }

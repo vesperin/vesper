@@ -37,7 +37,7 @@ public abstract class SourceChanger implements Changer {
     public CommitRequest applyChange(Change change){
         LOGGER.fine("Applying change " + change);
         final CommitRequest request = commitChange(change);
-        LOGGER.fine("Commit request created: " + request.more());
+        LOGGER.fine("Commit request created: " + request);
         return request;
     }
 

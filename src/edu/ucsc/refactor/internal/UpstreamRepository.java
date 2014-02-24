@@ -4,10 +4,10 @@ import com.google.common.base.Preconditions;
 import edu.ucsc.refactor.Credential;
 import edu.ucsc.refactor.Note;
 import edu.ucsc.refactor.Source;
-import edu.ucsc.refactor.spi.CommitRequest;
 import edu.ucsc.refactor.spi.CommitSummary;
 import edu.ucsc.refactor.spi.Name;
-import edu.ucsc.refactor.spi.Upstream;
+import edu.ucsc.refactor.spi.Repository;
+import edu.ucsc.refactor.util.Commit;
 import edu.ucsc.refactor.util.Notes;
 import edu.ucsc.refactor.util.StringUtil;
 import org.eclipse.egit.github.core.Comment;
@@ -23,71 +23,75 @@ import java.util.Map;
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public class RemoteRepository implements Upstream {
-    private final GistService service;
-    private final Credential  credential;
+public class UpstreamRepository implements Repository {
+    private final Credential    credential;
+    private final GistService   service;
 
     /**
-     * Construct a new RemoteRepository
+     * Construct a new {@code Credential} object with the
+     * remote {@code repository}'s credential.
      *
-     * @param key The storage service key
+     * @param credential Authentication information.
      */
-    public RemoteRepository(Credential key){
-        this(key, new GistService());
+    public UpstreamRepository(Credential credential){
+        this(credential, new GistService());
     }
 
     /**
-     * Construct a new RemoteRepository
+     * Construct a new UpstreamRepository
      *
-     * @param key The storage service key
+     * @param credential The storage service key
      * @param service The GistService object
      */
-    public RemoteRepository(Credential key, GistService service){
-        if(key != null && "None".equals(key.getUsername())){
-            service.getClient().setCredentials(key.getUsername(), key.getPassword());
+    public UpstreamRepository(Credential credential, GistService service){
+
+        if(credential != null && "None".equals(credential.getUsername())){
+            service.getClient().setCredentials(credential.getUsername(), credential.getPassword());
         }
-        this.service    = service;
-        this.credential = key;
+
+        this.credential = Preconditions.checkNotNull(credential);
+        this.service    = Preconditions.checkNotNull(service);
     }
 
-    @Override public CommitRequest publish(CommitRequest request) {
-        if(!request.isValid()) return request;
 
+    @Override public Commit push(Commit commit) {
+        Preconditions.checkNotNull(commit, "push() received a null commit");
         try {
-            final Source updatedSource = request.getCommitSummary().getSource();
-            Gist gist = new GistBuilder(service)
-                    .content(updatedSource.getContents())
-                    .file(updatedSource)
+            final Source after = commit.getSourceAfterChange();
+
+            final Gist gist = new GistBuilder(service)
+                    .content(after.getContents())
+                    .file(after)
                     .build();
 
-            ((AbstractCommitRequest)request).updateSource(sync(updatedSource, gist));
-
             // fill out the `more` information
-            final Name info = ((AbstractCommitRequest)request).getChange().getCause().getName();
+            final Name   info       = commit.getNameOfChange();
 
-            ((LocalCommitRequest)request).updateCommitSummary(
+            sync(after, gist);
+
+            final String username   = credential.getUsername();
+
+            commit.amendSummary(
                     CommitSummary.forSuccessfulCommit(
                             gist.getId(),
-                            getUser(),
+                            username,
                             gist.getCreatedAt(),
-                            updatedSource,
                             gist.getUrl(),
-                            info.getKey() + ":" + info.getSummary()
+                            info.getSummary()
                     )
             );
 
-            return request;
+
         } catch (Throwable ex){
-            ((LocalCommitRequest)request).updateCommitSummary(
+            commit.amendSummary(
                     CommitSummary.forFailedCommit(ex.getMessage())
             );
-
-            return request;
         }
 
+        return commit;
     }
 
-    private static Source sync(Source src, Gist gist) throws IOException {
+    private static void sync(Source src, Gist gist) throws IOException {
         final String        id           = gist.getId();
         final String        description  = gist.getDescription();
 
@@ -109,17 +113,8 @@ public class RemoteRepository implements Upstream {
         assert content  != null;
 
         src.setId(id);
-
-        return src;
     }
 
-    Credential getCredential(){
-        return credential;
-    }
-
-    public String getUser() {
-        return getCredential().getUsername();
-    }
 
 
     /**

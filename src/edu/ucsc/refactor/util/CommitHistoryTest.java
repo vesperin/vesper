@@ -58,13 +58,13 @@ public class CommitHistoryTest {
 
     @Test public void testCreateHistory() throws Exception {
 
-        final Checkpoint checkpoint = createCheckpoint(
+        final Commit commit = createCheckpoint(
                 Refactoring.DELETE_PARAMETER,
                 BEFORE,
                 AFTER
         );
 
-        final CommitHistory history = new CommitHistory(checkpoint);
+        final CommitHistory history = new CommitHistory(commit);
 
         assertThat(history.first() != null, is(true));
         assertEquals(history.first(), history.last());
@@ -77,10 +77,10 @@ public class CommitHistoryTest {
     }
 
     @Test public void testResetHistory() throws Exception {
-        final Checkpoint c1 = createCheckpoint(Refactoring.DELETE_PARAMETER, BEFORE, AFTER);
-        final Checkpoint c2 = createCheckpoint(Refactoring.DELETE_UNUSED_IMPORTS, AFTER, WAY_AFTER);
-        final Checkpoint c3 = createCheckpoint(Refactoring.RENAME_METHOD, WAY_AFTER, WAY_WAY_AFTER);
-        final Checkpoint c4 = createCheckpoint(Refactoring.DELETE_METHOD, WAY_WAY_AFTER, WAY_WAY_WAY_AFTER);
+        final Commit c1 = createCheckpoint(Refactoring.DELETE_PARAMETER, BEFORE, AFTER);
+        final Commit c2 = createCheckpoint(Refactoring.DELETE_UNUSED_IMPORTS, AFTER, WAY_AFTER);
+        final Commit c3 = createCheckpoint(Refactoring.RENAME_METHOD, WAY_AFTER, WAY_WAY_AFTER);
+        final Commit c4 = createCheckpoint(Refactoring.DELETE_METHOD, WAY_WAY_AFTER, WAY_WAY_WAY_AFTER);
 
 
         final CommitHistory history = new CommitHistory(c1);
@@ -103,8 +103,8 @@ public class CommitHistoryTest {
     }
 
 
-    private static Checkpoint createCheckpoint(Refactoring refactoring, Source before, Source after){
-       return new Checkpoint(
+    private static Commit createCheckpoint(Refactoring refactoring, Source before, Source after){
+       return new Commit(
                refactoring,
                before,
                after,
