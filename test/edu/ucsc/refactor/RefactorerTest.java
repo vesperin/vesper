@@ -45,14 +45,15 @@ public class RefactorerTest {
 
     @Test public void testRefactorerInternals(){
         final Refactorer refactorer = Vesper.createRefactorer(SRC);
+        final CheckpointedRefactorer enrichedRefactorer = Vesper.createCheckpointedRefactorer(refactorer);
         assertThat(refactorer.getIssues(SRC).isEmpty(), is(false));
-        assertThat(refactorer.getTrackedSources().size(), is(1));
+        assertThat(enrichedRefactorer.getTrackedSources().size(), is(1));
 
-        assertThat(refactorer.getTrackedSources().isEmpty(), is(false));
-        assertThat(refactorer.getTrackedSources().size(), is(1));
+        assertThat(enrichedRefactorer.getTrackedSources().isEmpty(), is(false));
+        assertThat(enrichedRefactorer.getTrackedSources().size(), is(1));
 
-        assertSame(refactorer.getTrackedSources().get(0), SRC);
-        assertThat(refactorer.getTrackedSources().contains(SRC), is(true));
+        assertSame(enrichedRefactorer.getTrackedSources().get(0), SRC);
+        assertThat(enrichedRefactorer.getTrackedSources().contains(SRC), is(true));
 
         assertThat(refactorer.hasIssues(SRC), is(true));
     }

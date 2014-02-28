@@ -68,6 +68,8 @@ public class VesperTest {
                 folio
         );
 
+        final CheckpointedRefactorer enrichedRefactorer = Vesper.createCheckpointedRefactorer(refactorer);
+
         assertThat(refactorer.hasIssues(src), is(true));
 
         final List<Change> suggestedChanges = refactorer.recommendChanges(src);
@@ -77,7 +79,7 @@ public class VesperTest {
         final Commit applied = refactorer.apply(first);
         assertNotNull(applied);
 
-        final CommitPublisher publisher = refactorer.getCommitPublisher(src);
+        final CommitPublisher publisher = enrichedRefactorer.getCommitPublisher(src);
 
         final Commit published = publisher.publish(
                 applied,

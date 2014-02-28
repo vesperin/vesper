@@ -1,13 +1,6 @@
 package edu.ucsc.refactor.internal;
 
-import difflib.DiffUtils;
-import difflib.Patch;
-import edu.ucsc.refactor.Note;
 import edu.ucsc.refactor.Source;
-
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -52,7 +45,6 @@ public class Delta {
      */
     public void setAfter(String after) {
         this.after  = after;
-        setSource(ensureSourceUpdate(getSource(), getAfter()));
     }
 
     /**
@@ -82,48 +74,5 @@ public class Delta {
         return source;
     }
 
-    /**
-     * Gets the difference between the before and after source.
-     *
-     * @return The list of differences between the original {@code Source} and
-     *      the updated {@code Source}.
-     */
-    public List<difflib.Delta> getDifferences() {
-        Patch patch = DiffUtils.diff(contentToLines(getBefore()), contentToLines(getAfter()));
-        return patch.getDeltas();
-    }
 
-    /**
-     * Splits the content of a file into separate lines.
-     *
-     * @param content The content to split.
-     * @return a List of all lines in the content string.
-     */
-    private List<String> contentToLines(String content) {
-        String[] lines = content.split(System.getProperty("line.separator"));
-        List<String> linesAsList = new LinkedList<String>();
-
-        linesAsList.addAll(Arrays.asList(lines));
-
-        return linesAsList;
-    }
-
-
-    private static Source ensureSourceUpdate(Source original, String update){
-        final Source newSource = new Source(
-                original.getName(),
-                update,
-                original.getDescription()
-        );
-
-        newSource.setSignature(original.getUniqueSignature());
-
-        for(Note each : original.getNotes()){
-            newSource.addNote(each);
-        }
-
-        newSource.setId(original.getId());
-        return newSource;
-
-    }
 }

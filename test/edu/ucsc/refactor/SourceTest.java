@@ -20,7 +20,7 @@ public class SourceTest {
     @Test public void testSourceCreationNoDescription(){
         final Source a = new Source(NAME, CONTENT);
         assertNotNull(a);
-        assertThat(StringUtil.extractName(a.getName()), equalTo(StringUtil.extractName(NAME)));
+        assertThat(StringUtil.extractFileName(a.getName()), equalTo(StringUtil.extractFileName(NAME)));
         assertThat(a.getContents(), equalTo(CONTENT));
         assertNotNull(a.toDocument());
         assertEquals(a.getDescription(), DESC);
@@ -30,10 +30,10 @@ public class SourceTest {
 
     @Test public void testSourceCreationWithDescription(){
         final Source b = new Source(NAME, CONTENT, VERBOSE_DESC);
-        assertThat(StringUtil.extractName(b.getName()), equalTo(StringUtil.extractName(NAME)));
+        assertThat(StringUtil.extractFileName(b.getName()), equalTo(StringUtil.extractFileName(NAME)));
         assertThat(b.getContents(), equalTo(CONTENT));
         assertNotNull(b.toDocument());
-        assertThat("Source{name=" + StringUtil.extractName(b.getName()) + "}",
+        assertThat("Source{name=" + StringUtil.extractFileName(b.getName()) + "}",
                 equalTo(b.toString()));
         assertEquals(b.getDescription(), VERBOSE_DESC);
         assertThat(b.getNotes().isEmpty(), is(true));

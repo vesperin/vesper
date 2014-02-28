@@ -1,9 +1,8 @@
 package edu.ucsc.refactor;
 
 import edu.ucsc.refactor.internal.HostImpl;
-import edu.ucsc.refactor.internal.InternalCommitHistoryFetcherCreator;
+import edu.ucsc.refactor.internal.InternalCheckpointedRefactorerCreator;
 import edu.ucsc.refactor.internal.InternalRefactorerCreator;
-import edu.ucsc.refactor.spi.Repository;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -73,15 +72,20 @@ import java.util.List;
  *     final CommitRequest published = refactorer.publish(applied);
  *     System.out.println(published.more());
  *
- *     // IV. Retrieving the CommitHistory of a Source (previously curated)
+ *     // IV. Retrieving the SourceHistory of a Source (previously curated)
  *
- *     final SourceHistoryFetcher fetcher = Vesper.createSourceHistoryFetcher(new Upstream(...), "123456");
+ *     final SourceRecalling recalling = new SourceRecalling(new Upstream(...), "123456");
  *
- *     final SourceHistory history = fetcher.fetchSourceHistory();
+ *     final SourceHistory history = recalling.recall();
  *
  *     // iterating over the history is a just a matter of a simple for-each loop
+ *     Source pivot = null;
  *     for(Source eachSrc : history){
- *         System.out.println(eachSrc.getName());
+ *         if(pivot == null){
+ *             pivot = eachSrc; continue;
+ *         }
+ *
+ *         System.out.println(recalling.differences(pivot, eachSrc).toString());
  *     }
  *
  *     // V. More?
@@ -100,19 +104,6 @@ public final class Vesper {
      * Private constructor to prevent instantiation.
      */
     private Vesper(){}
-
-    /**
-     * Creates a commit history fetcher for the given repository and source id.
-     *
-     * @param repository The remote repository.
-     * @param sourceId   The {@code Source}'s id.
-     * @return a new SourceHistoryFetcher.
-     */
-    public static SourceHistoryFetcher createSourceHistoryFetcher(Repository repository, String sourceId){
-        return new InternalCommitHistoryFetcherCreator(repository)
-                .addSourceId(sourceId)
-                .build();
-    }
 
     /**
      * Creates a refactorer for the given set of sources.
@@ -193,6 +184,14 @@ public final class Vesper {
                 configuration,
                 Arrays.asList(sources)
         );
+    }
+
+    /**
+     * Creates a checkpointed refactorer for the given refactorer.
+     * @return a new CheckpointedRefactorer
+     */
+    public static CheckpointedRefactorer createCheckpointedRefactorer(Refactorer refactorer){
+        return new InternalCheckpointedRefactorerCreator(refactorer).build();
     }
 
     /**

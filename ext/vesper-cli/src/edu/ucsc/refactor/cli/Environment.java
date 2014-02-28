@@ -15,16 +15,16 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public class Environment {
-    final AtomicReference<Refactorer>       refactorer;
-    final AtomicReference<Source>           origin;
-    final AtomicReference<Configuration>    remoteConfig;
-    final Queue<String>                     errors;
+    final AtomicReference<CheckpointedRefactorer>   refactorer;
+    final AtomicReference<Source>                   origin;
+    final AtomicReference<Configuration>            remoteConfig;
+    final Queue<String>                             errors;
 
     /**
      * Constructs a new Interpreter's Environment.
      */
     public Environment(){
-        refactorer      = new AtomicReference<Refactorer>();
+        refactorer      = new AtomicReference<CheckpointedRefactorer>();
         origin          = new AtomicReference<Source>();
         remoteConfig    = new AtomicReference<Configuration>();
         errors          = new LinkedList<String>();
@@ -200,7 +200,7 @@ public class Environment {
     /**
      * @return the {@code Refactorer} for the tracked {@code Source}
      */
-    public Refactorer getCodeRefactorer() {
+    public CheckpointedRefactorer getCodeRefactorer() {
         return refactorer.get();
     }
 
@@ -235,7 +235,7 @@ public class Environment {
                     ? Vesper.createRefactorer(getOrigin())
                     : Vesper.createRefactorer(remote, getOrigin());
 
-            this.refactorer.set(refactorer);
+            this.refactorer.set(Vesper.createCheckpointedRefactorer(refactorer));
         } else {
             this.refactorer.set(null);
         }

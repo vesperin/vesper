@@ -104,4 +104,10 @@ public class UnusedMethods extends IssueDetector {
             }
         }
     }
+
+    @Override public void resetThisDetector() {
+        methodInvocationList.clear();
+        methodUsages.clear();
+        super.resetThisDetector();
+    }
 }

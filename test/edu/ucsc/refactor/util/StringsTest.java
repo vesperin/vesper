@@ -12,7 +12,7 @@ import static org.junit.Assert.assertThat;
 public class StringsTest {
     @Test public void testExtractJavaFileName(){
         final String nameWithExtension = "Name.java";
-        assertEquals(StringUtil.extractName(nameWithExtension), "Name");
+        assertEquals(StringUtil.extractFileName(nameWithExtension), "Name");
     }
 
     @Test public void testSplitCamelCase() {

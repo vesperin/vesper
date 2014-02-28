@@ -2,12 +2,13 @@ package edu.ucsc.refactor.internal;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import edu.ucsc.refactor.*;
-import edu.ucsc.refactor.spi.*;
+import edu.ucsc.refactor.spi.CommitRequest;
+import edu.ucsc.refactor.spi.IssueDetector;
+import edu.ucsc.refactor.spi.SourceChanger;
+import edu.ucsc.refactor.spi.UnitLocator;
 import edu.ucsc.refactor.util.Commit;
-import edu.ucsc.refactor.util.CommitHistory;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
 import java.util.*;
@@ -23,11 +24,9 @@ public class JavaRefactorer implements Refactorer {
     private final Map<Source, List<Issue>>  findings;
     private final Map<Source, Context>      cachedContexts;
 
+
     private final SourceChecking inspector;
     private final SourceChanging changer;
-
-    private final Map<String, CommitHistory> timeline;
-
 
 
     /**
@@ -41,7 +40,6 @@ public class JavaRefactorer implements Refactorer {
 
         this.inspector  = new SourceChecking(host.getIssueDetectors());
         this.changer    = new SourceChanging(host.getSourceChangers());
-        this.timeline   = Maps.newHashMap();
     }
 
     @Override public Commit apply(Change change) {
@@ -53,9 +51,7 @@ public class JavaRefactorer implements Refactorer {
 
         if(applied.isValid()){
             try {
-                final Commit commit = applied.commit();
-                detectIssues(onAppliedCommit(commit));
-                return commit;
+                return applied.commit();
             } catch (RuntimeException ex){
                 LOGGER.throwing("Unable to commit change", "apply()", ex);
                 return null; // nothing was committed
@@ -65,36 +61,6 @@ public class JavaRefactorer implements Refactorer {
         return null;  // nothing was committed
     }
 
-
-    private Source onAppliedCommit(Commit commit){
-        createCommitHistory(commit);
-        populateCommitHistory(commit);
-        return commit.getSourceAfterChange();
-    }
-
-
-    private void createCommitHistory(Commit commit){
-        final Source before = commit.getSourceBeforeChange();
-        if(!timeline.containsKey(before.getUniqueSignature())){  // the signature should have been generated during compilation.
-            this.timeline.put(before.getUniqueSignature(), new CommitHistory());
-        }
-    }
-
-
-    private void populateCommitHistory(Commit commit){
-        // clear current issue registry for source
-        getIssueRegistry().remove(commit.getSourceBeforeChange());
-        getValidContexts().remove(commit.getSourceBeforeChange());
-
-        final String key = commit.getUniqueSignature();
-
-        Preconditions.checkState(
-                timeline.containsKey(key),
-                "At this point the Source unique signature should have been recorded."
-        );
-
-        timeline.get(key).add(commit);
-    }
 
     @Override public Change createChange(ChangeRequest request) {
         Preconditions.checkNotNull(request, "createChange() method has received a null request");
@@ -118,7 +84,7 @@ public class JavaRefactorer implements Refactorer {
         final Source          code    = select.first().getSource();
         final Context         context = getValidContexts().containsKey(code)
                                             ? getValidContexts().get(code)
-                                            : host.createContext(code);
+                                            : getRefactoringHost().createContext(code);
 
         getValidContexts().put(code, context);
 
@@ -146,102 +112,23 @@ public class JavaRefactorer implements Refactorer {
                 registerIssue(code, each);
             }
         } catch (Exception ex){
-            host.addError(ex);
+            getRefactoringHost().addError(ex);
             LOGGER.throwing(this.getClass().getName(), "detectIssues()", ex);
         }
     }
 
-    @Override public Source rewriteHistory(Source source) {
-
-        final Source        from   = Preconditions.checkNotNull(source);
-        final CommitHistory entire = getCommitHistory(from);
-
-        if(entire.isEmpty()) { return source; }
-
-        final Commit first  = entire.first();
-        final Commit last   = entire.last();
-
-
-        if(first.getSourceBeforeChange().equals(from)) { // base case
-            return rewritingHistory(from, entire.slice());
-        }
-
-        if(last.getSourceAfterChange().equals(from)) {  // base case
-            return from;
-        }
-
-
-        final CommitHistory sandwiched = entire.slice(first, false, last, false);
-
-        for(Commit each : sandwiched){
-
-            if(each.getSourceAfterChange().equals(from)){
-                final CommitHistory sliced = entire.slice(each);
-
-                Preconditions.checkArgument(
-                        from.getUniqueSignature().equals(sliced.last().getUniqueSignature()),
-                        "rewriteHistory() is dealing with sources that are not part "
-                        + "of the same change history"
-                );
-
-                return rewritingHistory(from, sliced);
-
-            }
-        }
-
-        throw new NoSuchElementException("rewriteHistory() was unable to find " + from);
+    HostImpl getRefactoringHost(){
+        return this.host;
     }
 
 
-    private Source rewritingHistory(Source from, CommitHistory sliced){
-        final String signature = from.getUniqueSignature();
-
-        if(timeline.containsKey(signature)){
-            getIssueRegistry().remove(from);
-
-            timeline.remove(signature);
-            timeline.put(signature, sliced);
-
-            detectIssues(from);
-
-        }
-
-        return from;
-    }
-
-    @Override public Source advance(Source current) {
-        final CommitHistory history = getCommitHistory(current);
-
-        for(Commit each : history){
-            if(each.getSourceBeforeChange().equals(current)){
-                return each.getSourceAfterChange();
-            }
-        }
-
-        // otherwise, there is nothing to advance (i.e., current is the latest version)
-        return current;
-    }
-
-    @Override public Source regress(Source current) {
-        final CommitHistory history = getCommitHistory(current);
-
-        for(Commit each : history){
-            if(each.getSourceAfterChange().equals(current)){
-                return each.getSourceBeforeChange();
-            }
-        }
-
-        return current; // nothing to roll back
-
-    }
-
-
-    private Map<Source, Context> getValidContexts(){
+    Map<Source, Context> getValidContexts(){
         return cachedContexts;
     }
 
-    private Context validContext(Source code){
-        final Context context = host.createContext(code);
+
+    Context validContext(Source code){
+        final Context context = getRefactoringHost().createContext(code);
         if(!canScanContextForIssues(context)) {
             LOGGER.fine("Cannot scan this context. Check configuration.");
             return null;
@@ -270,16 +157,12 @@ public class JavaRefactorer implements Refactorer {
      */
     boolean canScanContextForIssues(Context context) {
         return context != null
-                && !host.getIssueDetectors().isEmpty()
+                && !getRefactoringHost().getIssueDetectors().isEmpty()
                 && context.getSource() != null;
     }
 
-    public Map<Source, List<Issue>> getIssueRegistry() {
+    Map<Source, List<Issue>> getIssueRegistry() {
         return findings;
-    }
-
-    @Override public List<Source> getTrackedSources() {
-        return new ArrayList<Source>(getValidContexts().keySet());
     }
 
     @Override public List<Issue> getIssues(Source key) {
@@ -290,15 +173,6 @@ public class JavaRefactorer implements Refactorer {
         return Collections.emptyList();
     }
 
-    @Override public CommitHistory getCommitHistory(Source src) {
-        final CommitHistory result = timeline.get(Preconditions.checkNotNull(src).getUniqueSignature());
-        if(result == null){
-            return new CommitHistory();
-        }
-
-        return result;
-    }
-
     @Override public boolean hasIssues(Source code) {
         return !getIssues(Preconditions.checkNotNull(code)).isEmpty();
     }
@@ -307,14 +181,6 @@ public class JavaRefactorer implements Refactorer {
         Preconditions.checkNotNull(readSource);
         Preconditions.checkState(!getValidContexts().isEmpty(), "unknown Source");
         return new ProgramUnitLocator(getValidContexts().get(readSource));
-    }
-
-    @Override public CommitPublisher getCommitPublisher(Source src) {
-        return new CommitHistoryPublisher(
-                getCommitHistory(src),
-                this.host.getStorageKey(),
-                this.host.isRemoteUpstreamEnabled()
-        );
     }
 
 
@@ -335,7 +201,7 @@ public class JavaRefactorer implements Refactorer {
 
     @Override public String toString() {
         final Objects.ToStringHelper builder = Objects.toStringHelper(getClass());
-        builder.add("known files", getTrackedSources());
+        builder.add("files", "none");
         return builder.toString();
     }
 
@@ -473,53 +339,6 @@ public class JavaRefactorer implements Refactorer {
          */
         List<SourceChanger> getChangers() {
             return changers;
-        }
-    }
-
-    /**
-     * Helper class used to publish all the commits that belong to a given
-     * {@code CommitHistory}
-     */
-    static class CommitHistoryPublisher implements CommitPublisher {
-        final CommitHistory history;
-        final Credential    credential;
-        final boolean       isRemotePublishingEnabled;
-
-        CommitHistoryPublisher(CommitHistory history, Credential credential, boolean isRemotePublishingEnabled){
-            this.history                    = history;
-            this.credential                 = credential;
-            this.isRemotePublishingEnabled  = isRemotePublishingEnabled;
-        }
-
-        @Override public List<Commit> publish() {
-            return publish(new Upstream(credential));
-        }
-
-        @Override public List<Commit> publish(Repository to) {
-
-            Preconditions.checkState(
-                    isRemotePublishingEnabled,
-                    "this refactorer is not setup yet for remote publishing"
-            );
-
-            final List<Commit> commitsToDelete = Lists.newArrayList();
-            for(Commit eachCommit : history){ // in order
-
-                final Commit pushed = publish(eachCommit, to);
-
-                if(pushed.isValidCommit()){
-                    commitsToDelete.add(pushed);
-                }
-            }
-
-            return commitsToDelete;
-        }
-
-
-        @Override public Commit publish(Commit request, Repository upstream) {
-            return Preconditions.checkNotNull(upstream).push(
-                    Preconditions.checkNotNull(request)
-            );
         }
     }
 }

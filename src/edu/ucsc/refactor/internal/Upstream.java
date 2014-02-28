@@ -102,17 +102,17 @@ public class Upstream implements Repository {
         return commit;
     }
 
-    @Override public SourceHistory pull(String thatHistory) {
+    @Override public SourceHistory pull(String historyForId) {
         try {
-            Preconditions.checkArgument(!StringUtil.isStringEmpty(thatHistory), "invalid source id");
+            Preconditions.checkArgument(!StringUtil.isStringEmpty(historyForId), "invalid source id");
 
-            final Gist gist = service.getGist(thatHistory);
+            final Gist gist = service.getGist(historyForId);
             final List<GistRevision> revisions = gist.getHistory();
 
             final SourceHistory history = new SourceHistory();
 
             for(GistRevision revision : revisions){
-                addSourceFromUrl(history, thatHistory, revision.getVersion(), revision.getUrl());
+                addSourceFromUrl(history, historyForId, revision.getVersion(), revision.getUrl());
             }
 
 
@@ -190,6 +190,9 @@ public class Upstream implements Repository {
     }
 
 
+    @Override public String toString() {
+        return "Upstream";
+    }
 
     /**
      * Helper class to create or update a {@code Gist}.

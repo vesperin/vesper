@@ -103,7 +103,7 @@ public class LocalCommitRequest extends AbstractCommitRequest {
 
 
     private static Source getSourceAfterCommit(Source seed, Queue<Delta> load){
-        final String    fileName             = StringUtil.extractName(seed.getName());
+        final String    fileName             = StringUtil.extractFileName(seed.getName());
         final String    updatedSourceContent = squashedDeltas(fileName, load);
 
         return Source.from(seed, updatedSourceContent);

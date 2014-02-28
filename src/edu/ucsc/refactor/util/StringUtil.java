@@ -1,12 +1,21 @@
 package edu.ucsc.refactor.util;
 
+import com.google.common.base.Predicates;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Iterables;
+
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public class StringUtil {
     private StringUtil(){}
 
-    public static String extractName(String filePathName) {
+    public static String extractClassName(String content){
+        final Iterable<String> chunks = Splitter.on(" ").split(content.substring(0, content.indexOf("{")));
+        return Iterables.get(chunks, Iterables.indexOf(chunks, Predicates.equalTo("class")) + 1);
+    }
+
+    public static String extractFileName(String filePathName) {
         if ( filePathName == null )
             return null;
 

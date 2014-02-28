@@ -2,7 +2,6 @@ package edu.ucsc.refactor;
 
 import edu.ucsc.refactor.spi.UnitLocator;
 import edu.ucsc.refactor.util.Commit;
-import edu.ucsc.refactor.util.CommitHistory;
 
 import java.util.List;
 
@@ -10,18 +9,6 @@ import java.util.List;
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public interface Refactorer {
-    /**
-     * Re-does any {@link Refactorer#regress(Source) undo-ed} changes made by the
-     * {@code Refactorer}.
-     *
-     * @param current The current Source.
-     * @return The {@code Source}'s next version, after the advance. Or the
-     *      same {@code current} if {@code current} is the only
-     *      available version of {@code Source}.
-     * @throws java.lang.NullPointerException if {@code Source} null.
-     */
-    Source advance(Source current);
-
     /**
      * Applies a code change to a {@code Source} and then returns a {@link Commit}, which
      * represents a set of applied changes, or "deltas", from one version of the {@code Source} to
@@ -74,27 +61,12 @@ public interface Refactorer {
     void detectIssues(Source code);
 
     /**
-     * Returns the list of {@code Source}s  tracked by this {@code Refactorer}.
-     *
-     * @return The list of tracked {@code Source}s.
-     */
-    List<Source> getTrackedSources();
-
-    /**
      * Returns the list of issues found in the given {@code Source}.
      *
      * @param key The source key
      * @return The list of issues detected in that source; or empty if no issues were found.
      */
     List<Issue> getIssues(Source key);
-
-    /**
-     * Gets the commit history of a given {@code Source}.
-     *
-     * @return the compiled changed history, or empty history if none is available.
-     * @throws java.lang.NullPointerException if {@code Source} null.
-     */
-    CommitHistory getCommitHistory(Source src);
 
     /**
      * Checks whether a given source code has issues.
@@ -116,16 +88,6 @@ public interface Refactorer {
     UnitLocator getLocator(Source src);
 
     /**
-     * Retrieves the {@code CommitPublisher}; a strategy for publishing
-     * all the changes to a given {@code Source}.
-     *
-     * @param src The current {@code Source}
-     * @return The {@code CommitPublisher}.
-     * @throws java.lang.NullPointerException if {@code Source} null.
-     */
-    CommitPublisher getCommitPublisher(Source src);
-
-    /**
      * Recommends changes for a {@code Source} based on a list of found {@code issues}.
      * E.g., if this {@code Source} has 10 issues in it, then the
      * {@code Refactorer} will recommend 10 changes that will address this 10 issues.
@@ -142,33 +104,4 @@ public interface Refactorer {
      * @throws java.lang.NullPointerException if {@code Source} null.
      */
     List<Change> recommendChanges(Source code);
-
-    /**
-     * Rewrite a Source's Commit History having {@code Source} as a value.
-     *
-     * <p>
-     * <strong>Note</strong>: After rewriting history, there is no turning back. So, you must be
-     * {@code 100%} sure about using it.
-     * </p>
-     *
-     * @param source THe current Source. This Source can be the same as the indexed Source, or
-     *    a Source product of the methods {@link Refactorer#regress(Source)} or
-     *    {@link Refactorer#advance(Source)}.
-     *
-     * @return the indexed Source, after the rewrite.
-     * @throws java.lang.NullPointerException if {@code Source} null.
-     * @throws java.util.NoSuchElementException if unable to find {@code current} {@code Source}.
-     */
-    Source rewriteHistory(Source source);
-
-    /**
-     * Un-does the changes made by the {@code Refactorer}.
-     *
-     * @param current The current Source.
-     * @return The {@code Source}'s previous version, after the regress. Or the
-     *      same {@code current} if {@code current} is the only
-     *      available version of {@code Source}.
-     * @throws java.lang.NullPointerException if {@code Source} null.
-     */
-    Source regress(Source current);
 }

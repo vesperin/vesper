@@ -71,8 +71,6 @@ public class RenameClassOrInterface extends SourceChanger {
 
         rewrite.replace(unit, copy, null);
 
-        src.setName(newName);
-
         return createDelta(src, rewrite);
     }
 

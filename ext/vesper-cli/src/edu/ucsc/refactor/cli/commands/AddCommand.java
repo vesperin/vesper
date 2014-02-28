@@ -37,7 +37,7 @@ public class AddCommand extends VesperCommand {
 
         if(file){
             final String path = Preconditions.checkNotNull(Iterables.get(patterns, 0, null));
-            final String name = StringUtil.extractName(path);
+            final String name = StringUtil.extractFileName(path);
             final String cont = SourceFileReader.readContent(path);
 
             return compareAndSet(environment, name + ".java", cont);

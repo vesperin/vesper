@@ -5,7 +5,6 @@ import edu.ucsc.refactor.internal.util.AstUtil;
 import edu.ucsc.refactor.spi.CommitSummary;
 import edu.ucsc.refactor.spi.Repository;
 import edu.ucsc.refactor.util.Commit;
-import edu.ucsc.refactor.util.CommitHistory;
 import edu.ucsc.refactor.util.SourceHistory;
 import org.eclipse.jdt.core.dom.ASTNode;
 
@@ -34,7 +33,11 @@ public class Downstream implements Repository {
         return commit;
     }
 
-    @Override public SourceHistory pull(String thatHistory) {
+    @Override public SourceHistory pull(String historyForId) {
         return new SourceHistory(); // empty one
+    }
+
+    @Override public String toString() {
+        return "Downstream";
     }
 }

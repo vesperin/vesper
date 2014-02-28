@@ -66,10 +66,15 @@ public class Source {
      * @return The {@code Source}
      */
     public static Source from(Source seed, String newContent){
+        final String tentativeName      = StringUtil.extractClassName(newContent);
+        final String nameWithoutJavaExt = StringUtil.extractFileName(seed.getName());
+
+        final String name          = StringUtil.equals(nameWithoutJavaExt, tentativeName) ? nameWithoutJavaExt : tentativeName;
+
         final Source  copy  = new Source(
-                seed.getName(),
+                name + ".java",
                 newContent,
-                seed.getDescription()
+                seed.getDescription().replace(nameWithoutJavaExt, name)
         );
 
         copy.setId(seed.getId());
@@ -117,7 +122,7 @@ public class Source {
     }
 
     private static String generateDescription(String fromName){
-        return "Java: " + StringUtil.splitCamelCase(StringUtil.extractName(fromName));
+        return "Java: " + StringUtil.splitCamelCase(StringUtil.extractFileName(fromName));
     }
 
     /**
@@ -236,9 +241,10 @@ public class Source {
     }
 
     /**
+     * Sets a version in text form.
      *
-     * @param version
-     * @return
+     * @param version version string
+     * @return {@code true} if version was set, {@code false} otherwise.
      */
     public boolean setVersion(String version){
         return this.version.compareAndSet(this.version.get(), version);
@@ -250,7 +256,7 @@ public class Source {
             builder.add("id", getId());
         }
 
-        builder.add("name", StringUtil.extractName(getName()));
+        builder.add("name", StringUtil.extractFileName(getName()));
         return builder.toString();
 
     }

@@ -20,8 +20,8 @@ public interface Repository {
     /**
      * Pull the CommitHistory of some {@code Source}.
      *
-     * @param thatHistory The source Id
+     * @param historyForId The source Id
      * @return The CommitHistory of the Source matching the source id.
      */
-    SourceHistory pull(String thatHistory);
+    SourceHistory pull(String historyForId);
 }
