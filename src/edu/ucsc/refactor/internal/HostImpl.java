@@ -119,7 +119,7 @@ public class HostImpl implements Host {
     }
 
     @Override public boolean isRemoteUpstreamEnabled() {
-        return getStorageKey() != null;
+        return getStorageKey() != null || !getStorageKey().isNoneCredential();
     }
 
     @Override public void throwCreationErrorIfErrorsExist() throws RuntimeException {

@@ -7,6 +7,7 @@ import edu.ucsc.refactor.spi.ProgramUnit;
 import edu.ucsc.refactor.spi.UnitLocator;
 import edu.ucsc.refactor.util.Commit;
 import edu.ucsc.refactor.util.CommitHistory;
+import edu.ucsc.refactor.util.CommitPublisher;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -232,10 +233,10 @@ public class Environment {
         if(origin != null){
             final Configuration remote      = remoteConfig.get();
             final Refactorer    refactorer  = remote == null
-                    ? Vesper.createRefactorer(getOrigin())
-                    : Vesper.createRefactorer(remote, getOrigin());
+                    ? Vesper.createRefactorer()
+                    : Vesper.createRefactorer(remote);
 
-            this.refactorer.set(Vesper.createCheckpointedRefactorer(refactorer));
+            this.refactorer.set(Vesper.createCheckpointedRefactorer(refactorer, getOrigin()));
         } else {
             this.refactorer.set(null);
         }

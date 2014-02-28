@@ -33,20 +33,20 @@ public class RefactorerTest {
     static final Source SRC  = new Source(NAME, CONTENT);
 
     @Test public void testRefactorerCreation(){
-        final Refactorer refactorer = Vesper.createRefactorer(SRC);
+        final Refactorer refactorer = Vesper.createRefactorer();
         assertThat(refactorer, notNullValue());
     }
 
     @Test public void testMultipleRefactorers(){
-        final Refactorer first  = Vesper.createRefactorer(SRC);
-        final Refactorer second = Vesper.createRefactorer(SRC);
+        final Refactorer first  = Vesper.createRefactorer();
+        final Refactorer second = Vesper.createRefactorer();
         assertNotSame(first, second);
     }
 
     @Test public void testRefactorerInternals(){
-        final Refactorer refactorer = Vesper.createRefactorer(SRC);
-        final CheckpointedRefactorer enrichedRefactorer = Vesper.createCheckpointedRefactorer(refactorer);
-        assertThat(refactorer.getIssues(SRC).isEmpty(), is(false));
+        final Refactorer refactorer = Vesper.createRefactorer();
+        final CheckpointedRefactorer enrichedRefactorer = Vesper.createCheckpointedRefactorer(refactorer, SRC);
+        assertThat(enrichedRefactorer.getIssues(SRC).isEmpty(), is(false));
         assertThat(enrichedRefactorer.getTrackedSources().size(), is(1));
 
         assertThat(enrichedRefactorer.getTrackedSources().isEmpty(), is(false));
@@ -55,13 +55,14 @@ public class RefactorerTest {
         assertSame(enrichedRefactorer.getTrackedSources().get(0), SRC);
         assertThat(enrichedRefactorer.getTrackedSources().contains(SRC), is(true));
 
-        assertThat(refactorer.hasIssues(SRC), is(true));
+        assertThat(enrichedRefactorer.hasIssues(SRC), is(true));
     }
 
     @Test public void testRefactorerCreateChanges() {
         // for issue and for edit
-        final Refactorer refactorer = Vesper.createRefactorer(SRC);
-        final List<Issue> issues = refactorer.getIssues(SRC);
+        final Refactorer refactorer = Vesper.createRefactorer();
+        final CheckpointedRefactorer enrichedRefactorer = Vesper.createCheckpointedRefactorer(refactorer, SRC);
+        final List<Issue> issues = enrichedRefactorer.getIssues(SRC);
 
         assertThat(issues.isEmpty(), is(false));
 
@@ -89,15 +90,15 @@ public class RefactorerTest {
 
     @Test public void testRefactorerRecommendChange(){
         // for any issues found on the SRC
-        final Refactorer refactorer = Vesper.createRefactorer(SRC);
-        final List<Change> recommendedChanges = refactorer.recommendChanges(SRC);
+        final Refactorer refactorer = Vesper.createRefactorer();
+        final List<Change> changes = refactorer.recommendChanges(SRC, refactorer.detectIssues(SRC));
 
-        assertThat(recommendedChanges.isEmpty(), is(false));
-        assertThat(recommendedChanges.size(), is(2));
+        assertThat(changes.isEmpty(), is(false));
+        assertThat(changes.size(), is(2));
     }
 
     @Test public void testRefactorerUnitLocator() {
-        final Refactorer refactorer = Vesper.createRefactorer(SRC);
+        final Refactorer refactorer = Vesper.createRefactorer();
         final UnitLocator locator = refactorer.getLocator(SRC);
 
         final List<NamedLocation> params = locator.locate(new ParameterUnit("message"));

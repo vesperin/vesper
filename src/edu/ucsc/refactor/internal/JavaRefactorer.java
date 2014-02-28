@@ -2,6 +2,7 @@ package edu.ucsc.refactor.internal;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.spi.CommitRequest;
@@ -21,7 +22,6 @@ public class JavaRefactorer implements Refactorer {
     private static final Logger LOGGER = Logger.getLogger(JavaRefactorer.class.getName());
 
     private final HostImpl                  host;
-    private final Map<Source, List<Issue>>  findings;
     private final Map<Source, Context>      cachedContexts;
 
 
@@ -35,7 +35,6 @@ public class JavaRefactorer implements Refactorer {
      */
     public JavaRefactorer(Host host) {
         this.host           = (HostImpl) host;
-        this.findings       = Maps.newHashMap();
         this.cachedContexts = Maps.newHashMap();
 
         this.inspector  = new SourceChecking(host.getIssueDetectors());
@@ -101,19 +100,17 @@ public class JavaRefactorer implements Refactorer {
     }
 
 
-    @Override public void detectIssues(Source code) {
+    @Override public Set<Issue> detectIssues(Source code) {
         Preconditions.checkNotNull(code);
         try {
             final Context context = validContext(code);
-            if(context == null) { return; }
+            if(context == null) { return ImmutableSet.of(); }
 
-            final Set<Issue> issues = inspector.detectIssues(context);
-            for(Issue each : issues){
-                registerIssue(code, each);
-            }
+            return inspector.detectIssues(context);
         } catch (Exception ex){
             getRefactoringHost().addError(ex);
             LOGGER.throwing(this.getClass().getName(), "detectIssues()", ex);
+            return ImmutableSet.of();
         }
     }
 
@@ -139,15 +136,6 @@ public class JavaRefactorer implements Refactorer {
         return context;
     }
 
-    private Issue registerIssue(Source source, Issue issue) {
-        if(getIssueRegistry().containsKey(source)) { this.findings.get(source).add(issue); } else {
-            this.findings.put(source, new ArrayList<Issue>());
-            this.findings.get(source).add(issue);
-        }
-
-        return issue;
-    }
-
     /**
      * Checks whether the conditions are right so the detection service
      * to start scanning a source file for issues.
@@ -161,38 +149,24 @@ public class JavaRefactorer implements Refactorer {
                 && context.getSource() != null;
     }
 
-    Map<Source, List<Issue>> getIssueRegistry() {
-        return findings;
-    }
-
-    @Override public List<Issue> getIssues(Source key) {
-        if(getIssueRegistry().containsKey(key)){
-            return getIssueRegistry().get(key);
-        }
-
-        return Collections.emptyList();
-    }
-
-    @Override public boolean hasIssues(Source code) {
-        return !getIssues(Preconditions.checkNotNull(code)).isEmpty();
-    }
 
     @Override public UnitLocator getLocator(Source readSource) {
         Preconditions.checkNotNull(readSource);
-        Preconditions.checkState(!getValidContexts().isEmpty(), "unknown Source");
-        return new ProgramUnitLocator(getValidContexts().get(readSource));
+
+        final Context context = (getValidContexts().containsKey(readSource)
+                ? getValidContexts().get(readSource)
+                : validContext(readSource)
+        );
+
+        return new ProgramUnitLocator(context);
     }
 
 
-    @Override public List<Change> recommendChanges(Source code) {
+    @Override public List<Change> recommendChanges(Source code, Set<Issue> issues) {
         final List<Change> recommendations = new ArrayList<Change>();
 
-        if(hasIssues(code)){
-            final List<Issue> issues = getIssues(code);
-
-            for(Issue issue : issues){
-                recommendations.add(createChange(ChangeRequest.forIssue(issue, code)));
-            }
+        for(Issue issue : issues){
+            recommendations.add(createChange(ChangeRequest.forIssue(issue, code)));
         }
 
         return recommendations;

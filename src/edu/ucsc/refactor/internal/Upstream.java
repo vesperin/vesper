@@ -66,6 +66,7 @@ public class Upstream implements Repository {
 
 
     @Override public Commit push(Commit commit) {
+        Preconditions.checkArgument(!credential.isNoneCredential(), "incorrect credentials; this refactorer is not setup yet for remote publishing!");
         Preconditions.checkNotNull(commit, "push() received a null commit");
         try {
             final Source after = commit.getSourceAfterChange();

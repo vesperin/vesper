@@ -1,11 +1,11 @@
 package edu.ucsc.refactor;
 
+import com.google.common.collect.ImmutableList;
 import edu.ucsc.refactor.internal.HostImpl;
 import edu.ucsc.refactor.internal.InternalCheckpointedRefactorerCreator;
 import edu.ucsc.refactor.internal.InternalRefactorerCreator;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -109,10 +109,23 @@ public final class Vesper {
      * Creates a refactorer for the given set of sources.
      * @return a new Refactorer
      */
-    public static Refactorer createRefactorer(Source... sources){
+    public static Refactorer createRefactorer(){
+        return createRefactorer(DEFAULT_CONFIG);
+    }
+
+
+    /**
+     * Creates a refactorer for the given set of sources using
+     * {@link Vesper}'s main configuration object.
+     *
+     * @param configuration The current configuration
+     *
+     * @return a new Refactorer
+     */
+    public static Refactorer createRefactorer(Configuration configuration) {
         return createRefactorer(
-                DEFAULT_CONFIG,
-                sources
+                configuration,
+                new HostImpl()
         );
     }
 
@@ -123,75 +136,67 @@ public final class Vesper {
      *
      * @param configuration The current configuration
      * @param host          The current host.
-     * @param sources The list of sources.
      *
      * @return a new Refactorer
      */
     public static Refactorer createRefactorer(
             Configuration configuration,
-            Host host, Iterable<Source> sources
+            Host host
     ){
 
-        Vesper.nonNull(configuration, host, sources);
+        Vesper.nonNull(configuration, host);
 
 
         // installs a configuration to Vesper's host.
         host.install(configuration);
 
         return new InternalRefactorerCreator(host)
-                .addSources(sources)
                 .build();
     }
 
-
     /**
-     * Creates a refactorer for the given set of sources using
-     * {@link Vesper}'s main configuration object.
+     * Creates a checkpointed refactorer for the given array of sources
      *
-     * @param configuration The current configuration
-     * @param sources The list of sources.
-     *
-     * @return a new Refactorer
-     */
-    public static Refactorer createRefactorer(
-            Configuration configuration,
-            Iterable<Source> sources
-    ){
-
-        return createRefactorer(
-                configuration,
-                new HostImpl(),
-                sources
-        );
-    }
-
-
-    /**
-     * Creates a refactorer for the given set of sources using
-     * {@link Vesper}'s main configuration object.
-     *
-     * @param configuration The current configuration
      * @param sources The array of sources.
      *
      * @return a new Refactorer
      */
-    public static Refactorer createRefactorer(
-            Configuration configuration,
-            Source... sources
-    ){
-
-        return createRefactorer(
-                configuration,
-                Arrays.asList(sources)
-        );
+    public static CheckpointedRefactorer createCheckpointedRefactorer(Source... sources){
+        return Vesper.createCheckpointedRefactorer(Vesper.createRefactorer(), sources);
     }
 
     /**
-     * Creates a checkpointed refactorer for the given refactorer.
-     * @return a new CheckpointedRefactorer
+     * Creates a checkpointed refactorer for the given array of sources
+     *
+     * @param refactorer The plain refactorer
+     * @param sources The array of sources.
+     *
+     * @return a new Refactorer
      */
-    public static CheckpointedRefactorer createCheckpointedRefactorer(Refactorer refactorer){
-        return new InternalCheckpointedRefactorerCreator(refactorer).build();
+    public static CheckpointedRefactorer createCheckpointedRefactorer(Refactorer refactorer, Source... sources){
+        final ImmutableList<Source> seed = ImmutableList.copyOf(sources);
+
+        if(seed.contains(null)) {
+            throw new CreationException(
+                    ImmutableList.of(new Throwable("createRefactorer() has been given a null configuration."))
+            );
+        }
+
+        return Vesper.createCheckpointedRefactorer(refactorer, seed);
+    }
+
+    /**
+     * Creates a checkpointed refactorer from a plain refactorer and for the given array of sources
+     *
+     * @param refactorer The plain refactorer
+     * @param sources The array of sources.
+     *
+     * @return a new Refactorer
+     */
+    private static CheckpointedRefactorer createCheckpointedRefactorer(Refactorer refactorer, Iterable<Source> sources){
+        return new InternalCheckpointedRefactorerCreator(refactorer)
+                .addSources(sources)
+                .build();
     }
 
     /**
@@ -204,7 +209,7 @@ public final class Vesper {
     }
 
 
-    static void nonNull(Configuration configuration, Host host, Iterable<Source> sources) throws
+    static void nonNull(Configuration configuration, Host host) throws
             CreationException {
 
         final List<Throwable> throwables = new ArrayList<Throwable>();
@@ -217,12 +222,6 @@ public final class Vesper {
         if(host == null){
             throwables.add(
                     new Throwable("createRefactorer() has been given a null host.")
-            );
-        }
-
-        if(sources == null){
-            throwables.add(
-                    new Throwable("createRefactorer() has been given no sources to inspect.")
             );
         }
 

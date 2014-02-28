@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import edu.ucsc.refactor.internal.HostImpl;
 import edu.ucsc.refactor.internal.Upstream;
 import edu.ucsc.refactor.util.Commit;
+import edu.ucsc.refactor.util.CommitPublisher;
 import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.Gist;
 import org.eclipse.egit.github.core.GistFile;
@@ -33,19 +34,15 @@ public class VesperTest {
     static final Source CODE = new Source("Name.java", CONTENT);
 
     @Test public void testCommitBrandNewChange() throws Exception {
-        final List<Source>  folio   = new ArrayList<Source>();
-
-        folio.add(CODE);
-
         final Refactorer refactorer = Vesper.createRefactorer(
                 new ShallowConfiguration(),
-                new ShallowHost(),
-                folio
+                new ShallowHost()
         );
 
-        assertThat(refactorer.hasIssues(CODE), is(true));
+        final Set<Issue> issues = refactorer.detectIssues(CODE);
+        assertThat(!issues.isEmpty(), is(true));
 
-        final List<Change> suggestedChanges = refactorer.recommendChanges(CODE);
+        final List<Change> suggestedChanges = refactorer.recommendChanges(CODE, issues);
         assertThat(suggestedChanges.isEmpty(), is(false));
 
         final Change first = suggestedChanges.get(0);
@@ -59,27 +56,23 @@ public class VesperTest {
         final Source src = new Source("Name.java", UPDATED);
         src.setId(String.valueOf(new Random().nextLong()));
 
-        final List<Source>  folio   = new ArrayList<Source>();
-        folio.add(src);
 
         final Refactorer refactorer = Vesper.createRefactorer(
                 new ShallowConfiguration(),
-                new SemiShallowHost(),
-                folio
+                new SemiShallowHost()
         );
 
-        final CheckpointedRefactorer enrichedRefactorer = Vesper.createCheckpointedRefactorer(refactorer);
+        final Set<Issue> issues = refactorer.detectIssues(CODE);
+        assertThat(!issues.isEmpty(), is(true));
 
-        assertThat(refactorer.hasIssues(src), is(true));
-
-        final List<Change> suggestedChanges = refactorer.recommendChanges(src);
+        final List<Change> suggestedChanges = refactorer.recommendChanges(src, issues);
         assertThat(suggestedChanges.isEmpty(), is(false));
 
         final Change first = suggestedChanges.get(0);
         final Commit applied = refactorer.apply(first);
         assertNotNull(applied);
 
-        final CommitPublisher publisher = enrichedRefactorer.getCommitPublisher(src);
+        final CommitPublisher publisher = new CommitPublisher();
 
         final Commit published = publisher.publish(
                 applied,
@@ -103,6 +96,9 @@ public class VesperTest {
         System.out.println(anotherPublished.getCommitSummary().more());
 
     }
+
+
+
 
 
     static class ShallowHost extends HostImpl {

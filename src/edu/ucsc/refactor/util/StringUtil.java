@@ -3,6 +3,10 @@ package edu.ucsc.refactor.util;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
+import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -11,7 +15,11 @@ public class StringUtil {
     private StringUtil(){}
 
     public static String extractClassName(String content){
-        final Iterable<String> chunks = Splitter.on(" ").split(content.substring(0, content.indexOf("{")));
+        final Iterable<String> chunks = Splitter.on(
+                Pattern.compile("\r\n|\n|\r|[^\\S\\n]")
+        ).trimResults().split(
+                content.substring(0, content.indexOf("{"))
+        );
         return Iterables.get(chunks, Iterables.indexOf(chunks, Predicates.equalTo("class")) + 1);
     }
 

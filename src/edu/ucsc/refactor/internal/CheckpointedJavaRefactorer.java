@@ -2,18 +2,14 @@ package edu.ucsc.refactor.internal;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import edu.ucsc.refactor.*;
-import edu.ucsc.refactor.spi.Repository;
 import edu.ucsc.refactor.spi.UnitLocator;
 import edu.ucsc.refactor.util.Commit;
 import edu.ucsc.refactor.util.CommitHistory;
+import edu.ucsc.refactor.util.CommitPublisher;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
@@ -24,6 +20,7 @@ public class CheckpointedJavaRefactorer implements CheckpointedRefactorer {
 
     private final JavaRefactorer                refactorer;
     private final Map<String, CommitHistory>    timeline;
+    private final Map<Source, List<Issue>>      findings;
 
     /**
      * Instantiates a new {@link CheckpointedJavaRefactorer} object.
@@ -32,6 +29,7 @@ public class CheckpointedJavaRefactorer implements CheckpointedRefactorer {
     CheckpointedJavaRefactorer(Refactorer refactorer){
         this.refactorer     = (JavaRefactorer) refactorer;
         this.timeline       = Maps.newHashMap();
+        this.findings       = Maps.newHashMap();
     }
 
     @Override public Source advance(Source current) {
@@ -76,13 +74,34 @@ public class CheckpointedJavaRefactorer implements CheckpointedRefactorer {
     }
 
 
-    @Override public void detectIssues(Source code) {
-        refactorer.detectIssues(code);
+    @Override public Set<Issue> detectIssues(Source code) {
+        final Set<Issue> issues = refactorer.detectIssues(code);
+        for(Issue each : issues){
+            registerIssue(code, each);
+        }
+        return issues;
+    }
+
+    private Issue registerIssue(Source source, Issue issue) {
+        if(getIssueRegistry().containsKey(source)) { this.findings.get(source).add(issue); } else {
+            this.findings.put(source, new ArrayList<Issue>());
+            this.findings.get(source).add(issue);
+        }
+
+        return issue;
+    }
+
+    Map<Source, List<Issue>> getIssueRegistry() {
+        return findings;
     }
 
 
     @Override public List<Issue> getIssues(Source key) {
-        return refactorer.getIssues(key);
+        if(getIssueRegistry().containsKey(key)){
+            return getIssueRegistry().get(key);
+        }
+
+        return Collections.emptyList();
     }
 
     @Override public CommitHistory getCommitHistory(Source src) {
@@ -96,10 +115,9 @@ public class CheckpointedJavaRefactorer implements CheckpointedRefactorer {
 
 
     @Override public CommitPublisher getCommitPublisher(Source src) {
-        return new CommitHistoryPublisher(
+        return new CommitPublisher(
                 getCommitHistory(src),
-                refactorer.getRefactoringHost().getStorageKey(),
-                refactorer.getRefactoringHost().isRemoteUpstreamEnabled()
+                refactorer.getRefactoringHost().getStorageKey()
         );
     }
 
@@ -109,7 +127,7 @@ public class CheckpointedJavaRefactorer implements CheckpointedRefactorer {
     }
 
     @Override public boolean hasIssues(Source code) {
-        return refactorer.hasIssues(code);
+        return !getIssues(Preconditions.checkNotNull(code)).isEmpty();
     }
 
     @Override public List<Source> getTrackedSources() {
@@ -119,7 +137,7 @@ public class CheckpointedJavaRefactorer implements CheckpointedRefactorer {
 
     private void populateCommitHistory(Commit commit){
         // clear current issue registry for source
-        refactorer.getIssueRegistry().remove(commit.getSourceBeforeChange());
+        getIssueRegistry().remove(commit.getSourceBeforeChange());
         refactorer.getValidContexts().remove(commit.getSourceBeforeChange());
 
         final String key = commit.getUniqueSignature();
@@ -133,8 +151,9 @@ public class CheckpointedJavaRefactorer implements CheckpointedRefactorer {
     }
 
 
-    @Override public List<Change> recommendChanges(Source code) {
-        return refactorer.recommendChanges(code);
+
+    @Override public List<Change> recommendChanges(Source code, Set<Issue> issues) {
+        return refactorer.recommendChanges(code, issues);
     }
 
     @Override public Source rewriteHistory(Source source) {
@@ -198,7 +217,7 @@ public class CheckpointedJavaRefactorer implements CheckpointedRefactorer {
         final String signature = from.getUniqueSignature();
 
         if(timeline.containsKey(signature)){
-            refactorer.getIssueRegistry().remove(from);
+            getIssueRegistry().remove(from);
 
             timeline.remove(signature);
             timeline.put(signature, sliced);
@@ -215,52 +234,5 @@ public class CheckpointedJavaRefactorer implements CheckpointedRefactorer {
         final Objects.ToStringHelper builder = Objects.toStringHelper(getClass());
         builder.add("known files", getTrackedSources());
         return builder.toString();
-    }
-
-    /**
-     * Helper class used to publish all the commits that belong to a given
-     * {@code CommitHistory}
-     */
-    static class CommitHistoryPublisher implements CommitPublisher {
-        final CommitHistory history;
-        final Credential    credential;
-        final boolean       isRemotePublishingEnabled;
-
-        CommitHistoryPublisher(CommitHistory history, Credential credential, boolean isRemotePublishingEnabled){
-            this.history                    = history;
-            this.credential                 = credential;
-            this.isRemotePublishingEnabled  = isRemotePublishingEnabled;
-        }
-
-        @Override public List<Commit> publish() {
-            return publish(new Upstream(credential));
-        }
-
-        @Override public List<Commit> publish(Repository to) {
-
-            Preconditions.checkState(
-                    isRemotePublishingEnabled,
-                    "this refactorer is not setup yet for remote publishing"
-            );
-
-            final List<Commit> commitsToDelete = Lists.newArrayList();
-            for(Commit eachCommit : history){ // in order
-
-                final Commit pushed = publish(eachCommit, to);
-
-                if(pushed.isValidCommit()){
-                    commitsToDelete.add(pushed);
-                }
-            }
-
-            return commitsToDelete;
-        }
-
-
-        @Override public Commit publish(Commit request, Repository upstream) {
-            return Preconditions.checkNotNull(upstream).push(
-                    Preconditions.checkNotNull(request)
-            );
-        }
     }
 }

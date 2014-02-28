@@ -4,6 +4,7 @@ import edu.ucsc.refactor.spi.UnitLocator;
 import edu.ucsc.refactor.util.Commit;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -13,18 +14,6 @@ public interface Refactorer {
      * Applies a code change to a {@code Source} and then returns a {@link Commit}, which
      * represents a set of applied changes, or "deltas", from one version of the {@code Source} to
      * the next.
-     *
-     * <p>
-     * Once a change is applied to a {@code Source}, this {@link Refactorer} re-inspects the
-     * modified {@link Source} to check if there are still code issues that could be addressed.
-     * The returned list of issues can be either empty (no issues found) or non-empty (issues found).
-     * </p>
-     *
-     * <p>
-     * To obtain the most recent list of issues (after any application of a change), the user must
-     * invoke the {@link Refactorer#getIssues(Source)} method.
-     * </p>
-     *
      *
      * @param change The change to be applied
      * @return The applied commit, null if the {@link Commit} could not
@@ -56,26 +45,10 @@ public interface Refactorer {
      * in it.
      *
      * @param code The {@link Source} to be scanned.
+     * @return a set of issues found in {@code Source}.
      * @throws java.lang.NullPointerException if {@code Source} null.
      */
-    void detectIssues(Source code);
-
-    /**
-     * Returns the list of issues found in the given {@code Source}.
-     *
-     * @param key The source key
-     * @return The list of issues detected in that source; or empty if no issues were found.
-     */
-    List<Issue> getIssues(Source key);
-
-    /**
-     * Checks whether a given source code has issues.
-     *
-     * @param code The {@code Source}.
-     * @return {@code true} if the {@code Source} has issues, {@code false} otherwise.
-     * @throws java.lang.NullPointerException if {@code Source} null.
-     */
-    boolean hasIssues(Source code);
+    Set<Issue> detectIssues(Source code);
 
     /**
      * Returns a locator of any structural unit of a base {@code Source} (class, member, ...).
@@ -100,8 +73,9 @@ public interface Refactorer {
      * guarantee a fresh set of recommended changes. Otherwise, source code conflicts may occur.
      *
      * @param code The {@code Source}
+     * @param issues The issues from where changes will be recommended.
      * @return The list of recommended changes
      * @throws java.lang.NullPointerException if {@code Source} null.
      */
-    List<Change> recommendChanges(Source code);
+    List<Change> recommendChanges(Source code, Set<Issue> issues);
 }
