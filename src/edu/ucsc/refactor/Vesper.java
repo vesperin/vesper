@@ -25,9 +25,9 @@ import java.util.List;
  *
  *     final Source          code       = new Source(...);
  *     // using your own configuration:
- *     // refactorer = Vesper.createRefactorer(new MyConfiguration(), code);
+ *     // refactorer = Vesper.createRefactorer(new MyConfiguration());
  *     // using default configuration
- *     final Refactorer      refactorer = Vesper.createRefactorer(code);
+ *     final Refactorer      refactorer = Vesper.createRefactorer();
  *
  *     final Map<String, Parameter> userInput = ...;
  *
@@ -66,15 +66,28 @@ import java.util.List;
  *     // III. Publishing locally committed changes to a remote repository (e.g., Gist.Github.com)
  *
  *     // Let's assume that vesper has been given the right credentials to access a remote repo
- *     // (e.g., see default configuration for how to do this).
+ *     // (e.g., see default configuration for how to do this). Let's call this authenticated repo
+ *     AuthenticatedUpstream..
  *
+ *     final CommitPublisher publisher = new CommitPublisher();
  *     // publish changes
- *     final CommitRequest published = refactorer.publish(applied);
- *     System.out.println(published.more());
+ *     final Commit published = publisher.publish(applied, new AuthenticatedUpstream());
+ *     System.out.println(published.getCommitSummary().more());
+ *
+ *     // Assuming a source have been changed many times and we have kept a commit history
+ *     // of those changes. THis mean that the user has used the CheckpointedRefactorer.
+ *     // Here is how to use this refactorer in order to publish those changes
+ *
+ *     final CheckpointedRefactorer cf = Vesper.createCheckpointedRefactorer(code);
+ *     // .. changes are made to 'code'
+ *
+ *     final CommitPublisher publisher = cf.getCommitPublisher(code);
+ *     // publish changes
+ *     publisher.publish();
  *
  *     // IV. Retrieving the SourceHistory of a Source (previously curated)
  *
- *     final SourceRecalling recalling = new SourceRecalling(new Upstream(...), "123456");
+ *     final SourceRecalling recalling = new SourceRecalling(new AuthenticatedUpstream(), "123456");
  *
  *     final SourceHistory history = recalling.recall();
  *
