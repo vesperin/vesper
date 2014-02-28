@@ -1,6 +1,7 @@
 package edu.ucsc.refactor;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 import edu.ucsc.refactor.util.Notes;
 import edu.ucsc.refactor.util.StringUtil;
 import edu.ucsc.refactor.util.UniqueIdentifierGenerator;
@@ -48,6 +49,12 @@ public class Source {
      * @param description The file's description.
      */
     public Source(String name, String contents, String description){
+        Preconditions.checkArgument(
+                StringUtil.size(
+                        StringUtil.extractFileName(Preconditions.checkNotNull(name))
+                ) > 2, "name of class is too short"
+        );
+
         this.name        = new AtomicReference<String>(name);
         this.contents    = contents;
         this.description = description;

@@ -72,20 +72,21 @@ public class JavaRefactorer implements Refactorer {
                         : "creating a change for a single edit.") );
 
         return changer.createChange(
-                (isIssue ? cause : prep(cause, request)), parameters
+                (isIssue ? cause : prepSingleEdit(cause, request)), parameters
         );
     }
 
 
-    private SingleEdit prep(CauseOfChange cause, ChangeRequest request){
+    void clearCachedContexts(){
+        getValidContexts().clear();
+    }
+
+
+    private SingleEdit prepSingleEdit(CauseOfChange cause, ChangeRequest request){
         final SingleEdit      edit    = (SingleEdit) cause;
         final SourceSelection select  = request.getSelection();
         final Source          code    = select.first().getSource();
-        final Context         context = getValidContexts().containsKey(code)
-                                            ? getValidContexts().get(code)
-                                            : getRefactoringHost().createContext(code);
-
-        getValidContexts().put(code, context);
+        final Context         context = validContext(code);
 
         final UnitLocator           inferredUnitLocator = getLocator(context.getSource());
         final List<NamedLocation>   namedLocations      = inferredUnitLocator.locate(
@@ -125,14 +126,17 @@ public class JavaRefactorer implements Refactorer {
 
 
     Context validContext(Source code){
-        final Context context = getRefactoringHost().createContext(code);
+        final Context context = (getValidContexts().containsKey(code)
+                ? getValidContexts().get(code)
+                : getRefactoringHost().createContext(code));
+
         if(!canScanContextForIssues(context)) {
             LOGGER.fine("Cannot scan this context. Check configuration.");
             return null;
         }
 
         // cached contexts, just in case we need to reuse them
-        cachedContexts.put(code, context);
+        getValidContexts().put(code, context);
         return context;
     }
 
@@ -169,6 +173,7 @@ public class JavaRefactorer implements Refactorer {
             recommendations.add(createChange(ChangeRequest.forIssue(issue, code)));
         }
 
+        clearCachedContexts();
         return recommendations;
     }
 

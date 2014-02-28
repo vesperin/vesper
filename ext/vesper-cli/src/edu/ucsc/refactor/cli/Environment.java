@@ -288,19 +288,25 @@ public class Environment {
 
         for(Source each : all){
             if(each.getName().equals(name)){
-
                 final boolean isOrigin  = each.equals(getOrigin());
 
-                final Source to         = getCodeRefactorer().regress(each);
-                final Source indexed    = getCodeRefactorer().rewriteHistory(to);
+                Source result =  each;
 
-                final boolean isUpdateNeeded = !each.equals(indexed);
+                final int size = getCommitHistory().size();
 
-                if(isOrigin && isUpdateNeeded){
-                    update(indexed);
+                for(int idx = 0; idx < size; idx++){
+                    final Source to         = getCodeRefactorer().regress(result);
+                    final Source indexed    = getCodeRefactorer().rewriteHistory(to);
+
+                    final boolean isUpdateNeeded = !each.equals(indexed);
+
+                    if(isOrigin && isUpdateNeeded){
+                        update(indexed);
+                        result =  indexed;
+                    }
                 }
 
-                return each;
+                return result;
             }
         }
 

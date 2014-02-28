@@ -137,8 +137,9 @@ public class CheckpointedJavaRefactorer implements CheckpointedRefactorer {
 
     private void populateCommitHistory(Commit commit){
         // clear current issue registry for source
-        getIssueRegistry().remove(commit.getSourceBeforeChange());
-        refactorer.getValidContexts().remove(commit.getSourceBeforeChange());
+        final Source before = commit.getSourceBeforeChange();
+        getIssueRegistry().remove(before);
+        refactorer.getValidContexts().remove(before);
 
         final String key = commit.getUniqueSignature();
 
@@ -203,6 +204,7 @@ public class CheckpointedJavaRefactorer implements CheckpointedRefactorer {
 
         for(Commit each : history){
             if(each.getSourceAfterChange().equals(current)){
+                getIssueRegistry().remove(current);
                 return each.getSourceBeforeChange();
             }
         }
@@ -217,7 +219,7 @@ public class CheckpointedJavaRefactorer implements CheckpointedRefactorer {
         final String signature = from.getUniqueSignature();
 
         if(timeline.containsKey(signature)){
-            getIssueRegistry().remove(from);
+            refactorer.clearCachedContexts();
 
             timeline.remove(signature);
             timeline.put(signature, sliced);

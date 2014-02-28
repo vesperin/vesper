@@ -15,10 +15,22 @@ public interface Refactorer {
      * represents a set of applied changes, or "deltas", from one version of the {@code Source} to
      * the next.
      *
+     * <p />
+     *
+     * Each change is orthogonal to every other change of the {@code list} of recommended changes
+     * or detected issues. Consequently, once a change or fix to an issue is applied to a {@code Source},
+     * the remaining changes (the ones that have not been applied) become outdated since they contain
+     * an outdated version of the {@code Source} and therefore an different {@code AST}. To alleviate
+     * this problem, each time the user chooses a {@code change} from the list of recommended changes or
+     * from the list of detected issues to fix and then applies it, the user must re-run the
+     * {@code Refactorer#recommendChanges(Source)} method to guarantee a fresh set of recommended
+     * changes. Otherwise, source code conflicts may occur; e.g., Document does not match the AST.
+     *
      * @param change The change to be applied
      * @return The applied commit, null if the {@link Commit} could not
      *      be applied.
      * @throws java.lang.NullPointerException if change is null.
+     * @throws java.lang.IllegalArgumentException if conflicts in AST.
      */
     Commit apply(Change change);
 
@@ -44,6 +56,12 @@ public interface Refactorer {
      * Scans a {@link Source} tracked by the {@code Refactorer}, looking for any {@link Issue}s
      * in it.
      *
+     * <p />
+     *
+     * Contexts are cached when invoking this method. THis mean that if this method is not invoked,
+     * then a new context will be created per change request.
+     *
+     *
      * @param code The {@link Source} to be scanned.
      * @return a set of issues found in {@code Source}.
      * @throws java.lang.NullPointerException if {@code Source} null.
@@ -65,12 +83,10 @@ public interface Refactorer {
      * E.g., if this {@code Source} has 10 issues in it, then the
      * {@code Refactorer} will recommend 10 changes that will address this 10 issues.
      *
-     * Each change is orthogonal to every other change of the {@code recommended} list. Consequently,
-     * once a change is applied to a {@code Source}, the remaining changes become outdated since
-     * they contain an outdated version of the {@code Source}. To alleviate this problem, each time
-     * the user chooses a {@code change} from the recommended list and then applies it, the user
-     * must re-run the {@code Refactorer#recommendChanges(Source)} method to
-     * guarantee a fresh set of recommended changes. Otherwise, source code conflicts may occur.
+     * <p />
+     *
+     * Context cache is flushed out after recommending changes for a set of issues. THis mean that
+     * if this method is not invoked, then the cached contexts will remain.
      *
      * @param code The {@code Source}
      * @param issues The issues from where changes will be recommended.

@@ -42,6 +42,11 @@ public class StringUtil {
         return filePathName.substring( slashPos > 0 ? slashPos + 1 : 0 );
     }
 
+    public static int size(String content){
+        if(StringUtil.isStringEmpty(content)) return 0;
+        return content.length();
+    }
+
 
     public static String splitCamelCase(String s) {
         return s.replaceAll(
@@ -61,7 +66,7 @@ public class StringUtil {
 
 
     public static boolean equals(String a, String b) {
-        return a == null ? b == null : a.equalsIgnoreCase(b);
+        return a == null ? b == null : a.equals(b);
     }
 
 }
