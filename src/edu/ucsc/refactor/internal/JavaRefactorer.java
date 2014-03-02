@@ -50,7 +50,9 @@ public class JavaRefactorer implements Refactorer {
 
         if(applied.isValid()){
             try {
-                return applied.commit();
+                final Commit committed = applied.commit();
+                clearCachedContext(committed.getSourceBeforeChange());
+                return committed;
             } catch (RuntimeException ex){
                 LOGGER.throwing("Unable to commit change", "apply()", ex);
                 return null; // nothing was committed
@@ -74,6 +76,10 @@ public class JavaRefactorer implements Refactorer {
         return changer.createChange(
                 (isIssue ? cause : prepSingleEdit(cause, request)), parameters
         );
+    }
+
+    void clearCachedContext(Source before){
+        getValidContexts().remove(before);
     }
 
 

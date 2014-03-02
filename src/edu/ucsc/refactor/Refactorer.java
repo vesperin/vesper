@@ -26,6 +26,11 @@ public interface Refactorer {
      * {@code Refactorer#recommendChanges(Source)} method to guarantee a fresh set of recommended
      * changes. Otherwise, source code conflicts may occur; e.g., Document does not match the AST.
      *
+     * <p />
+     *
+     * Context cache is flushed out after applying a given change. THis mean that if this method is
+     * not invoked, then we have a cached context for the given Source.
+     *
      * @param change The change to be applied
      * @return The applied commit, null if the {@link Commit} could not
      *      be applied.
