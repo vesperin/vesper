@@ -1,9 +1,12 @@
 package edu.ucsc.refactor.spi;
 
 import edu.ucsc.refactor.*;
-import edu.ucsc.refactor.internal.*;
+import edu.ucsc.refactor.internal.Delta;
+import edu.ucsc.refactor.internal.LocalCommitRequest;
+import edu.ucsc.refactor.internal.SourceLocation;
 import edu.ucsc.refactor.internal.util.AstUtil;
 import edu.ucsc.refactor.util.SourceFormatter;
+import edu.ucsc.refactor.util.StringUtil;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -98,7 +101,7 @@ public abstract class SourceChanger implements Changer {
             LOGGER.throwing("Could not rewrite the AST tree.", "createDelta", e);
         }
 
-        delta.setAfter(document.get());
+        delta.setAfter(StringUtil.trim(document.get()));
 
         return delta;
     }
