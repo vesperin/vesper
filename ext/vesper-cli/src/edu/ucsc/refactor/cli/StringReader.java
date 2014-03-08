@@ -38,7 +38,7 @@ public class StringReader {
             }
         }
 
-
+        parentheses.delete(0, parentheses.length());
         return result;
     }
 

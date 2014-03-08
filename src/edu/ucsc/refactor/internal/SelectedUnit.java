@@ -43,6 +43,11 @@ public class SelectedUnit extends AbstractProgramUnit  {
 
         if(!statements.isSelectionCoveringValidStatements()){ return locations; }
 
+        // todo, once formatted, it is hard to locate a method. This mean that statements getSelectedNodes
+        // is empty, and the only non null node is the statements.lastCoveringNode, which can be A BLOCK
+        // if method is the selection. Therefore, I should get the parent of this block to get the method
+        // or class to remove.
+
         for(ASTNode each : statements.getSelectedNodes()){
             // ignore instance creation, parameter passing,... just give me its declaration
             locations.add(new ProgramUnitLocation(each, Locations.locate(each)));

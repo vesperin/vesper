@@ -12,6 +12,7 @@ import edu.ucsc.refactor.util.Commit;
 import io.airlift.airline.Arguments;
 import io.airlift.airline.Option;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static io.airlift.airline.OptionType.GROUP;
@@ -24,7 +25,7 @@ public abstract class RemoveCommand extends VesperCommand {
     public boolean file = false;
 
     @Arguments(description = "Remove operation parameters")
-    public List<String> patterns;
+    public List<String> patterns = new ArrayList<String>();
 
     @Override public Result execute(Environment environment) throws RuntimeException {
         ensureValidState(environment);
@@ -48,6 +49,8 @@ public abstract class RemoveCommand extends VesperCommand {
         if(environment.isErrorFree()){
             return Results.errorResult(environment.getErrorMessage());
         }
+
+        patterns.clear();
 
         return createResultPackage(applied);
     }

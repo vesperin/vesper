@@ -70,6 +70,8 @@ public class RemoveUnusedFields extends SourceChanger {
                                         " cannot be deleted. It is referenced" +
                                         " throughout the source code"
                         );
+                    } else {
+                        rewrite.remove(declaration, null);
                     }
 
                 }
