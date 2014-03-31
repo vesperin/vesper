@@ -32,7 +32,7 @@ public class RenameMethod extends SourceChanger {
                                            Map<String, Parameter> parameters) {
 
         final Change change  = new SourceChange(cause, this, parameters);
-        final String newName = (String) parameters.get(Parameters.METHOD_NEW_NAME).getValue();
+        final String newName = (String) parameters.get(Parameters.MEMBER_NEW_NAME).getValue();
         try {
             for(ASTNode each : cause.getAffectedNodes()){ // assumption, there is only one affected node
                 final Delta delta = renameMethod(

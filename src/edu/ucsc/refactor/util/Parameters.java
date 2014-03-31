@@ -17,30 +17,15 @@ public class Parameters {
         }
     };
 
-    public static final String METHOD_NEW_NAME         = "New method name";
-    public static final String TYPE_NEW_NAME           = "New class or interface name";
-    public static final String PARAMETER_NEW_NAME      = "New method name";
-    public static final String FIELD_NEW_NAME          = "New method name";
+    public static final String MEMBER_NEW_NAME         = "New member name";
+
     public static final String PARAMETER_CONSTANT_NAME = "Constant name";
 
     private Parameters(){}
 
 
-    public static Map<String, Parameter> newClassOrInterfaceName(String value){
-        return createParameter(TYPE_NEW_NAME, value, CONSTRAINT);
-    }
-
-    public static Map<String, Parameter> newMethodName(String value){
-        return createParameter(METHOD_NEW_NAME, value, CONSTRAINT);
-    }
-
-
-    public static Map<String, Parameter> newParameterName(String value){
-        return createParameter(PARAMETER_NEW_NAME, value, CONSTRAINT);
-    }
-
-    public static Map<String, Parameter> newFieldName(String value){
-        return createParameter(FIELD_NEW_NAME, value, CONSTRAINT);
+    public static Map<String, Parameter> newMemberName(String value){
+        return createParameter(MEMBER_NEW_NAME, value, CONSTRAINT);
     }
 
 

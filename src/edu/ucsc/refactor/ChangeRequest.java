@@ -159,6 +159,18 @@ public class ChangeRequest {
         );
     }
 
+    /**
+     * Rename a 'selected member change request' with selection and newName as values.
+     *
+     * @see {@link SingleEdit#renameSelectedMember(SourceSelection)}
+     */
+    public static ChangeRequest renameSelectedMember(SourceSelection selection, String newName){
+        return ChangeRequest.forEdit(
+                SingleEdit.renameSelectedMember(selection),
+                Parameters.newMemberName(newName)
+        );
+    }
+
 
     /**
      * Rename a class/interface change request with selection and newName as values.
@@ -168,7 +180,7 @@ public class ChangeRequest {
     public static ChangeRequest renameClassOrInterface(SourceSelection selection, String newName){
         return ChangeRequest.forEdit(
                 SingleEdit.renameClassOrInterface(selection),
-                Parameters.newClassOrInterfaceName(newName)
+                Parameters.newMemberName(newName)
         );
     }
 
@@ -180,7 +192,7 @@ public class ChangeRequest {
     public static ChangeRequest renameMethod(SourceSelection selection, String newName){
         return ChangeRequest.forEdit(
                 SingleEdit.renameMethod(selection),
-                Parameters.newMethodName(newName)
+                Parameters.newMemberName(newName)
         );
     }
 
@@ -193,7 +205,7 @@ public class ChangeRequest {
     public static ChangeRequest renameParameter(SourceSelection selection, String newName){
         return ChangeRequest.forEdit(
                 SingleEdit.renameParameter(selection),
-                Parameters.newParameterName(newName)
+                Parameters.newMemberName(newName)
         );
     }
 
@@ -207,7 +219,7 @@ public class ChangeRequest {
     public static ChangeRequest renameField(SourceSelection selection, String newName){
         return ChangeRequest.forEdit(
                 SingleEdit.renameField(selection),
-                Parameters.newFieldName(newName)
+                Parameters.newMemberName(newName)
         );
     }
 
@@ -284,9 +296,8 @@ public class ChangeRequest {
 
 
     @Override public String toString() {
-        StringBuilder s = new StringBuilder();
-        s.append("ChangeRequest (").append(getSelection()).append(")").append(" for ");
-        s.append(getCauseOfChange().getName()).append(isIssue() ? " issue." : " edit.");
-        return s.toString();
+        return "ChangeRequest (" + getSelection() + ")"
+                + " for " + getCauseOfChange().getName()
+                + (isIssue() ? " issue." : " edit.");
     }
 }

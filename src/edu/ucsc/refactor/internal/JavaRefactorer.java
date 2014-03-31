@@ -5,6 +5,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import edu.ucsc.refactor.*;
+import edu.ucsc.refactor.internal.util.Edits;
 import edu.ucsc.refactor.spi.CommitRequest;
 import edu.ucsc.refactor.spi.IssueDetector;
 import edu.ucsc.refactor.spi.SourceChanger;
@@ -103,7 +104,7 @@ public class JavaRefactorer implements Refactorer {
             edit.addNode(((ProgramUnitLocation)eachNamedLocation).getNode());
         }
 
-        return edit;
+        return Edits.resolve(edit);
     }
 
 

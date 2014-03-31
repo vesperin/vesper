@@ -6,8 +6,12 @@ import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.*;
 import edu.ucsc.refactor.internal.detectors.*;
 import edu.ucsc.refactor.internal.util.AstUtil;
+import edu.ucsc.refactor.internal.util.Edits;
 import edu.ucsc.refactor.spi.JavaParser;
+import edu.ucsc.refactor.spi.SourceChanger;
+import edu.ucsc.refactor.util.Commit;
 import edu.ucsc.refactor.util.Locations;
+import edu.ucsc.refactor.util.Parameters;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -20,8 +24,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -323,6 +326,169 @@ public class ChangersTest {
         final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
         assertThat(locations.isEmpty(), is(true)); // it's empty since this is an invalid selection
     }
+
+
+    @Test public void testRenameSelectedMethod(){
+        final Source  code    = InternalUtil.createSourceWithJavaDocs();
+        final Context context = new Context(code);
+
+        parser.parseJava(context);
+
+        final ProgramUnitLocator  locator   = new ProgramUnitLocator(context);
+        final SourceSelection     selection = new SourceSelection(SourceLocation.createLocation(code, code.getContents(), 53, 57));
+        final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
+
+
+        final SingleEdit       edit   = SingleEdit.renameSelectedMember(selection);
+        assertThat(locations.isEmpty(), is(false));
+
+        for(NamedLocation eachLocation : locations){
+            final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
+            edit.addNode(target.getNode());
+        }
+
+
+//        final List<Location> lll = Locations.locateWord(code, "boom");
+
+
+        final RenameMethod  rename      = new RenameMethod();
+        final SingleEdit    resolved    = Edits.resolve(edit);
+
+        checkChangeCreation(rename, resolved);
+    }
+
+
+    @Test public void testRenameSelectedClass(){
+        final Source  code    = InternalUtil.createSourceWithJavaDocs();
+        final Context context = new Context(code);
+
+        parser.parseJava(context);
+
+        final ProgramUnitLocator  locator   = new ProgramUnitLocator(context);
+        final SourceSelection     selection = new SourceSelection(SourceLocation.createLocation(code, code.getContents(), 6, 10));
+        final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
+
+
+        final SingleEdit       edit   = SingleEdit.renameSelectedMember(selection);
+        assertThat(locations.isEmpty(), is(false));
+
+        for(NamedLocation eachLocation : locations){
+            final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
+            edit.addNode(target.getNode());
+        }
+
+
+        final RenameClassOrInterface    rename      = new RenameClassOrInterface();
+        final SingleEdit                resolved    = Edits.resolve(edit);
+
+        checkChangeCreation(rename, resolved);
+
+
+        final ProgramUnitLocator  classLocator   = new ProgramUnitLocator(context);
+        final List<NamedLocation> classLocations = locator.locate(new ClassUnit("Name"));
+
+        final ProgramUnitLocation nloc = (ProgramUnitLocation) classLocations.get(0);
+
+        final Location ok = Locations.locate(nloc.getNode());
+
+        System.out.print("");
+    }
+
+
+    @Test(expected = RuntimeException.class) public void testRenameSelectedWholeClass(){
+        final Source  code    = InternalUtil.createSourceWithJavaDocs();
+        final Context context = new Context(code);
+
+        parser.parseJava(context);
+
+        final ProgramUnitLocator  locator   = new ProgramUnitLocator(context);
+        final SourceSelection     selection = new SourceSelection(SourceLocation.createLocation(code, code.getContents(), 0, 87));
+        final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
+
+
+        final SingleEdit       edit   = SingleEdit.renameSelectedMember(selection);
+        assertThat(locations.isEmpty(), is(false));
+
+        for(NamedLocation eachLocation : locations){
+            final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
+            edit.addNode(target.getNode());
+        }
+
+        Edits.resolve(edit); // will throw an exception; cannot rename a compilation unit
+
+        fail("Tried to rename a compilation unit, which is wrong!");
+
+    }
+
+
+    @Test public void testRenameSelectedParameter(){
+        final Source  code    = InternalUtil.createSourceWithUsedField();
+        final Context context = new Context(code);
+
+        parser.parseJava(context);
+
+        final ProgramUnitLocator  locator   = new ProgramUnitLocator(context);
+        final SourceSelection     selection = new SourceSelection(SourceLocation.createLocation(code, code.getContents(), 42, 45));
+        final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
+
+
+        final SingleEdit       edit   = SingleEdit.renameSelectedMember(selection);
+        assertThat(locations.isEmpty(), is(false));
+
+        for(NamedLocation eachLocation : locations){
+            final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
+            edit.addNode(target.getNode());
+        }
+
+
+        final RenameParam    rename      = new RenameParam();
+        final SingleEdit     resolved    = Edits.resolve(edit);
+
+        checkChangeCreation(rename, resolved);
+    }
+
+
+    @Test public void testRenameSelectedField(){
+        final Source  code    = InternalUtil.createSourceWithUsedField();
+        final Context context = new Context(code);
+
+        parser.parseJava(context);
+
+        final ProgramUnitLocator  locator   = new ProgramUnitLocator(context);
+        final SourceSelection     selection = new SourceSelection(SourceLocation.createLocation(code, code.getContents(), 18, 19));
+        final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
+
+
+        final SingleEdit       edit   = SingleEdit.renameSelectedMember(selection);
+        assertThat(locations.isEmpty(), is(false));
+
+        for(NamedLocation eachLocation : locations){
+            final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
+            edit.addNode(target.getNode());
+        }
+
+
+        final RenameField    rename      = new RenameField();
+        final SingleEdit     resolved    = Edits.resolve(edit);
+
+        checkChangeCreation(rename, resolved);
+    }
+
+    private static void checkChangeCreation(SourceChanger changer, SingleEdit resolved){
+        final Change  change  = changer.createChange(resolved, Parameters.newMemberName("hey"));
+        assertThat(change.isValid(), is(true));
+
+        final Commit commit = change.perform().commit();
+
+        assertThat(commit != null, is(true));
+
+        if(commit != null){
+            assertThat(commit.isValidCommit(), is(true));
+        }
+    }
+
+
+
 
 
     @After public void tearDown() throws Exception {

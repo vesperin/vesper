@@ -93,6 +93,17 @@ public class SingleEdit extends AbstractCauseOfChange {
     }
 
     /**
+     * Renames a selected member of a class (e.g., class, method, parameter, or field), which its
+     * location can be inferred from {@code SourceSelection} object.
+     *
+     * @param selection The selected member
+     * @return The {@code SingleEdit}.
+     */
+    public static SingleEdit renameSelectedMember(SourceSelection selection){
+        return new SingleEdit(Refactoring.RENAME_SELECTION, selection);
+    }
+
+    /**
      * Optimizes the import declarations found in a {@code Source} code.
      *
      * @param code The source code whose import declarations will be optimized.

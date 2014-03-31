@@ -136,6 +136,14 @@ public class AstUtil {
         }
     }
 
+    public static <T extends ASTNode> T immediateAncestor(Class<T> targetType, ASTNode object){
+        try {
+            return exactCast(targetType, object);
+        } catch (Throwable ex){
+            return null;
+        }
+    }
+
     public static <T extends ASTNode> T exactCast(Class<T> targetType, ASTNode object){
         return targetType.cast(object);
     }
@@ -312,15 +320,22 @@ public class AstUtil {
      * @return <code>true</code> iff <code>parent</code> is a true ancestor of <code>node</code>
      */
     public static boolean isParent(ASTNode node, ASTNode parent) {
+
         ASTNode a = Preconditions.checkNotNull(node);
-        ASTNode b = Preconditions.checkNotNull(parent);
+
+        if(parent == null) return false;
 
         do {
             a = a.getParent();
-            if (a == b) return true;
+            if (a == parent) return true;
         } while (a != null);
 
         return false;
+    }
+
+
+    public static <T extends ASTNode> boolean isOfType(final Class<T> thatClass, final ASTNode node) {
+        return node.getClass() == thatClass;
     }
 
 

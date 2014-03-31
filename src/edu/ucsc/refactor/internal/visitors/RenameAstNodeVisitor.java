@@ -96,7 +96,8 @@ public class RenameAstNodeVisitor extends ASTVisitor {
     static void renameField(SimpleName node, VariableDeclaration declaration, String newName){
         // todo(Huascar) should we rename the getter and setter?
         if(declaration == null){
-            if((node.getParent() instanceof FieldAccess)){ // field
+            if((node.getParent() instanceof FieldAccess)
+                || node.getParent() instanceof Assignment){ // field
                 node.setIdentifier(newName);
             }
         } else {
@@ -108,7 +109,8 @@ public class RenameAstNodeVisitor extends ASTVisitor {
 
     static void renameType(SimpleName node, String newName){
         if(node.getParent() instanceof TypeDeclaration
-                || node.getParent() instanceof ConstructorInvocation){
+                || node.getParent() instanceof ConstructorInvocation
+                || node.getParent() instanceof MethodRef){
             node.setIdentifier(newName);
         }
     }
