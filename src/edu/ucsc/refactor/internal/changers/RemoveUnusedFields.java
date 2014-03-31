@@ -52,7 +52,7 @@ public class RemoveUnusedFields extends SourceChanger {
         final boolean cameFromDetector = cause.getName().isSame(Smell.UNUSED_TYPE);
 
         for(ASTNode affected : cause.getAffectedNodes()){
-            final FieldDeclaration declaration = (FieldDeclaration) affected;
+            final FieldDeclaration declaration = AstUtil.parent(FieldDeclaration.class, affected);
 
             if(cameFromDetector){
                 rewrite.remove(declaration, null);

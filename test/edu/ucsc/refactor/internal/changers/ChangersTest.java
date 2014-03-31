@@ -144,6 +144,116 @@ public class ChangersTest {
         assertThat(change.isValid(), is(false));
     }
 
+    @Test public void testRemoveSelectedField(){
+        final Source  code    = InternalUtil.createSourceWithUnusedField();
+        final Context context = new Context(code);
+
+        parser.parseJava(context);
+
+        final ProgramUnitLocator  locator   = new ProgramUnitLocator(context);
+        final SourceSelection     selection = new SourceSelection(SourceLocation.createLocation(code, code.getContents(), 18, 19));
+        final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
+
+
+        final SingleEdit       edit   = SingleEdit.deleteRegion(selection);
+        assertThat(locations.isEmpty(), is(false));
+
+        for(NamedLocation eachLocation : locations){
+            final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
+            edit.addNode(target.getNode());
+        }
+
+
+        final RemoveUnusedFields    remove      = new RemoveUnusedFields();
+        final SingleEdit            resolved    = Edits.resolve(edit);
+
+        checkChangeCreation(remove, resolved);
+    }
+
+
+    @Test public void testRemoveSelectedMethod(){
+        final Source  code    = InternalUtil.createSourceWithUnusedMethodAndParameter();
+        final Context context = new Context(code);
+
+        parser.parseJava(context);
+
+        final ProgramUnitLocator  locator   = new ProgramUnitLocator(context);
+
+        final SourceSelection     selection = new SourceSelection(SourceLocation.createLocation(code, code.getContents(), 44, 48));
+        final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
+
+
+        final SingleEdit       edit   = SingleEdit.deleteRegion(selection);
+        assertThat(locations.isEmpty(), is(false));
+
+        for(NamedLocation eachLocation : locations){
+            final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
+            edit.addNode(target.getNode());
+        }
+
+
+        final RemoveUnusedMethods   remove      = new RemoveUnusedMethods();
+        final SingleEdit            resolved    = Edits.resolve(edit);
+
+        checkChangeCreation(remove, resolved);
+    }
+
+
+    @Test public void testRemoveSelectedClass(){
+        final Source  code    = InternalUtil.createSourceWithOneUnusedStaticNestedClass();
+        final Context context = new Context(code);
+
+        parser.parseJava(context);
+
+        final ProgramUnitLocator  locator   = new ProgramUnitLocator(context);
+
+        final SourceSelection     selection = new SourceSelection(SourceLocation.createLocation(code, code.getContents(), 195, 211));
+        final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
+
+
+        final SingleEdit       edit   = SingleEdit.deleteRegion(selection);
+        assertThat(locations.isEmpty(), is(false));
+
+        for(NamedLocation eachLocation : locations){
+            final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
+            edit.addNode(target.getNode());
+        }
+
+
+        final RemoveUnusedTypes   remove      = new RemoveUnusedTypes();
+        final SingleEdit          resolved    = Edits.resolve(edit);
+
+        checkChangeCreation(remove, resolved);
+    }
+
+
+    @Test public void testRemoveSelectedMethodParameter(){
+        final Source  code    = InternalUtil.createSourceWithUnusedMethodAndParameter();
+        final Context context = new Context(code);
+
+        parser.parseJava(context);
+
+        final ProgramUnitLocator  locator   = new ProgramUnitLocator(context);
+
+        final SourceSelection     selection = new SourceSelection(SourceLocation.createLocation(code, code.getContents(), 31, 34));
+        final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
+
+
+        final SingleEdit       edit   = SingleEdit.deleteRegion(selection);
+        assertThat(locations.isEmpty(), is(false));
+
+        for(NamedLocation eachLocation : locations){
+            final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
+            edit.addNode(target.getNode());
+        }
+
+
+        final RemoveUnusedParameters    remove      = new RemoveUnusedParameters();
+        final SingleEdit                resolved    = Edits.resolve(edit);
+
+        checkChangeCreation(remove, resolved);
+    }
+
 
     @Test public void testRemoveFieldTriggeredByUser(){
         final Context context = new Context(
@@ -382,16 +492,6 @@ public class ChangersTest {
         final SingleEdit                resolved    = Edits.resolve(edit);
 
         checkChangeCreation(rename, resolved);
-
-
-        final ProgramUnitLocator  classLocator   = new ProgramUnitLocator(context);
-        final List<NamedLocation> classLocations = locator.locate(new ClassUnit("Name"));
-
-        final ProgramUnitLocation nloc = (ProgramUnitLocation) classLocations.get(0);
-
-        final Location ok = Locations.locate(nloc.getNode());
-
-        System.out.print("");
     }
 
 

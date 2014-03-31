@@ -8,6 +8,7 @@ import edu.ucsc.refactor.Parameter;
 import edu.ucsc.refactor.internal.Delta;
 import edu.ucsc.refactor.internal.SourceChange;
 import edu.ucsc.refactor.internal.util.AstUtil;
+import edu.ucsc.refactor.internal.visitors.MethodInvocationVisitor;
 import edu.ucsc.refactor.spi.Names;
 import edu.ucsc.refactor.spi.Smell;
 import edu.ucsc.refactor.spi.SourceChanger;
@@ -17,6 +18,7 @@ import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -78,8 +80,21 @@ public class RemoveUnusedParameters extends SourceChanger {
                 );
             } else {
                 final List<ASTNode> requiredNodes = new ArrayList<ASTNode>();
-                requiredNodes.add(AstUtil.parent(MethodDeclaration.class, parameterReference));
+
+                final MethodDeclaration host = AstUtil.parent(MethodDeclaration.class, parameterReference);
+
+                requiredNodes.add(host);
                 requiredNodes.add(parameterReference);
+
+
+                final MethodInvocationVisitor invokes = new MethodInvocationVisitor(host.getName());
+                root.accept(invokes);
+
+                final Set<MethodInvocation> invocations = invokes.getMethodInvocations();
+                for(MethodInvocation each : invocations){
+                    requiredNodes.add(each);
+                }
+
                 removeOnceAndForAll(rewrite, requiredNodes);
             }
 

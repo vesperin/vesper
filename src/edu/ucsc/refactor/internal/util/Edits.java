@@ -31,16 +31,16 @@ public class Edits {
             final ASTNode node = edit.getAffectedNodes().get(0);
 
             final SingleEdit resolved;
-            if(isRenameClass(node)) {
+            if(isClass(node)) {
                 resolved = SingleEdit.renameClassOrInterface(edit.getSourceSelection());
                 resolved.addNode(node);
-            } else if(isRenameMethod(node)){
+            } else if(isMethod(node)){
                 resolved = SingleEdit.renameMethod(edit.getSourceSelection());
                 resolved.addNode(node);
-            } else if(isRenameParameter(node)){
+            } else if(isParameter(node)){
                 resolved = SingleEdit.renameParameter(edit.getSourceSelection());
                 resolved.addNode(node);
-            } else if(isRenameField(node)){
+            } else if(isField(node)){
                 resolved = SingleEdit.renameField(edit.getSourceSelection());
                 resolved.addNode(node);
             } else {
@@ -49,29 +49,57 @@ public class Edits {
 
             return resolved;
 
+        } else if(Refactoring.DELETE_REGION.isSame(edit.getName())){
+            Preconditions.checkArgument(
+                    edit.getAffectedNodes().size() >= 1,
+                    "at least one selected member; no less"
+            );
+
+            if(edit.getAffectedNodes().size() == 1){
+                final ASTNode node = edit.getAffectedNodes().get(0);
+
+                final SingleEdit resolved;
+                if(isClass(node)){
+                    resolved = SingleEdit.deleteClass(edit.getSourceSelection());
+                    resolved.addNode(node);
+                } else if(isMethod(node)) {
+                    resolved = SingleEdit.deleteMethod(edit.getSourceSelection());
+                    resolved.addNode(node);
+                } else if(isParameter(node)){
+                    resolved = SingleEdit.deleteParameter(edit.getSourceSelection());
+                    resolved.addNode(node);
+                } else if(isField(node)){
+                    resolved = SingleEdit.deleteField(edit.getSourceSelection());
+                    resolved.addNode(node);
+                } else {
+                    return edit; // either is a comment, block comment.
+                }
+
+                return resolved;
+            }
         }
 
         return edit;
     }
 
-    private static boolean isRenameField(ASTNode node) {
+    private static boolean isField(ASTNode node) {
         return (AstUtil.isOfType(FieldDeclaration.class, node)
                 ||  AstUtil.isParent(node, AstUtil.immediateAncestor(FieldDeclaration.class, node.getParent())))
                 || (AstUtil.isOfType(VariableDeclarationFragment.class, node)
         || AstUtil.isParent(node, AstUtil.immediateAncestor(VariableDeclarationFragment.class, node.getParent())));
     }
 
-    private static boolean isRenameParameter(ASTNode node) {
+    private static boolean isParameter(ASTNode node) {
         return AstUtil.isOfType(SingleVariableDeclaration.class, node)
                 ||  AstUtil.isParent(node, AstUtil.immediateAncestor(SingleVariableDeclaration.class, node.getParent()));
     }
 
-    private static boolean isRenameMethod(ASTNode node) {
+    private static boolean isMethod(ASTNode node) {
         return AstUtil.isOfType(MethodDeclaration.class, node)
                 ||  AstUtil.isParent(node, AstUtil.immediateAncestor(MethodDeclaration.class, node.getParent()));
     }
 
-    private static boolean isRenameClass(ASTNode node) {
+    private static boolean isClass(ASTNode node) {
         return AstUtil.isOfType(TypeDeclaration.class, node)
                 ||  AstUtil.isParent(node, AstUtil.immediateAncestor(TypeDeclaration.class, node.getParent()));
     }
