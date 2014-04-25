@@ -169,6 +169,84 @@ public class InternalUtil {
         );
     }
 
+    public static Source createSourceUsingStackoverflowExample(){
+        final String content = "import java.io.*;\n" +
+                "import java.util.Arrays;\n" +
+                "\n" +
+                "public class MergeSort {\n" +
+                "\n" +
+                "\tpublic static void main(String[] args) throws IOException {\n" +
+                "\t\tBufferedReader R = new BufferedReader(new InputStreamReader(System.in));\n" +
+                "\t\tint arraySize = Integer.parseInt(R.readLine());\n" +
+                "\t\tint[] inputArray = new int[arraySize];\n" +
+                "\t\tfor (int i = 0; i < arraySize; i++) {\n" +
+                "\t\t\tinputArray[i] = Integer.parseInt(R.readLine());\n" +
+                "\t\t}\n" +
+                "\t\tmergeSort(inputArray);\n" +
+                "\n" +
+                "\t\tfor (int j = 0; j < inputArray.length; j++) {\n" +
+                "\t\t\tSystem.out.println(inputArray[j]);\n" +
+                "\t\t}\n" +
+                "\n" +
+                "\t}\n" +
+                "\n" +
+                "\tstatic void mergeSort(int[] A) {\n" +
+                "\t\tif (A.length > 1) {\n" +
+                "\t\t\tint q = A.length / 2;\n" +
+                "\t\t\tint[] leftArray = Arrays.copyOfRange(A, 0, q);\n" +
+                "\t\t\tint[] rightArray = Arrays.copyOfRange(A, q + 1, A.length);\n" +
+                "\t\t\tmergeSort(leftArray);\n" +
+                "\t\t\tmergeSort(rightArray);\n" +
+                "\t\t\tA = merge(leftArray, rightArray);\n" +
+                "\t\t}\n" +
+                "\t}\n" +
+                "\n" +
+                "\tstatic int[] merge(int[] l, int[] r) {\n" +
+                "\t\tint totElem = l.length + r.length;\n" +
+                "\t\tint[] a = new int[totElem];\n" +
+                "\t\tint i, li, ri;\n" +
+                "\t\ti = li = ri = 0;\n" +
+                "\t\twhile (i < totElem) {\n" +
+                "\t\t\tif ((li < l.length) && (ri < r.length)) {\n" +
+                "\t\t\t\tif (l[li] < r[ri]) {\n" +
+                "\t\t\t\t\ta[i] = l[li];\n" +
+                "\t\t\t\t\ti++;\n" +
+                "\t\t\t\t\tli++;\n" +
+                "\t\t\t\t} else {\n" +
+                "\t\t\t\t\ta[i] = r[ri];\n" +
+                "\t\t\t\t\ti++;\n" +
+                "\t\t\t\t\tri++;\n" +
+                "\t\t\t\t}\n" +
+                "\t\t\t} else {\n" +
+                "\t\t\t\tif (li >= l.length) {\n" +
+                "\t\t\t\t\twhile (ri < r.length) {\n" +
+                "\t\t\t\t\t\ta[i] = r[ri];\n" +
+                "\t\t\t\t\t\ti++;\n" +
+                "\t\t\t\t\t\tri++;\n" +
+                "\t\t\t\t\t}\n" +
+                "\t\t\t\t}\n" +
+                "\t\t\t\tif (ri >= r.length) {\n" +
+                "\t\t\t\t\twhile (li < l.length) {\n" +
+                "\t\t\t\t\t\ta[i] = l[li];\n" +
+                "\t\t\t\t\t\tli++;\n" +
+                "\t\t\t\t\t\ti++;\n" +
+                "\t\t\t\t\t}\n" +
+                "\t\t\t\t}\n" +
+                "\t\t\t}\n" +
+                "\t\t}\n" +
+                "\t\treturn a;\n" +
+                "\n" +
+                "\t}\n" +
+                "\n" +
+                "}";
+
+        return createSource(
+                "MergeSort.java",
+                new StringBuilder(content)
+        );
+
+    }
+
     public static Source createSource(String name, StringBuilder builder){
         return new Source(name, builder.toString());
     }

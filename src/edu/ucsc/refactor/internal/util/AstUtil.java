@@ -5,10 +5,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import edu.ucsc.refactor.Location;
+import edu.ucsc.refactor.NamedLocation;
 import edu.ucsc.refactor.Source;
-import edu.ucsc.refactor.internal.visitors.LabelVisitor;
-import edu.ucsc.refactor.internal.visitors.LinkedNodesVisitor;
-import edu.ucsc.refactor.internal.visitors.SideEffectNodesVisitor;
+import edu.ucsc.refactor.internal.ProgramUnitLocation;
+import edu.ucsc.refactor.internal.visitors.*;
 import edu.ucsc.refactor.util.Locations;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.*;
@@ -77,6 +77,95 @@ public class AstUtil {
                     ? binding.getAnnotations().length
                     : 0
         );
+    }
+
+    /**
+     * Note that LineComment and BlockComment nodes are not normally visited in an AST because
+     * they are not considered part of main structure of the AST. Use CompilationUnit.getCommentList()
+     * to find these additional comments nodes.
+     *
+     * @param unit  the current compilation unit
+     * @param base  the selection range
+     * @return the locations covered by selection range
+     */
+    public static List<NamedLocation> getCoveredCommentsLocation(CompilationUnit unit, Location base){
+        final List<NamedLocation>   locations   = Lists.newArrayList();
+        final List                  comments    = unit.getCommentList();
+        final CommentsVisitor       visitor     = new CommentsVisitor();
+        final Source                source      = Source.from(unit);
+
+
+        for(Object each : comments){
+            final Comment comment = (Comment) each;
+            comment.accept(visitor);
+            Location other;
+            for(LineComment line : visitor.getLineComments()){
+                other = Locations.locate(source, line);
+                if(Locations.covers(base, other) || Locations.bothSame(base, other)){
+                    if(!containsLocation(locations, other)){
+                        locations.add(new ProgramUnitLocation(line, other));
+                    }
+                }
+            }
+
+            for(BlockComment block : visitor.getBlockComments()){
+                other = Locations.locate(source, block);
+                if(Locations.covers(base, other) || Locations.bothSame(base, other)){
+                    if(!containsLocation(locations, other)){
+                        locations.add(new ProgramUnitLocation(block, other));
+                    }
+
+                }
+            }
+        }
+
+        return locations;
+
+    }
+
+    private static boolean containsLocation(List<NamedLocation> locations, Location location){
+        for(Location each : locations){
+            if(Locations.bothSame(each, location)){
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
+    public static List<Location> getChildrenLocation(ASTNode parent){
+        final List<Location> locations = Lists.newArrayList();
+        final List<ASTNode> children = AstUtil.getChildren(parent);
+        for(ASTNode eachChild : children){
+            locations.add(Locations.locate(eachChild));
+            if(eachChild instanceof Block){
+                final List<ASTNode> children2 = AstUtil.getChildren(eachChild);
+                for(ASTNode o : children2){
+                    locations.add(Locations.locate(o));
+                }
+            }
+        }
+
+        return locations;
+    }
+
+
+    public static MethodDeclaration getMethodDeclaration(ASTNode methodInvocation){
+        final SimpleName name = AstUtil.parent(MethodInvocation.class, methodInvocation).getName();
+        final CompilationUnit unit = AstUtil.parent(CompilationUnit.class, methodInvocation);
+        final MethodDeclarationVisitor methodDeclarationVisitor = new MethodDeclarationVisitor();
+
+        unit.accept(methodDeclarationVisitor);
+
+        final List<MethodDeclaration> declarations = methodDeclarationVisitor.getMethodDeclarations();
+        for(MethodDeclaration each : declarations){
+            if(each.getName().getIdentifier().equals(name.getIdentifier())){
+                return each;
+            }
+        }
+
+        return null; // not found
     }
 
     public static <T extends ASTNode> T copySubtree(final Class<T> thatClass, AST ast, final ASTNode node) {

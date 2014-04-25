@@ -88,6 +88,40 @@ public class ChangersTest {
     }
 
 
+    @Test public void testTheStackoverflowWebExample() {
+        final Context context = new Context(
+                InternalUtil.createSourceUsingStackoverflowExample()
+        );
+
+        parser.parseJava(context);
+
+        final SourceSelection     selection = new SourceSelection(
+                SourceLocation.createLocation(
+                        context.getSource(),
+                        context.getSource().getContents(),
+                        394, 403
+                )
+        );
+
+        final ProgramUnitLocator    locator    = new ProgramUnitLocator(context);
+        final List<NamedLocation>   locations  = locator.locate(new SelectedUnit(selection));
+
+
+        final SingleEdit       edit   = SingleEdit.renameSelectedMember(selection);
+        assertThat(locations.isEmpty(), is(false));
+
+        for(NamedLocation eachLocation : locations){
+            final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
+            edit.addNode(target.getNode());
+        }
+
+
+        final RenameMethod  rename      = new RenameMethod();
+        final SingleEdit    resolved    = Edits.resolve(edit);
+
+        checkChangeCreation(rename, resolved);
+    }
+
     @Test public void testChangerForOptimizeImports() throws Exception {
         final Source  code    = InternalUtil.createGeneralSource();
         final Context context = new Context(code);
@@ -586,9 +620,6 @@ public class ChangersTest {
             assertThat(commit.isValidCommit(), is(true));
         }
     }
-
-
-
 
 
     @After public void tearDown() throws Exception {

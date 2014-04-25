@@ -1,8 +1,11 @@
 package edu.ucsc.refactor.internal.util;
 
 import com.google.common.base.Preconditions;
+import edu.ucsc.refactor.Location;
 import edu.ucsc.refactor.SingleEdit;
+import edu.ucsc.refactor.SourceSelection;
 import edu.ucsc.refactor.spi.Refactoring;
+import edu.ucsc.refactor.util.Locations;
 import org.eclipse.jdt.core.dom.*;
 
 /**
@@ -34,9 +37,14 @@ public class Edits {
             if(isClass(node)) {
                 resolved = SingleEdit.renameClassOrInterface(edit.getSourceSelection());
                 resolved.addNode(node);
-            } else if(isMethod(node)){
+            } else if(isMethod(node)) {
                 resolved = SingleEdit.renameMethod(edit.getSourceSelection());
                 resolved.addNode(node);
+            } else if(isMethodInvocation(node)){
+                final ASTNode  methodDeclaration = AstUtil.getMethodDeclaration(node);
+                final Location location          = Locations.locate(methodDeclaration);
+                resolved = SingleEdit.renameMethod(new SourceSelection(location));
+                resolved.addNode(methodDeclaration);
             } else if(isParameter(node)){
                 resolved = SingleEdit.renameParameter(edit.getSourceSelection());
                 resolved.addNode(node);
@@ -65,6 +73,11 @@ public class Edits {
                 } else if(isMethod(node)) {
                     resolved = SingleEdit.deleteMethod(edit.getSourceSelection());
                     resolved.addNode(node);
+                } else if(isMethodInvocation(node)) {
+                    final ASTNode  methodDeclaration = AstUtil.getMethodDeclaration(node);
+                    final Location location          = Locations.locate(methodDeclaration);
+                    resolved = SingleEdit.deleteMethod(new SourceSelection(location));
+                    resolved.addNode(methodDeclaration);
                 } else if(isParameter(node)){
                     resolved = SingleEdit.deleteParameter(edit.getSourceSelection());
                     resolved.addNode(node);
@@ -98,6 +111,12 @@ public class Edits {
         return AstUtil.isOfType(MethodDeclaration.class, node)
                 ||  AstUtil.isParent(node, AstUtil.immediateAncestor(MethodDeclaration.class, node.getParent()));
     }
+
+    private static boolean isMethodInvocation(ASTNode node) {
+        return AstUtil.isOfType(MethodInvocation.class, node)
+                || AstUtil.isParent(node, AstUtil.immediateAncestor(MethodInvocation.class, node.getParent()));
+    }
+
 
     private static boolean isClass(ASTNode node) {
         return AstUtil.isOfType(TypeDeclaration.class, node)
