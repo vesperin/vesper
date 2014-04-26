@@ -51,7 +51,12 @@ public class Edits {
             } else if(isField(node)){
                 resolved = SingleEdit.renameField(edit.getSourceSelection());
                 resolved.addNode(node);
-            } else {
+            } else if(isFieldAccess(node)){
+                final FieldDeclaration  fieldDeclaration = AstUtil.getFieldDeclaration(node);
+                final Location          location         = Locations.locate(fieldDeclaration);
+                resolved = SingleEdit.renameField(new SourceSelection(location));
+                resolved.addNode(fieldDeclaration);
+            }  else {
                 throw new RuntimeException("invalid selection");
             }
 
@@ -84,6 +89,11 @@ public class Edits {
                 } else if(isField(node)){
                     resolved = SingleEdit.deleteField(edit.getSourceSelection());
                     resolved.addNode(node);
+                } else if(isFieldAccess(node)){
+                    final FieldDeclaration  fieldDeclaration = AstUtil.getFieldDeclaration(node);
+                    final Location          location         = Locations.locate(fieldDeclaration);
+                    resolved = SingleEdit.deleteField(new SourceSelection(location));
+                    resolved.addNode(fieldDeclaration);
                 } else {
                     return edit; // either is a comment, block comment.
                 }
@@ -93,6 +103,10 @@ public class Edits {
         }
 
         return edit;
+    }
+
+    private static boolean isFieldAccess(ASTNode node) {
+        return AstUtil.getFieldDeclaration(node) != null;
     }
 
     private static boolean isField(ASTNode node) {

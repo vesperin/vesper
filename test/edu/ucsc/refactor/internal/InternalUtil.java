@@ -62,6 +62,17 @@ public class InternalUtil {
     }
 
 
+    public static Source createSourceWithSomeUsedFieldAndLocalVariable(){
+        return createSource(
+                "Name.java",
+                new StringBuilder("class Name {\n")
+                        .append("\tint a = 0;")
+                        .append("\tvoid boom(String msg){ a = 1; int b = 0; b = 1; if(msg.length() > 1) {}}\n")
+                        .append("}")
+        );
+    }
+
+
     public static Source createSourceWithJavaDocs(){
         return createSource(
                 "Name.java",

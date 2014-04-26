@@ -151,6 +151,24 @@ public class AstUtil {
     }
 
 
+    public static FieldDeclaration getFieldDeclaration(ASTNode node){
+        if(AstUtil.isOfType(SimpleName.class, node)){
+            final CompilationUnit unit = AstUtil.parent(CompilationUnit.class, node);
+            final List<SimpleName> usages  = AstUtil.findByNode(unit, AstUtil.exactCast(SimpleName.class, node));
+            if(!usages.isEmpty()){
+                for(SimpleName usage : usages){
+                    final ASTNode parent = AstUtil.parent(FieldDeclaration.class, usage);
+                    if(parent != null){
+                        return AstUtil.exactCast(FieldDeclaration.class, parent);
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+
     public static MethodDeclaration getMethodDeclaration(ASTNode methodInvocation){
         final SimpleName name = AstUtil.parent(MethodInvocation.class, methodInvocation).getName();
         final CompilationUnit unit = AstUtil.parent(CompilationUnit.class, methodInvocation);

@@ -122,6 +122,41 @@ public class ChangersTest {
         checkChangeCreation(rename, resolved);
     }
 
+
+    @Test public void testRenameFieldBySelectingOneOfItsUsages() {
+        final Context context = new Context(
+                InternalUtil.createSourceWithSomeUsedFieldAndLocalVariable()
+        );
+
+        parser.parseJava(context);
+
+        final List<Location>    spots     = Locations.locateWord(context.getSource(), "a");
+        final SourceSelection   selection = new SourceSelection(spots.get(1));
+
+
+        final ProgramUnitLocator    locator    = new ProgramUnitLocator(context);
+        final List<NamedLocation>   locations  = locator.locate(new SelectedUnit(selection));
+
+
+        final SingleEdit       edit   = SingleEdit.renameSelectedMember(selection);
+        assertThat(locations.isEmpty(), is(false));
+
+        for(NamedLocation eachLocation : locations){
+            final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
+            edit.addNode(target.getNode());
+        }
+
+
+        final RenameField  rename      = new RenameField();
+        final SingleEdit    resolved    = Edits.resolve(edit);
+
+        checkChangeCreation(rename, resolved);
+
+        System.out.println();
+
+
+    }
+
     @Test public void testChangerForOptimizeImports() throws Exception {
         final Source  code    = InternalUtil.createGeneralSource();
         final Context context = new Context(code);
