@@ -35,28 +35,25 @@ public class Edits {
 
             final SingleEdit resolved;
             if(isClass(node)) {
-                resolved = SingleEdit.renameClassOrInterface(edit.getSourceSelection());
-                resolved.addNode(node);
+                final TypeDeclaration   declaration = AstUtil.getTypeDeclaration(node);
+                final Location          location    = Locations.locate(declaration);
+                resolved = SingleEdit.renameClassOrInterface(new SourceSelection(location));
+                resolved.addNode(declaration);
             } else if(isMethod(node)) {
-                resolved = SingleEdit.renameMethod(edit.getSourceSelection());
-                resolved.addNode(node);
-            } else if(isMethodInvocation(node)){
-                final ASTNode  methodDeclaration = AstUtil.getMethodDeclaration(node);
-                final Location location          = Locations.locate(methodDeclaration);
+                final MethodDeclaration declaration = AstUtil.getMethodDeclaration(node);
+                final Location          location    = Locations.locate(declaration);
                 resolved = SingleEdit.renameMethod(new SourceSelection(location));
-                resolved.addNode(methodDeclaration);
-            } else if(isParameter(node)){
-                resolved = SingleEdit.renameParameter(edit.getSourceSelection());
-                resolved.addNode(node);
+                resolved.addNode(declaration);
+            } else if(isParameter(node)) {
+                final SingleVariableDeclaration declaration = AstUtil.getVariableDeclaration(node);
+                resolved = SingleEdit.renameParameter(new SourceSelection(Locations.locate(declaration)));
+                resolved.addNode(declaration);
             } else if(isField(node)){
-                resolved = SingleEdit.renameField(edit.getSourceSelection());
-                resolved.addNode(node);
-            } else if(isFieldAccess(node)){
                 final FieldDeclaration  fieldDeclaration = AstUtil.getFieldDeclaration(node);
                 final Location          location         = Locations.locate(fieldDeclaration);
                 resolved = SingleEdit.renameField(new SourceSelection(location));
                 resolved.addNode(fieldDeclaration);
-            }  else {
+            } else {
                 throw new RuntimeException("invalid selection");
             }
 
@@ -73,23 +70,20 @@ public class Edits {
 
                 final SingleEdit resolved;
                 if(isClass(node)){
-                    resolved = SingleEdit.deleteClass(edit.getSourceSelection());
-                    resolved.addNode(node);
+                    final TypeDeclaration   declaration = AstUtil.getTypeDeclaration(node);
+                    final Location          location    = Locations.locate(declaration);
+                    resolved = SingleEdit.deleteClass(new SourceSelection(location));
+                    resolved.addNode(declaration);
                 } else if(isMethod(node)) {
-                    resolved = SingleEdit.deleteMethod(edit.getSourceSelection());
-                    resolved.addNode(node);
-                } else if(isMethodInvocation(node)) {
-                    final ASTNode  methodDeclaration = AstUtil.getMethodDeclaration(node);
-                    final Location location          = Locations.locate(methodDeclaration);
+                    final MethodDeclaration declaration = AstUtil.getMethodDeclaration(node);
+                    final Location          location    = Locations.locate(declaration);
                     resolved = SingleEdit.deleteMethod(new SourceSelection(location));
-                    resolved.addNode(methodDeclaration);
+                    resolved.addNode(declaration);
                 } else if(isParameter(node)){
-                    resolved = SingleEdit.deleteParameter(edit.getSourceSelection());
-                    resolved.addNode(node);
+                    final SingleVariableDeclaration declaration = AstUtil.getVariableDeclaration(node);
+                    resolved = SingleEdit.deleteParameter(new SourceSelection(Locations.locate(declaration)));
+                    resolved.addNode(declaration);
                 } else if(isField(node)){
-                    resolved = SingleEdit.deleteField(edit.getSourceSelection());
-                    resolved.addNode(node);
-                } else if(isFieldAccess(node)){
                     final FieldDeclaration  fieldDeclaration = AstUtil.getFieldDeclaration(node);
                     final Location          location         = Locations.locate(fieldDeclaration);
                     resolved = SingleEdit.deleteField(new SourceSelection(location));
@@ -105,35 +99,33 @@ public class Edits {
         return edit;
     }
 
+
+    private static boolean isParameterAccess(ASTNode node) {
+        return AstUtil.getVariableDeclaration(node) != null;
+    }
+
     private static boolean isFieldAccess(ASTNode node) {
         return AstUtil.getFieldDeclaration(node) != null;
     }
 
     private static boolean isField(ASTNode node) {
         return (AstUtil.isOfType(FieldDeclaration.class, node)
-                ||  AstUtil.isParent(node, AstUtil.immediateAncestor(FieldDeclaration.class, node.getParent())))
-                || (AstUtil.isOfType(VariableDeclarationFragment.class, node)
-        || AstUtil.isParent(node, AstUtil.immediateAncestor(VariableDeclarationFragment.class, node.getParent())));
+                || isFieldAccess(node));
     }
 
     private static boolean isParameter(ASTNode node) {
         return AstUtil.isOfType(SingleVariableDeclaration.class, node)
-                ||  AstUtil.isParent(node, AstUtil.immediateAncestor(SingleVariableDeclaration.class, node.getParent()));
+                ||  isParameterAccess(node);
     }
 
     private static boolean isMethod(ASTNode node) {
-        return AstUtil.isOfType(MethodDeclaration.class, node)
-                ||  AstUtil.isParent(node, AstUtil.immediateAncestor(MethodDeclaration.class, node.getParent()));
-    }
-
-    private static boolean isMethodInvocation(ASTNode node) {
-        return AstUtil.isOfType(MethodInvocation.class, node)
-                || AstUtil.isParent(node, AstUtil.immediateAncestor(MethodInvocation.class, node.getParent()));
+        return (AstUtil.isOfType(MethodDeclaration.class, node)
+                ||  AstUtil.getMethodDeclaration(node) != null) ;
     }
 
 
     private static boolean isClass(ASTNode node) {
         return AstUtil.isOfType(TypeDeclaration.class, node)
-                ||  AstUtil.isParent(node, AstUtil.immediateAncestor(TypeDeclaration.class, node.getParent()));
+                ||  AstUtil.getTypeDeclaration(node) != null;
     }
 }

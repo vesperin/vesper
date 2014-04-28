@@ -153,15 +153,13 @@ public class AstUtil {
 
     public static FieldDeclaration getFieldDeclaration(ASTNode node){
         if(AstUtil.isOfType(SimpleName.class, node)){
+
             final CompilationUnit unit = AstUtil.parent(CompilationUnit.class, node);
-            final List<SimpleName> usages  = AstUtil.findByNode(unit, AstUtil.exactCast(SimpleName.class, node));
-            if(!usages.isEmpty()){
-                for(SimpleName usage : usages){
-                    final ASTNode parent = AstUtil.parent(FieldDeclaration.class, usage);
-                    if(parent != null){
-                        return AstUtil.exactCast(FieldDeclaration.class, parent);
-                    }
-                }
+            final ASTNode binding = AstUtil.findDeclaration(((SimpleName)node).resolveBinding(), unit);
+
+            final ASTNode parent = AstUtil.parent(FieldDeclaration.class, binding);
+            if(parent != null){
+                return AstUtil.exactCast(FieldDeclaration.class, parent);
             }
         }
 
@@ -169,21 +167,55 @@ public class AstUtil {
     }
 
 
-    public static MethodDeclaration getMethodDeclaration(ASTNode methodInvocation){
-        final SimpleName name = AstUtil.parent(MethodInvocation.class, methodInvocation).getName();
-        final CompilationUnit unit = AstUtil.parent(CompilationUnit.class, methodInvocation);
-        final MethodDeclarationVisitor methodDeclarationVisitor = new MethodDeclarationVisitor();
+    public static TypeDeclaration getTypeDeclaration(ASTNode node){
 
-        unit.accept(methodDeclarationVisitor);
+        if(AstUtil.isOfType(TypeDeclaration.class, node)){
+            return AstUtil.exactCast(TypeDeclaration.class, node);
+        }
 
-        final List<MethodDeclaration> declarations = methodDeclarationVisitor.getMethodDeclarations();
-        for(MethodDeclaration each : declarations){
-            if(each.getName().getIdentifier().equals(name.getIdentifier())){
-                return each;
+        final Name name =
+                AstUtil.isOfType(SimpleType.class, node) ? AstUtil.exactCast(SimpleType.class, node).getName() : ((AstUtil.isOfType(SimpleName.class, node)
+                ?  AstUtil.exactCast(SimpleName.class, node) : null));
+
+        if(name == null) return null;
+
+        final ASTNode binding = AstUtil.findDeclaration(
+                name.resolveBinding(),
+                AstUtil.parent(CompilationUnit.class, node)
+        );
+
+        if(binding != null){
+            if(AstUtil.isOfType(MethodDeclaration.class, binding)){
+                final MethodDeclaration  mtd = AstUtil.exactCast(MethodDeclaration.class, binding);
+                if(mtd.isConstructor()){
+                    return AstUtil.exactCast(TypeDeclaration.class, mtd.getParent());
+                }
+            } else if(AstUtil.isOfType(TypeDeclaration.class, binding)){
+                return AstUtil.exactCast(TypeDeclaration.class, binding);
             }
         }
 
-        return null; // not found
+        return null;
+
+    }
+
+
+    public static MethodDeclaration getMethodDeclaration(ASTNode node){
+        final SimpleName name = AstUtil.isOfType(MethodInvocation.class, node)
+                ? AstUtil.exactCast(MethodInvocation.class, node).getName()
+                : (AstUtil.isOfType(MethodDeclaration.class, node) ? AstUtil.exactCast(MethodDeclaration.class, node).getName()
+                : (AstUtil.isOfType(SimpleName.class, node) ? AstUtil.exactCast(SimpleName.class, node) : null));
+
+        if(name == null) return null;
+
+        final ASTNode binding = AstUtil.findDeclaration(name.resolveBinding(),  AstUtil.parent(CompilationUnit.class, node));
+        if(binding != null){
+            if(AstUtil.isOfType(MethodDeclaration.class, binding)){
+                return AstUtil.exactCast(MethodDeclaration.class, binding);
+            }
+        }
+
+        return null;
     }
 
     public static <T extends ASTNode> T copySubtree(final Class<T> thatClass, AST ast, final ASTNode node) {
@@ -379,6 +411,11 @@ public class AstUtil {
         return isNodeWithinSelection(src, node, selection)
                 || isNodeEnclosingMethod(src, node, selection)
                 || isNodeExactlyAtLocation(src, node, selection);
+    }
+
+
+    public static SingleVariableDeclaration getVariableDeclaration(ASTNode simpleName){
+        return (SingleVariableDeclaration) AstUtil.getVariableDeclaration(((Name)simpleName));
     }
 
     public static VariableDeclaration getVariableDeclaration(Name node) {

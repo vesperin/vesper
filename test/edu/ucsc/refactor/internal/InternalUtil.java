@@ -73,6 +73,19 @@ public class InternalUtil {
     }
 
 
+    public static Source createSourceWithSomeConstructorInvocation(){
+        return createSource(
+                "Name.java",
+                new StringBuilder("class Name {\n")
+                        .append("\tint a = 0;\n")
+                        .append("\tName(){}")
+                        .append("\tvoid boom(String msg){ final Name old = new Name(); \n")
+                        .append("a = 1; int b = 0; b = 1; if(msg.length() > 1) {}}\n")
+                        .append("}")
+        );
+    }
+
+
     public static Source createSourceWithJavaDocs(){
         return createSource(
                 "Name.java",

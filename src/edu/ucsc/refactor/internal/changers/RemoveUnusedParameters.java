@@ -72,7 +72,7 @@ public class RemoveUnusedParameters extends SourceChanger {
             final List<SimpleName>  usages  = AstUtil.findByNode(parameterReference.getParent(), parameterReference.getName());
 
 
-            if(usages.size() > 1){
+            if(AstUtil.isSideEffectFound(parameterReference.getName()) || usages.size() > 1){
                 throw new RuntimeException(
                         parameterReference.getName().getIdentifier() +
                                 " cannot be deleted. It is used somewhere" +
