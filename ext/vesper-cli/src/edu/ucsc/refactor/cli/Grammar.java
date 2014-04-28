@@ -35,6 +35,7 @@ public class Grammar {
                 .withCommand(LocateClassCommand.class)
                 .withCommand(LocateMethodCommand.class)
                 .withCommand(LocateParamCommand.class)
+                .withCommand(LocateVarCommand.class)
                 .withCommand(LocateFieldCommand.class);
 
         builder.withGroup("notes")
