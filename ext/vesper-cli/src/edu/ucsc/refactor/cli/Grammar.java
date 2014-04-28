@@ -49,7 +49,8 @@ public class Grammar {
                 .withCommand(RenameClassCommand.class)
                 .withCommand(RenameMethodCommand.class)
                 .withCommand(RenameParameterCommand.class)
-                .withCommand(RenameFieldCommand.class);
+                .withCommand(RenameFieldCommand.class)
+                .withCommand(RenameLocalVariableCommand.class);
 
         builder.withGroup("rm")
                 .withDescription("Remove file contents from the tracked source")
@@ -59,6 +60,7 @@ public class Grammar {
                 .withCommand(RemoveMethodCommand.class)
                 .withCommand(RemoveParameterCommand.class)
                 .withCommand(RemoveFieldCommand.class)
+                .withCommand(RemoveLocalVariableCommand.class)
                 .withCommand(RemoveRegionCommand.class);
 
         builder.withGroup("slice")
