@@ -546,6 +546,14 @@ public class AstUtil {
     }
 
 
+    public static String getSimpleName(VariableDeclarationStatement field){
+        final List fragments = field.fragments();
+        final Object element = fragments.get(0);
+        final VariableDeclarationFragment fragment = (VariableDeclarationFragment)element;
+        return fragment.getName().getIdentifier();
+    }
+
+
     public static boolean hasVoidReturn(MethodDeclaration method){
         if(method.getReturnType2().isPrimitiveType() ){
             final PrimitiveType primitiveType = AstUtil.exactCast(

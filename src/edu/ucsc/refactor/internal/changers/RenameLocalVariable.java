@@ -54,7 +54,7 @@ public class RenameLocalVariable extends SourceChanger {
 
         final AST           ast     = method.getAST();
         final ASTRewrite    rewrite = AstUtil.createAstRewrite(ast);
-        final String        oldName = getSimpleName(variable);
+        final String        oldName = AstUtil.getSimpleName(variable);
         final Source        src     = Source.from(method);
 
 
@@ -77,14 +77,6 @@ public class RenameLocalVariable extends SourceChanger {
         rewrite.replace(method, copy, null);
 
         return createDelta(variable, rewrite);
-    }
-
-
-    static String getSimpleName(VariableDeclarationStatement field){
-        final List fragments = field.fragments();
-        final Object element = fragments.get(0);
-        final VariableDeclarationFragment fragment = (VariableDeclarationFragment)element;
-        return fragment.getName().getIdentifier();
     }
 
     private static void checkNameIsNotTaken(MethodDeclaration methodDeclaration, List declaredVariables, String newName) {

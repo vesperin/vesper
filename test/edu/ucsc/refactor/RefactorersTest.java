@@ -1,9 +1,6 @@
 package edu.ucsc.refactor;
 
-import edu.ucsc.refactor.internal.ClassUnit;
-import edu.ucsc.refactor.internal.FieldUnit;
-import edu.ucsc.refactor.internal.MethodUnit;
-import edu.ucsc.refactor.internal.ParameterUnit;
+import edu.ucsc.refactor.internal.*;
 import edu.ucsc.refactor.spi.UnitLocator;
 import edu.ucsc.refactor.util.CommitHistory;
 import org.junit.Test;
@@ -183,6 +180,9 @@ public class RefactorersTest {
 
         final List<NamedLocation> fields = locator.locate(new FieldUnit("something"));
         assertThat(fields.isEmpty(), is(true));
+
+        final List<NamedLocation> vars  = locator.locate(new VarUnit("bbb"));
+        assertThat(vars.isEmpty(), is(false));
 
     }
 
