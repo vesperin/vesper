@@ -414,9 +414,30 @@ public class AstUtil {
     }
 
 
-    public static SingleVariableDeclaration getVariableDeclaration(ASTNode simpleName){
-        return (SingleVariableDeclaration) AstUtil.getVariableDeclaration(((Name)simpleName));
+    public static SingleVariableDeclaration getSingleVariableDeclaration(ASTNode simpleName){
+        final ASTNode declaration = AstUtil.getVariableDeclaration(((Name)simpleName));
+        if(declaration != null && AstUtil.isOfType(SingleVariableDeclaration.class, declaration)){
+            return AstUtil.exactCast(SingleVariableDeclaration.class, declaration);
+        }
+
+        return null;
     }
+
+
+    public static VariableDeclarationStatement getLocalVariable(ASTNode simpleName){
+        final ASTNode declaration = AstUtil.getVariableDeclaration(((Name)simpleName));
+        if(AstUtil.isOfType(VariableDeclarationFragment.class, declaration)){
+            final VariableDeclarationFragment fragment = AstUtil.exactCast(VariableDeclarationFragment.class, declaration);
+            final VariableDeclarationStatement statement = AstUtil.parent(VariableDeclarationStatement.class, fragment);
+            if(statement != null){
+                return statement;
+            }
+        }
+
+        return null;
+    }
+
+
 
     public static VariableDeclaration getVariableDeclaration(Name node) {
         final IBinding binding = node.resolveBinding();

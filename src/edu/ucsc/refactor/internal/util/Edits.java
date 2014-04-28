@@ -45,7 +45,7 @@ public class Edits {
                 resolved = SingleEdit.renameMethod(new SourceSelection(location));
                 resolved.addNode(declaration);
             } else if(isParameter(node)) {
-                final SingleVariableDeclaration declaration = AstUtil.getVariableDeclaration(node);
+                final SingleVariableDeclaration declaration = AstUtil.getSingleVariableDeclaration(node);
                 resolved = SingleEdit.renameParameter(new SourceSelection(Locations.locate(declaration)));
                 resolved.addNode(declaration);
             } else if(isField(node)){
@@ -53,6 +53,11 @@ public class Edits {
                 final Location          location         = Locations.locate(fieldDeclaration);
                 resolved = SingleEdit.renameField(new SourceSelection(location));
                 resolved.addNode(fieldDeclaration);
+            } else if(isLocalVariable(node)){
+                final VariableDeclarationStatement localVarDeclaration = AstUtil.getLocalVariable(node);
+                final Location                     location            = Locations.locate(localVarDeclaration);
+                resolved = SingleEdit.renameLocalVariable(new SourceSelection(location));
+                resolved.addNode(localVarDeclaration);
             } else {
                 throw new RuntimeException("invalid selection");
             }
@@ -80,7 +85,7 @@ public class Edits {
                     resolved = SingleEdit.deleteMethod(new SourceSelection(location));
                     resolved.addNode(declaration);
                 } else if(isParameter(node)){
-                    final SingleVariableDeclaration declaration = AstUtil.getVariableDeclaration(node);
+                    final SingleVariableDeclaration declaration = AstUtil.getSingleVariableDeclaration(node);
                     resolved = SingleEdit.deleteParameter(new SourceSelection(Locations.locate(declaration)));
                     resolved.addNode(declaration);
                 } else if(isField(node)){
@@ -88,6 +93,11 @@ public class Edits {
                     final Location          location         = Locations.locate(fieldDeclaration);
                     resolved = SingleEdit.deleteField(new SourceSelection(location));
                     resolved.addNode(fieldDeclaration);
+                } else if(isLocalVariable(node)){
+                    final VariableDeclarationStatement localVarDeclaration = AstUtil.getLocalVariable(node);
+                    final Location                     location            = Locations.locate(localVarDeclaration);
+                    resolved = SingleEdit.deleteLocalVariable(new SourceSelection(location));
+                    resolved.addNode(localVarDeclaration);
                 } else {
                     return edit; // either is a comment, block comment.
                 }
@@ -101,7 +111,7 @@ public class Edits {
 
 
     private static boolean isParameterAccess(ASTNode node) {
-        return AstUtil.getVariableDeclaration(node) != null;
+        return AstUtil.getSingleVariableDeclaration(node) != null;
     }
 
     private static boolean isFieldAccess(ASTNode node) {
@@ -121,6 +131,12 @@ public class Edits {
     private static boolean isMethod(ASTNode node) {
         return (AstUtil.isOfType(MethodDeclaration.class, node)
                 ||  AstUtil.getMethodDeclaration(node) != null) ;
+    }
+
+
+    private static boolean isLocalVariable(ASTNode node) {
+        return (AstUtil.isOfType(VariableDeclarationStatement.class, node)
+                ||  AstUtil.getLocalVariable(node) != null) ;
     }
 
 

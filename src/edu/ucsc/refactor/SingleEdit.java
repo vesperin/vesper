@@ -72,6 +72,17 @@ public class SingleEdit extends AbstractCauseOfChange {
 
 
     /**
+     * Deletes a local variable, which location can be inferred from {@code SourceSelection}
+     *
+     * @param selection The selected local variable
+     * @return The {@code SingleEdit}.
+     */
+    public static SingleEdit deleteLocalVariable(SourceSelection selection){
+        return new SingleEdit(Refactoring.DELETE_VARIABLE, selection);
+    }
+
+
+    /**
      * Deletes a method parameter, which location can be inferred from {@code SourceSelection}
      *
      * @param selection The selected method parameter
@@ -158,6 +169,18 @@ public class SingleEdit extends AbstractCauseOfChange {
      */
     public static SingleEdit renameField(SourceSelection selection){
         return new SingleEdit(Refactoring.RENAME_FIELD, selection);
+    }
+
+
+    /**
+     * Renames a local variable in a given scope, which location can be inferred from
+     * {@code SourceSelection}
+     *
+     * @param selection The selected local variable in a given class | method.
+     * @return The {@code SingleEdit}.
+     */
+    public static SingleEdit renameLocalVariable(SourceSelection selection){
+        return new SingleEdit(Refactoring.RENAME_VARIABLE, selection);
     }
 
     @Override public Refactoring getName() {

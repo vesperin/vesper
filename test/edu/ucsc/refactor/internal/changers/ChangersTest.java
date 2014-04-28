@@ -12,10 +12,7 @@ import edu.ucsc.refactor.spi.SourceChanger;
 import edu.ucsc.refactor.util.Commit;
 import edu.ucsc.refactor.util.Locations;
 import edu.ucsc.refactor.util.Parameters;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,8 +65,8 @@ public class ChangersTest {
         parser.parseJava(context);
 
 
-        final ProgramUnitLocator locator    = new ProgramUnitLocator(context);
-        final List<NamedLocation>     locations  = locator.locate(new ClassUnit("B"));
+        final ProgramUnitLocator    locator    = new ProgramUnitLocator(context);
+        final List<NamedLocation>   locations  = locator.locate(new ClassUnit("B"));
 
         assertThat(locations.isEmpty(), is(false));
 
@@ -131,28 +128,130 @@ public class ChangersTest {
         parser.parseJava(context);
 
         final List<Location>    spots     = Locations.locateWord(context.getSource(), "a");
-        final SourceSelection   selection = new SourceSelection(spots.get(1));
+        for(Location spot : spots){
+            final SourceSelection   selection = new SourceSelection(spot);
 
 
-        final ProgramUnitLocator    locator    = new ProgramUnitLocator(context);
-        final List<NamedLocation>   locations  = locator.locate(new SelectedUnit(selection));
+            final ProgramUnitLocator    locator    = new ProgramUnitLocator(context);
+            final List<NamedLocation>   locations  = locator.locate(new SelectedUnit(selection));
 
 
-        final SingleEdit       edit   = SingleEdit.renameSelectedMember(selection);
-        assertThat(locations.isEmpty(), is(false));
+            final SingleEdit       edit   = SingleEdit.renameSelectedMember(selection);
+            assertThat(locations.isEmpty(), is(false));
 
-        for(NamedLocation eachLocation : locations){
-            final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
-            edit.addNode(target.getNode());
+            for(NamedLocation eachLocation : locations){
+                final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
+                edit.addNode(target.getNode());
+            }
+
+
+            final RenameField  rename      = new RenameField();
+            final SingleEdit   resolved    = Edits.resolve(edit);
+
+            checkChangeCreation(rename, resolved);
+        }
+    }
+
+
+    @Test public void testRenameClassBySelectingOneOfItsUsages() {
+        final Context context = new Context(
+                InternalUtil.createSourceWithSomeConstructorInvocation()
+        );
+
+        parser.parseJava(context);
+
+        final List<Location>    spots     = Locations.locateWord(context.getSource(), "Name");
+
+        for(Location spot : spots){
+            final SourceSelection   selection = new SourceSelection(spot);
+
+
+            final ProgramUnitLocator    locator    = new ProgramUnitLocator(context);
+            final List<NamedLocation>   locations  = locator.locate(new SelectedUnit(selection));
+
+
+            final SingleEdit       edit   = SingleEdit.renameSelectedMember(selection);
+            assertThat(locations.isEmpty(), is(false));
+
+            for(NamedLocation eachLocation : locations){
+                final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
+                edit.addNode(target.getNode());
+            }
+
+
+            final RenameClassOrInterface    rename      = new RenameClassOrInterface();
+            final SingleEdit                resolved    = Edits.resolve(edit);
+
+            checkChangeCreation(rename, resolved);
         }
 
+    }
 
-        final RenameField  rename      = new RenameField();
-        final SingleEdit    resolved    = Edits.resolve(edit);
 
-        checkChangeCreation(rename, resolved);
+    @Test public void testRenameLocalVariableBySelectingOneOfItsUsages() {
+        final Context context = new Context(
+                InternalUtil.createSourceWithSomeUsedFieldAndLocalVariable()
+        );
 
-        System.out.println();
+        parser.parseJava(context);
+
+        final List<Location>    spots     = Locations.locateWord(context.getSource(), "b");
+        for(Location spot : spots){
+            final SourceSelection   selection = new SourceSelection(spot);
+
+
+            final ProgramUnitLocator    locator    = new ProgramUnitLocator(context);
+            final List<NamedLocation>   locations  = locator.locate(new SelectedUnit(selection));
+
+
+            final SingleEdit       edit   = SingleEdit.renameSelectedMember(selection);
+            assertThat(locations.isEmpty(), is(false));
+
+            for(NamedLocation eachLocation : locations){
+                final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
+                edit.addNode(target.getNode());
+            }
+
+
+            final RenameLocalVariable   rename      = new RenameLocalVariable();
+            final SingleEdit            resolved    = Edits.resolve(edit);
+
+            checkChangeCreation(rename, resolved);
+        }
+    }
+
+
+    @Test public void testRenameMethodParameterBySelectingOneOfItsUsages() {
+        final Context context = new Context(
+                InternalUtil.createSourceWithSomeUsedFieldAndLocalVariable()
+        );
+
+        parser.parseJava(context);
+
+        final List<Location>    spots     = Locations.locateWord(context.getSource(), "msg");
+
+        for(Location spot : spots){
+            final SourceSelection   selection = new SourceSelection(spot);
+
+
+            final ProgramUnitLocator    locator    = new ProgramUnitLocator(context);
+            final List<NamedLocation>   locations  = locator.locate(new SelectedUnit(selection));
+
+
+            final SingleEdit       edit   = SingleEdit.renameSelectedMember(selection);
+            assertThat(locations.isEmpty(), is(false));
+
+            for(NamedLocation eachLocation : locations){
+                final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
+                edit.addNode(target.getNode());
+            }
+
+
+            final RenameParam  rename     = new RenameParam();
+            final SingleEdit   resolved   = Edits.resolve(edit);
+
+            checkChangeCreation(rename, resolved);
+        }
 
 
     }
@@ -525,9 +624,6 @@ public class ChangersTest {
             final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
             edit.addNode(target.getNode());
         }
-
-
-//        final List<Location> lll = Locations.locateWord(code, "boom");
 
 
         final RenameMethod  rename      = new RenameMethod();

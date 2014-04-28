@@ -62,6 +62,9 @@ public class RenameAstNodeVisitor extends ASTVisitor {
                     case RENAME_TYPE: // rename class or interface
                         renameType(node, newName);
                         break;
+                    case RENAME_VARIABLE:
+                        renameVariable(node, declaration, newName);
+                        break;
                     default:
                         throw new NoSuchElementException(this.refactoring + " not found!");
                 }
@@ -105,6 +108,20 @@ public class RenameAstNodeVisitor extends ASTVisitor {
                 node.setIdentifier(newName);
             }
         }
+    }
+
+
+    static void renameVariable(SimpleName node, VariableDeclaration declaration, String newName){
+        if(declaration == null){
+            if(node.getParent() instanceof Assignment){ // field
+                node.setIdentifier(newName);
+            }
+        } else {
+            if(declaration.getParent() instanceof VariableDeclarationStatement){
+                node.setIdentifier(newName);
+            }
+        }
+
     }
 
     static void renameType(SimpleName node, String newName){
