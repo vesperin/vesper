@@ -339,6 +339,74 @@ public class ChangersTest {
     }
 
 
+
+    @Test public void testTryRemovingSelectedAndUsedLocalVariable(){
+        final Source  code    = InternalUtil.createSourceWithSomeUsedFieldAndLocalVariable();
+        final Context context = new Context(code);
+
+        parser.parseJava(context);
+
+
+        final List<Location>    spots     = Locations.locateWord(context.getSource(), "b");
+        for(Location spot : spots){
+            final SourceSelection   selection = new SourceSelection(spot);
+
+
+            final ProgramUnitLocator    locator    = new ProgramUnitLocator(context);
+            final List<NamedLocation>   locations  = locator.locate(new SelectedUnit(selection));
+
+
+            final SingleEdit       edit   = SingleEdit.deleteRegion(selection);
+            assertThat(locations.isEmpty(), is(false));
+
+            for(NamedLocation eachLocation : locations){
+                final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
+                edit.addNode(target.getNode());
+            }
+
+
+            final RemoveUnusedLocalVariable     remover     = new RemoveUnusedLocalVariable();
+            final SingleEdit                    resolved    = Edits.resolve(edit);
+
+            final Change  change  = remover.createChange(resolved, Maps.<String, Parameter>newHashMap());
+            assertThat(change.isValid(), is(false));
+        }
+    }
+
+
+    @Test public void testRemoveSelectedAndUnUsedLocalVariable(){
+        final Source  code    = InternalUtil.createSourceWithSomeUnUsedLocalVariable();
+        final Context context = new Context(code);
+
+        parser.parseJava(context);
+
+
+        final List<Location>    spots     = Locations.locateWord(context.getSource(), "b");
+        for(Location spot : spots){
+            final SourceSelection   selection = new SourceSelection(spot);
+
+
+            final ProgramUnitLocator    locator    = new ProgramUnitLocator(context);
+            final List<NamedLocation>   locations  = locator.locate(new SelectedUnit(selection));
+
+
+            final SingleEdit       edit   = SingleEdit.deleteRegion(selection);
+            assertThat(locations.isEmpty(), is(false));
+
+            for(NamedLocation eachLocation : locations){
+                final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
+                edit.addNode(target.getNode());
+            }
+
+
+            final RemoveUnusedLocalVariable     remover     = new RemoveUnusedLocalVariable();
+            final SingleEdit                    resolved    = Edits.resolve(edit);
+
+            checkChangeCreation(remover, resolved);
+        }
+    }
+
+
     @Test public void testRemoveSelectedMethod(){
         final Source  code    = InternalUtil.createSourceWithUnusedMethodAndParameter();
         final Context context = new Context(code);

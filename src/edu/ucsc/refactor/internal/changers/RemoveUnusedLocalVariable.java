@@ -18,18 +18,17 @@ import java.util.Map;
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public class RemoveUnusedFields extends SourceChanger {
-
+public class RemoveUnusedLocalVariable extends SourceChanger {
     /**
      * Instantiates a new {@link RemoveUnusedFields} object.
      */
-    public RemoveUnusedFields(){
+    public RemoveUnusedLocalVariable(){
         super();
     }
 
     @Override public boolean canHandle(CauseOfChange cause) {
-        return cause.getName().isSame(Smell.UNUSED_FIELD)
-                || Names.from(Smell.UNUSED_FIELD).isSame(cause.getName());
+        return cause.getName().isSame(Smell.UNUSED_VARIABLE)
+                || Names.from(Smell.UNUSED_VARIABLE).isSame(cause.getName());
     }
 
     @Override protected Change initChanger(CauseOfChange cause, Map<String, Parameter> parameters) {
@@ -39,7 +38,7 @@ public class RemoveUnusedFields extends SourceChanger {
             final CompilationUnit root = getCompilationUnit(cause);
             final ASTRewrite rewrite   = ASTRewrite.create(root.getAST());
 
-            change.getDeltas().add(removeUnusedFields(root, rewrite, cause));
+            change.getDeltas().add(removeUnusedLocalVariable(root, rewrite, cause));
 
         } catch (Throwable ex){
             change.getErrors().add(ex.getMessage());
@@ -48,17 +47,17 @@ public class RemoveUnusedFields extends SourceChanger {
         return change;
     }
 
-    private Delta removeUnusedFields(CompilationUnit root, ASTRewrite rewrite, CauseOfChange cause){
-        final boolean cameFromDetector = cause.getName().isSame(Smell.UNUSED_FIELD);
+
+    private Delta removeUnusedLocalVariable(CompilationUnit root, ASTRewrite rewrite, CauseOfChange cause){
+        final boolean cameFromDetector = cause.getName().isSame(Smell.UNUSED_VARIABLE);
 
         for(ASTNode affected : cause.getAffectedNodes()){
-            final FieldDeclaration declaration = AstUtil.parent(FieldDeclaration.class, affected);
+            final VariableDeclarationStatement declaration = AstUtil.parent(VariableDeclarationStatement.class, affected);
 
-            if(cameFromDetector){
+            if(cameFromDetector){  // not used anywhere in the code
                 rewrite.remove(declaration, null);
-            }  else {
-
-                List fragments = declaration.fragments();
+            } else {
+                final List fragments = declaration.fragments();
                 for(Object eachObject : fragments){
                     final VariableDeclarationFragment fragment   = (VariableDeclarationFragment) eachObject;
                     final SimpleName                  name       = fragment.getName();
@@ -68,7 +67,7 @@ public class RemoveUnusedFields extends SourceChanger {
                         throw new RuntimeException(
                                 name.getIdentifier() +
                                         " cannot be deleted. It is referenced" +
-                                        " throughout the source code"
+                                        " within the current scope!"
                         );
                     } else {
                         rewrite.remove(declaration, null);
@@ -76,8 +75,8 @@ public class RemoveUnusedFields extends SourceChanger {
 
                 }
             }
-
         }
+
 
         return createDelta(root, rewrite);
     }

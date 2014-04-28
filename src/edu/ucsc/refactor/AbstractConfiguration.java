@@ -83,6 +83,8 @@ public abstract class AbstractConfiguration implements Configuration {
         addSourceChanger(new RenameField());
         addSourceChanger(new RenameClassOrInterface());
         addSourceChanger(new RemoveCodeRegion());
+        addSourceChanger(new RenameLocalVariable());
+        addSourceChanger(new RemoveUnusedLocalVariable());
 
         // credentials must be added here..
         addCredentials(null);

@@ -137,6 +137,18 @@ public class ChangeRequest {
 
 
     /**
+     * Delete a local variable ChangeRequest given selection.
+     *
+     * @see {@link SingleEdit#deleteField(SourceSelection)}
+     */
+    public static ChangeRequest deleteLocalVariable(SourceSelection selection){
+        return ChangeRequest.forEdit(
+                SingleEdit.deleteLocalVariable(selection)
+        );
+    }
+
+
+    /**
      * Delete a parameter change request given selection.
      *
      * @see {@link SingleEdit#deleteParameter(SourceSelection)}
@@ -219,6 +231,19 @@ public class ChangeRequest {
     public static ChangeRequest renameField(SourceSelection selection, String newName){
         return ChangeRequest.forEdit(
                 SingleEdit.renameField(selection),
+                Parameters.newMemberName(newName)
+        );
+    }
+
+
+    /**
+     * Rename local variable ChangeRequest with selection and newName as values.
+     *
+     * @see {@link SingleEdit#renameLocalVariable(SourceSelection)}
+     */
+    public static ChangeRequest renameLocalVariable(SourceSelection selection, String newName){
+        return ChangeRequest.forEdit(
+                SingleEdit.renameLocalVariable(selection),
                 Parameters.newMemberName(newName)
         );
     }
