@@ -12,6 +12,7 @@ import edu.ucsc.refactor.spi.SourceChanger;
 import edu.ucsc.refactor.util.Commit;
 import edu.ucsc.refactor.util.Locations;
 import edu.ucsc.refactor.util.Parameters;
+import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.*;
 import org.junit.After;
 import org.junit.Before;
@@ -313,6 +314,15 @@ public class ChangersTest {
         final SingleEdit            resolved    = Edits.resolve(edit);
 
         checkChangeCreation(remove, resolved);
+    }
+
+
+    @Test (expected = RuntimeException.class)
+    public void testRemoveWholeMethodSelectionFromBrokenSource() throws Exception {
+        final Source src = InternalUtil.createBrokenSourceWithOneMethod();
+
+        final Context context = new Context(src);
+        parser.parseJava(context);
     }
 
 
