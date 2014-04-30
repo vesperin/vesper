@@ -63,17 +63,7 @@ public class EclipseJavaParser implements JavaParser {
             }
 
             // if the unit has problems, then fail fast
-            final IProblem[] problems = unit.getProblems();
-            if(problems.length > 0){
-                final CompilationProblemException exception = new CompilationProblemException();
-                for(IProblem each : problems){
-                    if(each.isError() && (each.getID() & IProblem.Syntax) != 0){ // catch only syntax related issues
-                        exception.cache(new Throwable(each.getMessage()));
-                    }
-                }
-
-                exception.throwCachedException();
-            }
+            throwCompilationErrorIfExist(unit);
 
             context.setCompilationUnit(unit);
 
@@ -89,6 +79,20 @@ public class EclipseJavaParser implements JavaParser {
         }
 
         return unit;
+    }
+
+    private static void throwCompilationErrorIfExist(CompilationUnit unit) {
+        final IProblem[] problems = unit.getProblems();
+        if(problems.length > 0){
+            final CompilationProblemException exception = new CompilationProblemException();
+            for(IProblem each : problems){
+                if(each.isError() && (each.getID() & IProblem.Syntax) != 0){ // catch only syntax related issues
+                    exception.cache(new Throwable(each.getMessage()));
+                }
+            }
+
+            exception.throwCachedException();
+        }
     }
 
 }
