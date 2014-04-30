@@ -50,6 +50,32 @@ public class InternalUtil {
         );
     }
 
+    public static Source createScratchedSourceWithOneMethod(){
+
+        final String content = "class ScratchedCodeSnippet {\n" +
+                "\tpublic static void main(String[] args) {\n" +
+                "\t\tint[] arr = { 12, 23, 43, 34, 3, 6, 7, 1, 9, 6 };\n" +
+                "\t\t{\n" +
+                "\t\t\tint temp;\n" +
+                "\t\t\tfor (int i = 0; i < arr.length; i++) {\n" +
+                "\t\t\t\tfor (int j = 0; j < arr.length - i; j++) {\n" +
+                "\t\t\t\t\tif (arr[j] > arr[j + 1]) {\n" +
+                "\t\t\t\t\t\ttemp = arr[j];\n" +
+                "\t\t\t\t\t\tarr[j + 1] = arr[j];\n" +
+                "\t\t\t\t\t\tarr[j + 1] = temp;\n" +
+                "\t\t\t\t\t}\n" +
+                "\t\t\t\t}\n" +
+                "\t\t\t}\n" +
+                "\t\t}\n" +
+                "\t}\n" +
+                "}";
+
+        return createSource(
+                "ScratchedCodeSnippet.java",
+                new StringBuilder(content)
+        );
+    }
+
 
     public static Source createSourceWithUsedField(){
         return createSource(

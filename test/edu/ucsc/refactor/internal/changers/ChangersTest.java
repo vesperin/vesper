@@ -290,6 +290,32 @@ public class ChangersTest {
     }
 
 
+    @Test public void testRemoveWholeMethodSelection(){
+        final Source src = InternalUtil.createScratchedSourceWithOneMethod();
+
+        final Context context = new Context(src);
+        parser.parseJava(context);
+
+        final ProgramUnitLocator locator   = new ProgramUnitLocator(context);
+        final SourceSelection    selection = new SourceSelection(context.getSource(), 30, 358);
+        final List<NamedLocation>     locations = locator.locate(new SelectedUnit(selection));
+
+        final SingleEdit       edit   = SingleEdit.deleteRegion(selection);
+        assertThat(locations.isEmpty(), is(false));
+
+        for(NamedLocation eachLocation : locations){
+            final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
+            edit.addNode(target.getNode());
+        }
+
+
+        final RemoveUnusedMethods   remove      = new RemoveUnusedMethods();
+        final SingleEdit            resolved    = Edits.resolve(edit);
+
+        checkChangeCreation(remove, resolved);
+    }
+
+
     @Test public void testTryRemovingUsedField(){
         final Context context = new Context(
                 InternalUtil.createSourceWithUsedField()
