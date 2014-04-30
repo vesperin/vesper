@@ -12,8 +12,10 @@ import edu.ucsc.refactor.spi.SourceChanger;
 import edu.ucsc.refactor.util.Commit;
 import edu.ucsc.refactor.util.Locations;
 import edu.ucsc.refactor.util.Parameters;
-import org.eclipse.jdt.core.compiler.IProblem;
-import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -372,6 +374,34 @@ public class ChangersTest {
         final SingleEdit            resolved    = Edits.resolve(edit);
 
         checkChangeCreation(remove, resolved);
+    }
+
+
+    @Test public void testTryRemovingSelectedBlock(){
+        final Context context = new Context(
+                InternalUtil.createBrokenBubbleSortSource()
+        );
+
+        parser.parseJava(context);
+
+        final ProgramUnitLocator locator   = new ProgramUnitLocator(context);
+        final SourceSelection    select    = new SourceSelection(context.getSource(), 363, 440);
+        final List<NamedLocation>     locations = locator.locate(new SelectedUnit(select));
+
+        final SingleEdit       edit   = SingleEdit.deleteRegion(select);
+        assertThat(locations.isEmpty(), is(false));
+
+        for(NamedLocation eachLocation : locations){
+            final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
+            edit.addNode(target.getNode());
+        }
+
+
+        final RemoveCodeRegion remover  = new RemoveCodeRegion();
+        final SingleEdit       resolved = Edits.resolve(edit);
+
+        checkChangeCreation(remover, resolved);
+
     }
 
 

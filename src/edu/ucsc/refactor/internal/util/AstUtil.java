@@ -415,6 +415,8 @@ public class AstUtil {
 
 
     public static SingleVariableDeclaration getSingleVariableDeclaration(ASTNode simpleName){
+        if((!AstUtil.isOfType(Name.class, simpleName)) && (!AstUtil.isOfType(SimpleName.class, simpleName))) return null;
+
         final ASTNode declaration = AstUtil.getVariableDeclaration(((Name)simpleName));
         if(declaration != null && AstUtil.isOfType(SingleVariableDeclaration.class, declaration)){
             return AstUtil.exactCast(SingleVariableDeclaration.class, declaration);
@@ -425,6 +427,8 @@ public class AstUtil {
 
 
     public static VariableDeclarationStatement getLocalVariable(ASTNode simpleName){
+        if((!AstUtil.isOfType(Name.class, simpleName)) && (!AstUtil.isOfType(SimpleName.class, simpleName))) return null;
+
         final ASTNode declaration = AstUtil.getVariableDeclaration(((Name)simpleName));
         if(AstUtil.isOfType(VariableDeclarationFragment.class, declaration)){
             final VariableDeclarationFragment fragment = AstUtil.exactCast(VariableDeclarationFragment.class, declaration);
