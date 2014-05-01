@@ -9,6 +9,7 @@ import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
 import java.util.Hashtable;
+import java.util.Map;
 import java.util.logging.Logger;
 
 /**
@@ -31,11 +32,9 @@ public class EclipseJavaParser implements JavaParser {
         astParser.setResolveBindings(true);
         astParser.setEnvironment(null, null, null, true);
 
-        Hashtable<String, String> options = new Hashtable<String, String>();
-        options.put(JavaCore.COMPILER_SOURCE, "1.6");
-        options.put(JavaCore.COMPILER_COMPLIANCE, "1.6");
 
-
+        final Map options = JavaCore.getOptions();
+        JavaCore.setComplianceOptions(JavaCore.VERSION_1_6, options);
         astParser.setCompilerOptions(options);
     }
 
