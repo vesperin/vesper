@@ -405,6 +405,34 @@ public class ChangersTest {
     }
 
 
+    @Test public void testTryRemovingArrayStatement(){
+        final Context context = new Context(
+                InternalUtil.createBrokenBubbleSortSource2()
+        );
+
+        parser.parseJava(context);
+
+        final ProgramUnitLocator locator   = new ProgramUnitLocator(context);
+        final SourceSelection    select    = new SourceSelection(context.getSource(), 68, 117);
+        final List<NamedLocation>     locations = locator.locate(new SelectedUnit(select));
+
+        final SingleEdit       edit   = SingleEdit.deleteRegion(select);
+        assertThat(locations.isEmpty(), is(false));
+
+        for(NamedLocation eachLocation : locations){
+            final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
+            edit.addNode(target.getNode());
+        }
+
+
+        final RemoveUnusedLocalVariable remover  = new RemoveUnusedLocalVariable();
+        final SingleEdit                resolved = Edits.resolve(edit);
+
+        checkChangeCreation(remover, resolved);
+
+    }
+
+
 
     @Test public void testTryRemovingSelectedAndUsedLocalVariable(){
         final Source  code    = InternalUtil.createSourceWithSomeUsedFieldAndLocalVariable();

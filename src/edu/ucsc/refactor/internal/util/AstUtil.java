@@ -426,10 +426,11 @@ public class AstUtil {
     }
 
 
-    public static VariableDeclarationStatement getLocalVariable(ASTNode simpleName){
-        if((!AstUtil.isOfType(Name.class, simpleName)) && (!AstUtil.isOfType(SimpleName.class, simpleName))) return null;
+    public static VariableDeclarationStatement getLocalVariable(ASTNode node){
+        if(AstUtil.isOfType(VariableDeclarationStatement.class, node)) return AstUtil.parent(VariableDeclarationStatement.class, node);
+        if((!AstUtil.isOfType(Name.class, node)) && (!AstUtil.isOfType(SimpleName.class, node))) return null;
 
-        final ASTNode declaration = AstUtil.getVariableDeclaration(((Name)simpleName));
+        final ASTNode declaration = AstUtil.getVariableDeclaration(((Name)node));
         if(AstUtil.isOfType(VariableDeclarationFragment.class, declaration)){
             final VariableDeclarationFragment fragment = AstUtil.exactCast(VariableDeclarationFragment.class, declaration);
             final VariableDeclarationStatement statement = AstUtil.parent(VariableDeclarationStatement.class, fragment);

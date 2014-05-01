@@ -103,6 +103,17 @@ public class InternalUtil {
     }
 
 
+    public static Source createBrokenBubbleSortSource2() {
+        final String content = "class BubbleSort {\n" +
+                "\tpublic static void main(String[] arguments) {\n" +
+                "\t\tint[] arr = { 12, 23, 43, 34, 3, 6, 7, 1, 9, 6 };\n" +
+                "\t}\n" +
+                "}";
+
+        return createSource("BubbleSort.java", new StringBuilder(content));
+    }
+
+
     public static Source createBrokenSourceWithOneMethod(){
 
         final String content = "class ScratchedCodeSnippet {\n" +
