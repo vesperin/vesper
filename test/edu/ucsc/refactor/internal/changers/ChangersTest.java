@@ -433,7 +433,25 @@ public class ChangersTest {
     }
 
 
-    @Test public void testTryRemovingPameterDeclaration(){
+    @Test public void testTryRemovingArrayStatement2(){
+        final Context context = new Context(
+                InternalUtil.createBrokenBubbleSortSource3()
+        );
+
+        parser.parseJava(context);
+
+        final SourceSelection    select    = new SourceSelection(context.getSource(), 50, 99);
+
+        final Refactorer refactorer = Vesper.createRefactorer();
+
+        final Change change = refactorer.createChange(ChangeRequest.deleteRegion(select));
+        final Commit commit = refactorer.apply(change);
+
+        assertThat(commit.isValidCommit(), is(true));
+    }
+
+
+    @Test public void testTryRemovingParameterDeclaration(){
         final Context context = new Context(
                 InternalUtil.createBrokenBubbleSortSource2()
         );
