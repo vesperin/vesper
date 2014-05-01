@@ -414,10 +414,11 @@ public class AstUtil {
     }
 
 
-    public static SingleVariableDeclaration getSingleVariableDeclaration(ASTNode simpleName){
-        if((!AstUtil.isOfType(Name.class, simpleName)) && (!AstUtil.isOfType(SimpleName.class, simpleName))) return null;
+    public static SingleVariableDeclaration getSingleVariableDeclaration(ASTNode node){
+        if(AstUtil.isOfType(SingleVariableDeclaration.class, node)) return AstUtil.parent(SingleVariableDeclaration.class, node);
+        if((!AstUtil.isOfType(Name.class, node)) && (!AstUtil.isOfType(SimpleName.class, node))) return null;
 
-        final ASTNode declaration = AstUtil.getVariableDeclaration(((Name)simpleName));
+        final ASTNode declaration = AstUtil.getVariableDeclaration(((Name)node));
         if(declaration != null && AstUtil.isOfType(SingleVariableDeclaration.class, declaration)){
             return AstUtil.exactCast(SingleVariableDeclaration.class, declaration);
         }
