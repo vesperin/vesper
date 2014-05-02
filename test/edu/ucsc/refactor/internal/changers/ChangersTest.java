@@ -144,7 +144,12 @@ public class ChangersTest {
 
             for(NamedLocation eachLocation : locations){
                 final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
-                edit.addNode(target.getNode());
+                final FieldDeclaration dec = AstUtil.parent(FieldDeclaration.class, target.getNode());
+                if(dec == null){
+                    edit.addNode(target.getNode());
+                } else {
+                    edit.addNode(dec);
+                }
             }
 
 
@@ -538,8 +543,8 @@ public class ChangersTest {
                 edit.addNode(target.getNode());
             }
 
-
-            final RemoveUnusedLocalVariable     remover     = new RemoveUnusedLocalVariable();
+            final RemoveUnusedLocalVariable remover = new RemoveUnusedLocalVariable();
+//            final RemoveCodeRegion remover  = new RemoveCodeRegion();
             final SingleEdit                    resolved    = Edits.resolve(edit);
 
             checkChangeCreation(remover, resolved);

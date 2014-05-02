@@ -8,7 +8,6 @@ import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
-import java.util.Hashtable;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -66,7 +65,7 @@ public class EclipseJavaParser implements JavaParser {
 
             context.setCompilationUnit(unit);
 
-        } catch (Throwable error){
+        } catch (Exception error){
             LOGGER.severe(
                     "Parser Error: "
                             + SourceLocation.createLocation(context.getSource())

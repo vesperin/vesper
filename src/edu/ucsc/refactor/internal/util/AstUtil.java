@@ -152,6 +152,7 @@ public class AstUtil {
 
 
     public static FieldDeclaration getFieldDeclaration(ASTNode node){
+        if(AstUtil.isOfType(FieldDeclaration.class, node)) return AstUtil.exactCast(FieldDeclaration.class, node);
         if(AstUtil.isOfType(SimpleName.class, node)){
 
             final CompilationUnit unit = AstUtil.parent(CompilationUnit.class, node);
@@ -197,6 +198,28 @@ public class AstUtil {
 
         return null;
 
+    }
+
+    public static boolean isNameExtractable(ASTNode node){
+        return ((node.getNodeType() == ASTNode.FIELD_ACCESS))
+                || ((node.getNodeType() == ASTNode.FIELD_DECLARATION))
+                || ((node.getNodeType() == ASTNode.SINGLE_VARIABLE_DECLARATION))
+                || ((node.getNodeType() == ASTNode.VARIABLE_DECLARATION_FRAGMENT))
+                || ((node.getNodeType() == ASTNode.VARIABLE_DECLARATION_STATEMENT))
+                || ((node.getNodeType() == ASTNode.ASSIGNMENT))
+                || ((node.getNodeType() == ASTNode.SIMPLE_NAME))
+                || ((node.getNodeType() == ASTNode.SIMPLE_TYPE))
+                || ((node.getNodeType() == ASTNode.TYPE_DECLARATION))
+                || ((node.getNodeType() == ASTNode.METHOD_DECLARATION))
+                || ((node.getNodeType() == ASTNode.METHOD_INVOCATION));
+    }
+
+    public static IVariableBinding getVariableBinding(ASTNode node){
+        if(!isNameExtractable(node)) return null;
+
+        final SimpleName            name            = node instanceof SimpleName ? (SimpleName)node : AstUtil.getSimpleName(node);
+        final VariableDeclaration   declaration     = name != null ? AstUtil.getVariableDeclaration(name) : null;
+        return declaration != null ? declaration.resolveBinding() : null;
     }
 
 
@@ -272,14 +295,6 @@ public class AstUtil {
                     Source.SOURCE_FILE_PROPERTY,
                     updatedSource
             );
-        }
-    }
-
-    public static <T extends ASTNode> T immediateAncestor(Class<T> targetType, ASTNode object){
-        try {
-            return exactCast(targetType, object);
-        } catch (Throwable ex){
-            return null;
         }
     }
 
@@ -414,36 +429,10 @@ public class AstUtil {
     }
 
 
-    public static SingleVariableDeclaration getSingleVariableDeclaration(ASTNode node){
-        if(AstUtil.isOfType(SingleVariableDeclaration.class, node)) return AstUtil.parent(SingleVariableDeclaration.class, node);
-        if((!AstUtil.isOfType(Name.class, node)) && (!AstUtil.isOfType(SimpleName.class, node))) return null;
-
-        final ASTNode declaration = AstUtil.getVariableDeclaration(((Name)node));
-        if(declaration != null && AstUtil.isOfType(SingleVariableDeclaration.class, declaration)){
-            return AstUtil.exactCast(SingleVariableDeclaration.class, declaration);
-        }
-
-        return null;
+    public static VariableDeclaration getVariableDeclaration(ASTNode node){
+        final SimpleName    name   = AstUtil.getSimpleName(node);
+        return name != null ? AstUtil.getVariableDeclaration(name) : null;
     }
-
-
-    public static VariableDeclarationStatement getLocalVariable(ASTNode node){
-        if(AstUtil.isOfType(VariableDeclarationStatement.class, node)) return AstUtil.parent(VariableDeclarationStatement.class, node);
-        if((!AstUtil.isOfType(Name.class, node)) && (!AstUtil.isOfType(SimpleName.class, node))) return null;
-
-        final ASTNode declaration = AstUtil.getVariableDeclaration(((Name)node));
-        if(AstUtil.isOfType(VariableDeclarationFragment.class, declaration)){
-            final VariableDeclarationFragment fragment = AstUtil.exactCast(VariableDeclarationFragment.class, declaration);
-            final VariableDeclarationStatement statement = AstUtil.parent(VariableDeclarationStatement.class, fragment);
-            if(statement != null){
-                return statement;
-            }
-        }
-
-        return null;
-    }
-
-
 
     public static VariableDeclaration getVariableDeclaration(Name node) {
         final IBinding binding = node.resolveBinding();
@@ -469,9 +458,6 @@ public class AstUtil {
     }
 
     public static VariableDeclaration findVariableDeclaration(IVariableBinding binding, ASTNode root) {
-        if (binding.isField()) {
-            return null;
-        }
 
         final ASTNode result = findDeclaration(binding, root);
         if (result instanceof VariableDeclaration) {
@@ -506,7 +492,7 @@ public class AstUtil {
 
 
     public static <T extends ASTNode> boolean isOfType(final Class<T> thatClass, final ASTNode node) {
-        return node.getClass() == thatClass;
+        return node != null && thatClass != null && node.getClass() == thatClass;
     }
 
 
@@ -557,6 +543,29 @@ public class AstUtil {
         final Object element = fragments.get(0);
         final VariableDeclarationFragment fragment = (VariableDeclarationFragment)element;
         return fragment.getName().getIdentifier();
+    }
+
+
+    public static SimpleName getSimpleName(ASTNode node){
+        if(node == null) return null;
+
+        SimpleName result = null;
+        if (node instanceof SimpleName)
+            result = (SimpleName)node;
+        if (node instanceof VariableDeclaration)
+            result = ((VariableDeclaration)node).getName();
+
+        if(result == null){
+            final SimpleNameVisitor nameVisitor = new SimpleNameVisitor(Locations.locate(node));
+            node.accept(nameVisitor);
+
+            if(nameVisitor.isFound()){ // if found, then try first
+                result = nameVisitor.getNames().get(0);
+            }
+
+        }
+
+        return result;
     }
 
 
