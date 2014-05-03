@@ -5,7 +5,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import edu.ucsc.refactor.Location;
+import edu.ucsc.refactor.NamedLocation;
 import edu.ucsc.refactor.Source;
+import edu.ucsc.refactor.internal.ProgramUnitLocation;
 import edu.ucsc.refactor.internal.visitors.LabelVisitor;
 import edu.ucsc.refactor.internal.visitors.LinkedNodesVisitor;
 import edu.ucsc.refactor.internal.visitors.SideEffectNodesVisitor;
@@ -280,8 +282,10 @@ public class AstUtil {
                 continue;
             }
 
-            if(!result.contains(binding)){
-                result.add(binding);
+            final IBinding declaration = AstUtil.getDeclaration(binding);
+
+            if(!result.contains(declaration)){
+                result.add(declaration);
                 result.addAll(getUniqueBindings(each));
             }
         }
@@ -290,10 +294,36 @@ public class AstUtil {
     }
 
 
+    public static IBinding getDeclaration(IBinding binding) {
+        if (binding instanceof ITypeBinding) {
+            return ((ITypeBinding) binding).getTypeDeclaration();
+        } else if (binding instanceof IMethodBinding) {
+            IMethodBinding methodBinding= (IMethodBinding) binding;
+            if (methodBinding.isConstructor()) { // link all constructors with their type
+                return methodBinding.getDeclaringClass().getTypeDeclaration();
+            } else {
+                return methodBinding.getMethodDeclaration();
+            }
+        } else if (binding instanceof IVariableBinding) {
+            return ((IVariableBinding) binding).getVariableDeclaration();
+        }
+        return binding;
+    }
+
+
 
     public static boolean contains(Set<IBinding> bindings, IBinding binding){
         for(IBinding each : bindings){
             if(each.equals(binding) || each == binding ) return true;
+        }
+
+        return false;
+    }
+
+    public static <T extends ASTNode> boolean contains(List<NamedLocation> nodes, T node){
+        for(NamedLocation each : nodes){
+            final ProgramUnitLocation pul = (ProgramUnitLocation)each;
+            if(pul.getNode().equals(node) || pul.getNode() == node ) return true;
         }
 
         return false;

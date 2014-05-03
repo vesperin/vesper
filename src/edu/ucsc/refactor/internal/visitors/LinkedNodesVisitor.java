@@ -1,5 +1,6 @@
 package edu.ucsc.refactor.internal.visitors;
 
+import edu.ucsc.refactor.internal.util.AstUtil;
 import org.eclipse.jdt.core.dom.*;
 
 import java.util.ArrayList;
@@ -21,7 +22,7 @@ public class LinkedNodesVisitor extends ASTVisitor {
      */
     public LinkedNodesVisitor(IBinding binding) {
         super(true);
-        this.binding = getDeclaration(binding);
+        this.binding = AstUtil.getDeclaration(binding);
         this.result  = new ArrayList<SimpleName>();
     }
 
@@ -31,7 +32,7 @@ public class LinkedNodesVisitor extends ASTVisitor {
             return false;
         }
 
-        binding= getDeclaration(binding);
+        binding = AstUtil.getDeclaration(binding);
 
         if (this.binding == binding) {
             result.add(node);
@@ -49,22 +50,6 @@ public class LinkedNodesVisitor extends ASTVisitor {
 
     public List<SimpleName> getLinkedNodes(){
         return result;
-    }
-
-    private static IBinding getDeclaration(IBinding binding) {
-        if (binding instanceof ITypeBinding) {
-            return ((ITypeBinding) binding).getTypeDeclaration();
-        } else if (binding instanceof IMethodBinding) {
-            IMethodBinding methodBinding= (IMethodBinding) binding;
-            if (methodBinding.isConstructor()) { // link all constructors with their type
-                return methodBinding.getDeclaringClass().getTypeDeclaration();
-            } else {
-                return methodBinding.getMethodDeclaration();
-            }
-        } else if (binding instanceof IVariableBinding) {
-            return ((IVariableBinding) binding).getVariableDeclaration();
-        }
-        return binding;
     }
 
 }
