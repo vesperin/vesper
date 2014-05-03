@@ -9,35 +9,35 @@ import java.util.List;
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public interface CheckpointedRefactorer extends Refactorer {
+public interface NavigableRefactorer extends Refactorer {
     /**
-     * In addition to {@code Refactorer}'s implementation, this checkpointed refactorer
+     * In addition to {@code Refactorer}'s implementation, this navigable refactorer
      * exhibits the following behavior during the application of a change:
      *
      * <p>
-     * Once a change is applied to a {@code Source}, this {@link CheckpointedRefactorer} re-inspects the
+     * Once a change is applied to a {@code Source}, this {@link NavigableRefactorer} re-inspects the
      * modified {@link Source} to check if there are still code issues that could be addressed.
      * The returned list of issues can be either empty (no issues found) or non-empty (issues found).
      * </p>
      *
      * <p>
      * To obtain the most recent list of issues (after any application of a change), the user must
-     * invoke the {@link CheckpointedRefactorer#getIssues(Source)} method.
+     * invoke the {@link NavigableRefactorer#getIssues(Source)} method.
      * </p>
      */
     @Override Commit apply(Change change);
 
     /**
-     * Re-does any {@link CheckpointedRefactorer#regress(Source) undo-ed} changes made by the
-     * {@code CheckpointedRefactorer}.
+     * Re-does any {@link NavigableRefactorer#previous(Source) undo-ed} changes made by the
+     * {@code NavigableRefactorer}.
      *
      * @param current The current Source.
-     * @return The {@code Source}'s next version, after the advance. Or the
+     * @return The {@code Source}'s next version, after the next call. Or the
      *      same {@code current} if {@code current} is the only
      *      available version of {@code Source}.
      * @throws java.lang.NullPointerException if {@code Source} null.
      */
-    Source advance(Source current);
+    Source next(Source current);
 
     /**
      * Checkpoints a commit and then returns a Source, which is the updated
@@ -49,11 +49,11 @@ public interface CheckpointedRefactorer extends Refactorer {
     Source checkpoint(Commit commit);
 
     /**
-     * Returns the list of {@code Source}s  tracked by this {@code CheckpointedRefactorer}.
+     * Returns the list of {@code Source}s  tracked by this {@code NavigableRefactorer}.
      *
      * @return The list of tracked {@code Source}s.
      */
-    List<Source> getTrackedSources();
+    List<Source> getSources();
 
     /**
      * Gets the commit history of a given {@code Source}.
@@ -99,8 +99,8 @@ public interface CheckpointedRefactorer extends Refactorer {
      * </p>
      *
      * @param source THe current Source. This Source can be the same as the indexed Source, or
-     *    a Source product of the methods {@link CheckpointedRefactorer#regress(Source)} or
-     *    {@link CheckpointedRefactorer#advance(Source)}.
+     *    a Source product of the methods {@link NavigableRefactorer#previous(Source)} or
+     *    {@link NavigableRefactorer#next(Source)}.
      *
      * @return the indexed Source, after the rewrite.
      * @throws java.lang.NullPointerException if {@code Source} null.
@@ -109,13 +109,13 @@ public interface CheckpointedRefactorer extends Refactorer {
     Source rewriteHistory(Source source);
 
     /**
-     * Un-does the changes made by the {@code CheckpointedRefactorer}.
+     * Un-does the changes made by the {@code NavigableRefactorer}.
      *
      * @param current The current Source.
-     * @return The {@code Source}'s previous version, after the regress. Or the
+     * @return The {@code Source}'s previous version, after the previous call. Or the
      *      same {@code current} if {@code current} is the only
      *      available version of {@code Source}.
      * @throws java.lang.NullPointerException if {@code Source} null.
      */
-    Source regress(Source current);
+    Source previous(Source current);
 }

@@ -15,24 +15,24 @@ import java.util.logging.Logger;
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public class CheckpointedJavaRefactorer implements CheckpointedRefactorer {
-    private static final Logger LOGGER = Logger.getLogger(CheckpointedJavaRefactorer.class.getName());
+public class NavigableJavaRefactorer implements NavigableRefactorer {
+    private static final Logger LOGGER = Logger.getLogger(NavigableJavaRefactorer.class.getName());
 
     private final JavaRefactorer                refactorer;
     private final Map<String, CommitHistory>    timeline;
     private final Map<Source, List<Issue>>      findings;
 
     /**
-     * Instantiates a new {@link CheckpointedJavaRefactorer} object.
+     * Instantiates a new {@link NavigableJavaRefactorer} object.
      * @param refactorer The refactorer without checkpointing.
      */
-    CheckpointedJavaRefactorer(Refactorer refactorer){
+    NavigableJavaRefactorer(Refactorer refactorer){
         this.refactorer     = (JavaRefactorer) refactorer;
         this.timeline       = Maps.newHashMap();
         this.findings       = Maps.newHashMap();
     }
 
-    @Override public Source advance(Source current) {
+    @Override public Source next(Source current) {
         final CommitHistory history = getCommitHistory(current);
 
         for(Commit each : history){
@@ -41,7 +41,7 @@ public class CheckpointedJavaRefactorer implements CheckpointedRefactorer {
             }
         }
 
-        // otherwise, there is nothing to advance (i.e., current is the latest version)
+        // otherwise, there is nothing to next (i.e., current is the latest version)
         return current;
     }
 
@@ -130,7 +130,7 @@ public class CheckpointedJavaRefactorer implements CheckpointedRefactorer {
         return !getIssues(Preconditions.checkNotNull(code)).isEmpty();
     }
 
-    @Override public List<Source> getTrackedSources() {
+    @Override public List<Source> getSources() {
         return new ArrayList<Source>(refactorer.getValidContexts().keySet());
     }
 
@@ -199,7 +199,7 @@ public class CheckpointedJavaRefactorer implements CheckpointedRefactorer {
     }
 
 
-    @Override public Source regress(Source current) {
+    @Override public Source previous(Source current) {
         final CommitHistory history = getCommitHistory(current);
 
         for(Commit each : history){
@@ -234,7 +234,7 @@ public class CheckpointedJavaRefactorer implements CheckpointedRefactorer {
 
     @Override public String toString() {
         final Objects.ToStringHelper builder = Objects.toStringHelper(getClass());
-        builder.add("known files", getTrackedSources());
+        builder.add("known files", getSources());
         return builder.toString();
     }
 }

@@ -75,10 +75,10 @@ import java.util.List;
  *     System.out.println(published.getCommitSummary().more());
  *
  *     // Assuming a source have been changed many times and we have kept a commit history
- *     // of those changes. THis mean that the user has used the CheckpointedRefactorer.
+ *     // of those changes. THis mean that the user has used the NavigableRefactorer.
  *     // Here is how to use this refactorer in order to publish those changes
  *
- *     final CheckpointedRefactorer cf = Vesper.createCheckpointedRefactorer(code);
+ *     final NavigableRefactorer cf = Vesper.createNavigableRefactorer(code);
  *     // .. changes are made to 'code'
  *
  *     final CommitPublisher publisher = cf.getCommitPublisher(code);
@@ -168,25 +168,25 @@ public final class Vesper {
     }
 
     /**
-     * Creates a checkpointed refactorer for the given array of sources
+     * Creates a navigable refactorer for the given array of sources
      *
      * @param sources The array of sources.
      *
      * @return a new Refactorer
      */
-    public static CheckpointedRefactorer createCheckpointedRefactorer(Source... sources){
-        return Vesper.createCheckpointedRefactorer(Vesper.createRefactorer(), sources);
+    public static NavigableRefactorer createNavigableRefactorer(Source... sources){
+        return Vesper.createNavigableRefactorer(Vesper.createRefactorer(), sources);
     }
 
     /**
-     * Creates a checkpointed refactorer for the given array of sources
+     * Creates a navigable refactorer for the given array of sources
      *
      * @param refactorer The plain refactorer
      * @param sources The array of sources.
      *
      * @return a new Refactorer
      */
-    public static CheckpointedRefactorer createCheckpointedRefactorer(Refactorer refactorer, Source... sources){
+    public static NavigableRefactorer createNavigableRefactorer(Refactorer refactorer, Source... sources){
         final ImmutableList<Source> seed = ImmutableList.copyOf(sources);
 
         if(seed.contains(null)) {
@@ -195,18 +195,18 @@ public final class Vesper {
             );
         }
 
-        return Vesper.createCheckpointedRefactorer(refactorer, seed);
+        return Vesper.createNavigableRefactorer(refactorer, seed);
     }
 
     /**
-     * Creates a checkpointed refactorer from a plain refactorer and for the given array of sources
+     * Creates a navigable refactorer from a plain refactorer and for the given array of sources
      *
      * @param refactorer The plain refactorer
      * @param sources The array of sources.
      *
      * @return a new Refactorer
      */
-    private static CheckpointedRefactorer createCheckpointedRefactorer(Refactorer refactorer, Iterable<Source> sources){
+    private static NavigableRefactorer createNavigableRefactorer(Refactorer refactorer, Iterable<Source> sources){
         return new InternalCheckpointedRefactorerCreator(refactorer)
                 .addSources(sources)
                 .build();

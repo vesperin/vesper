@@ -36,8 +36,8 @@ public class RefactorersTest {
         assertThat(refactorer, notNullValue());
     }
 
-    @Test public void testCheckpointedRefactorerCreation(){
-        final CheckpointedRefactorer refactorer = Vesper.createCheckpointedRefactorer(SRC);
+    @Test public void testNavigableRefactorerCreation(){
+        final NavigableRefactorer refactorer = Vesper.createNavigableRefactorer(SRC);
         assertThat(refactorer, notNullValue());
     }
 
@@ -47,9 +47,9 @@ public class RefactorersTest {
         assertNotSame(first, second);
     }
 
-    @Test public void testMultipleCheckpointedRefactorers(){
-        final Refactorer first  = Vesper.createCheckpointedRefactorer(SRC);
-        final Refactorer second = Vesper.createCheckpointedRefactorer(SRC);
+    @Test public void testMultipleNavigableRefactorers(){
+        final Refactorer first  = Vesper.createNavigableRefactorer(SRC);
+        final Refactorer second = Vesper.createNavigableRefactorer(SRC);
         assertNotSame(first, second);
     }
 
@@ -61,16 +61,16 @@ public class RefactorersTest {
     }
 
 
-    @Test public void testCheckpointedRefactorerInternals(){
-        final CheckpointedRefactorer enrichedRefactorer = Vesper.createCheckpointedRefactorer(SRC);
+    @Test public void testNavigableRefactorerInternals(){
+        final NavigableRefactorer enrichedRefactorer = Vesper.createNavigableRefactorer(SRC);
         assertThat(enrichedRefactorer.getIssues(SRC).isEmpty(), is(false));
-        assertThat(enrichedRefactorer.getTrackedSources().size(), is(1));
+        assertThat(enrichedRefactorer.getSources().size(), is(1));
 
-        assertThat(enrichedRefactorer.getTrackedSources().isEmpty(), is(false));
-        assertThat(enrichedRefactorer.getTrackedSources().size(), is(1));
+        assertThat(enrichedRefactorer.getSources().isEmpty(), is(false));
+        assertThat(enrichedRefactorer.getSources().size(), is(1));
 
-        assertSame(enrichedRefactorer.getTrackedSources().get(0), SRC);
-        assertThat(enrichedRefactorer.getTrackedSources().contains(SRC), is(true));
+        assertSame(enrichedRefactorer.getSources().get(0), SRC);
+        assertThat(enrichedRefactorer.getSources().contains(SRC), is(true));
 
         assertThat(enrichedRefactorer.hasIssues(SRC), is(true));
     }
@@ -104,20 +104,20 @@ public class RefactorersTest {
 
     }
 
-    @Test public void testCheckpointedRefactorerCreateChanges() {
+    @Test public void testNavigableRefactorerCreateChanges() {
         // for issue and for edit
-        final CheckpointedRefactorer enrichedRefactorer = Vesper.createCheckpointedRefactorer(SRC);
+        final NavigableRefactorer enrichedRefactorer = Vesper.createNavigableRefactorer(SRC);
         final List<Issue> issues = enrichedRefactorer.getIssues(SRC);
 
-        testCheckpointedRefactorerGivenSomeDetectedIssues(enrichedRefactorer, issues, false);
+        testNavigableRefactorerGivenSomeDetectedIssues(enrichedRefactorer, issues, false);
     }
 
-    @Test public void testCheckpointedRefactorerCommitHistory(){
+    @Test public void testNavigableRefactorerCommitHistory(){
         // for issue and for edit
-        final CheckpointedRefactorer enrichedRefactorer = Vesper.createCheckpointedRefactorer(SRC);
+        final NavigableRefactorer enrichedRefactorer = Vesper.createNavigableRefactorer(SRC);
         final List<Issue> issues = enrichedRefactorer.getIssues(SRC);
 
-        testCheckpointedRefactorerGivenSomeDetectedIssues(enrichedRefactorer, issues, true);
+        testNavigableRefactorerGivenSomeDetectedIssues(enrichedRefactorer, issues, true);
 
         final CommitHistory history = enrichedRefactorer.getCommitHistory(SRC);
         assertNotNull(history);
@@ -125,7 +125,7 @@ public class RefactorersTest {
     }
 
 
-    private void testCheckpointedRefactorerGivenSomeDetectedIssues(CheckpointedRefactorer refactorer, List<Issue> issues, boolean applyChanges){
+    private void testNavigableRefactorerGivenSomeDetectedIssues(NavigableRefactorer refactorer, List<Issue> issues, boolean applyChanges){
         assertThat(issues.isEmpty(), is(false));
 
         for(Issue eachIssue : issues){

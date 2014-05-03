@@ -35,9 +35,9 @@ public class InternalCheckpointedRefactorerCreator {
         return this;
     }
 
-    public CheckpointedJavaRefactorer build(){
+    public NavigableJavaRefactorer build(){
 
-        final CheckpointedJavaRefactorer checkpointedJavaRefactorer = new CheckpointedJavaRefactorer(refactorer);
+        final NavigableJavaRefactorer checkpointedJavaRefactorer = new NavigableJavaRefactorer(refactorer);
 
         for(Source src : sources){
             // detect issues in source file

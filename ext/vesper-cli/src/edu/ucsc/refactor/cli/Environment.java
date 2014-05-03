@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public class Environment {
-    final AtomicReference<CheckpointedRefactorer>   refactorer;
+    final AtomicReference<NavigableRefactorer>      refactorer;
     final AtomicReference<Source>                   origin;
     final AtomicReference<Configuration>            remoteConfig;
     final Queue<String>                             errors;
@@ -25,7 +25,7 @@ public class Environment {
      * Constructs a new Interpreter's Environment.
      */
     public Environment(){
-        refactorer      = new AtomicReference<CheckpointedRefactorer>();
+        refactorer      = new AtomicReference<NavigableRefactorer>();
         origin          = new AtomicReference<Source>();
         remoteConfig    = new AtomicReference<Configuration>();
         errors          = new LinkedList<String>();
@@ -201,7 +201,7 @@ public class Environment {
     /**
      * @return the {@code Refactorer} for the tracked {@code Source}
      */
-    public CheckpointedRefactorer getCodeRefactorer() {
+    public NavigableRefactorer getCodeRefactorer() {
         return refactorer.get();
     }
 
@@ -236,7 +236,7 @@ public class Environment {
                     ? Vesper.createRefactorer()
                     : Vesper.createRefactorer(remote);
 
-            this.refactorer.set(Vesper.createCheckpointedRefactorer(refactorer, getOrigin()));
+            this.refactorer.set(Vesper.createNavigableRefactorer(refactorer, getOrigin()));
         } else {
             this.refactorer.set(null);
         }
@@ -261,7 +261,7 @@ public class Environment {
      * @return {@code true} if it knows, {@code false} otherwise.
      */
     public boolean isTracked(Source code) {
-        for(Source each : getCodeRefactorer().getTrackedSources()){
+        for(Source each : getCodeRefactorer().getSources()){
             if(each.equals(code)){ return true; }
         }
 
@@ -284,7 +284,7 @@ public class Environment {
     public Source resetSource(String name) {
         Preconditions.checkNotNull(name);
 
-        final List<Source> all = getCodeRefactorer().getTrackedSources();
+        final List<Source> all = getCodeRefactorer().getSources();
 
         for(Source each : all){
             if(each.getName().equals(name)){
@@ -295,7 +295,7 @@ public class Environment {
                 final int size = getCommitHistory().size();
 
                 for(int idx = 0; idx < size; idx++){
-                    final Source to         = getCodeRefactorer().regress(result);
+                    final Source to         = getCodeRefactorer().previous(result);
                     final Source indexed    = getCodeRefactorer().rewriteHistory(to);
 
                     final boolean isUpdateNeeded = !each.equals(indexed);
