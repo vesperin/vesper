@@ -55,13 +55,13 @@ public class Upstream implements Repository {
      * @param service The GistService object
      */
     public Upstream(Credential credential, GistService service){
+        this.credential = Preconditions.checkNotNull(credential);
+        this.service    = Preconditions.checkNotNull(service);
 
-        if(credential != null && "None".equals(credential.getUsername())){
+        if("None".equals(credential.getUsername())){
             service.getClient().setCredentials(credential.getUsername(), credential.getPassword());
         }
 
-        this.credential = Preconditions.checkNotNull(credential);
-        this.service    = Preconditions.checkNotNull(service);
     }
 
 
@@ -167,25 +167,28 @@ public class Upstream implements Repository {
     }
 
     private static void sync(Source src, Gist gist) throws IOException {
-        final String        id           = gist.getId();
-        final String        description  = gist.getDescription();
 
-        String name     = null;
-        String content  = null;
+        final Gist nonNullGist = Preconditions.checkNotNull(gist);
 
-        for(String eachKey : gist.getFiles().keySet()){ // it should be only one file
-            name    = gist.getFiles().get(eachKey).getFilename();
-            content = gist.getFiles().get(eachKey).getContent();
+        final String        id           = nonNullGist.getId();
+        final String        description  = nonNullGist.getDescription();
+
+        String name;
+        String content;
+
+        Preconditions.checkArgument(!nonNullGist.getFiles().isEmpty(), "Upstream#sync error: Not Gist files were found!");
+        Preconditions.checkArgument(nonNullGist.getFiles().size() == 1, "Upstream#sync error: Gist should contain only one file");
+
+        for(String eachKey : nonNullGist.getFiles().keySet()){ // it should be only one file
+            name    = nonNullGist.getFiles().get(eachKey).getFilename();
+            content = nonNullGist.getFiles().get(eachKey).getContent();
+
+            Preconditions.checkNotNull(name);
+            Preconditions.checkNotNull(content);
+            Preconditions.checkNotNull(description);
+            Preconditions.checkArgument(src.getName().equals(name), "name mismatch");
+            Preconditions.checkArgument(description.equals(src.getDescription()), "description mismatch");
         }
-
-        Preconditions.checkNotNull(name);
-        Preconditions.checkNotNull(content);
-        Preconditions.checkNotNull(description);
-        Preconditions.checkArgument(src.getName().equals(name), "name mismatch");
-        Preconditions.checkArgument(description.equals(src.getDescription()), "description mismatch");
-
-        assert name     != null;
-        assert content  != null;
 
         src.setId(id);
     }
