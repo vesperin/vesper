@@ -34,27 +34,27 @@ public class Edits {
             final ASTNode node = edit.getAffectedNodes().get(0);
 
             final SingleEdit resolved;
-            if(isClass(node)) {
+            if(AstUtil.isClass(node)) {
                 final TypeDeclaration   declaration = AstUtil.getTypeDeclaration(node);
                 final Location          location    = Locations.locate(declaration);
                 resolved = SingleEdit.renameClassOrInterface(new SourceSelection(location));
                 resolved.addNode(declaration);
-            } else if(isMethod(node)) {
+            } else if(AstUtil.isMethod(node)) {
                 final MethodDeclaration declaration = AstUtil.getMethodDeclaration(node);
                 final Location          location    = Locations.locate(declaration);
                 resolved = SingleEdit.renameMethod(new SourceSelection(location));
                 resolved.addNode(declaration);
-            } else if(isParameter(node)) {
+            } else if(AstUtil.isParameter(node)) {
                 final VariableDeclaration       variableDeclaration = AstUtil.getVariableDeclaration(node);
                 final SingleVariableDeclaration declaration         = (SingleVariableDeclaration) variableDeclaration;
                 resolved = SingleEdit.renameParameter(new SourceSelection(Locations.locate(declaration)));
                 resolved.addNode(declaration);
-            } else if(isField(node)){
+            } else if(AstUtil.isField(node)){
                 final FieldDeclaration  fieldDeclaration = AstUtil.getFieldDeclaration(node);
                 final Location          location         = Locations.locate(fieldDeclaration);
                 resolved = SingleEdit.renameField(new SourceSelection(location));
                 resolved.addNode(fieldDeclaration);
-            } else if(isLocalVariable(node)){
+            } else if(AstUtil.isLocalVariable(node)){
                 final VariableDeclaration           variableDeclaration = AstUtil.getVariableDeclaration(node);
                 final VariableDeclarationStatement  declaration         = AstUtil.parent(VariableDeclarationStatement.class, variableDeclaration);
                 final Location                      location            = Locations.locate(declaration);
@@ -76,28 +76,28 @@ public class Edits {
                 final ASTNode node = edit.getAffectedNodes().get(0);
 
                 final SingleEdit resolved;
-                if(isClass(node)){
+                if(AstUtil.isClass(node)){
                     final TypeDeclaration   declaration = AstUtil.getTypeDeclaration(node);
                     final Location          location    = Locations.locate(declaration);
                     resolved = SingleEdit.deleteClass(new SourceSelection(location));
                     resolved.addNode(declaration);
-                } else if(isMethod(node)) {
+                } else if(AstUtil.isMethod(node)) {
                     final MethodDeclaration declaration = AstUtil.getMethodDeclaration(node);
                     final Location          location    = Locations.locate(declaration);
                     resolved = SingleEdit.deleteMethod(new SourceSelection(location));
                     resolved.addNode(declaration);
-                } else if(isParameter(node)){
+                } else if(AstUtil.isParameter(node)){
                     final VariableDeclaration       variableDeclaration = AstUtil.getVariableDeclaration(node);
                     final SingleVariableDeclaration declaration         = (SingleVariableDeclaration) variableDeclaration;
                     resolved = SingleEdit.deleteParameter(new SourceSelection(Locations.locate(declaration)));
                     resolved.addNode(declaration);
-                } else if(isField(node)){
+                } else if(AstUtil.isField(node)){
                     final VariableDeclaration   variableDeclaration = AstUtil.getVariableDeclaration(node);
                     final FieldDeclaration      fieldDeclaration    = AstUtil.parent(FieldDeclaration.class, variableDeclaration);
                     final Location              location            = Locations.locate(fieldDeclaration);
                     resolved = SingleEdit.deleteField(new SourceSelection(location));
                     resolved.addNode(fieldDeclaration);
-                } else if(isLocalVariable(node)){
+                } else if(AstUtil.isLocalVariable(node)){
                     final VariableDeclaration           variableDeclaration = AstUtil.getVariableDeclaration(node);
                     final VariableDeclarationStatement  declaration         = AstUtil.parent(VariableDeclarationStatement.class, variableDeclaration);
                     final Location                      location            = Locations.locate(declaration);
@@ -114,31 +114,4 @@ public class Edits {
         return edit;
     }
 
-
-    private static boolean isField(ASTNode node) {
-        final IVariableBinding binding = AstUtil.getVariableBinding(node);
-        return (AstUtil.isOfType(FieldDeclaration.class, node) || (binding != null && (binding.isField())));
-    }
-
-    private static boolean isParameter(ASTNode node) {
-        final IVariableBinding binding = AstUtil.getVariableBinding(node);
-        return (AstUtil.isOfType(SingleVariableDeclaration.class, node) || (binding != null && (binding.isParameter())));
-    }
-
-    private static boolean isMethod(ASTNode node) {
-        return (AstUtil.isOfType(MethodDeclaration.class, node)
-                ||  AstUtil.getMethodDeclaration(node) != null) ;
-    }
-
-
-    private static boolean isLocalVariable(ASTNode node){
-        final IVariableBinding binding = AstUtil.getVariableBinding(node);
-        return (AstUtil.isOfType(VariableDeclarationStatement.class, node) || (binding != null && !(binding.isField() || binding.isParameter())));
-    }
-
-
-    private static boolean isClass(ASTNode node) {
-        return AstUtil.isOfType(TypeDeclaration.class, node)
-                ||  AstUtil.getTypeDeclaration(node) != null;
-    }
 }

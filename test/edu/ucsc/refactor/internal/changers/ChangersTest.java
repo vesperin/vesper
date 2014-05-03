@@ -405,7 +405,8 @@ public class ChangersTest {
         final RemoveCodeRegion remover  = new RemoveCodeRegion();
         final SingleEdit       resolved = Edits.resolve(edit);
 
-        checkChangeCreation(remover, resolved);
+        final Change            change      = remover.createChange(resolved, Maps.<String, Parameter>newHashMap());
+        assertThat(change.isValid(), is(false));
 
     }
 
@@ -544,7 +545,6 @@ public class ChangersTest {
             }
 
             final RemoveUnusedLocalVariable remover = new RemoveUnusedLocalVariable();
-//            final RemoveCodeRegion remover  = new RemoveCodeRegion();
             final SingleEdit                    resolved    = Edits.resolve(edit);
 
             checkChangeCreation(remover, resolved);
@@ -787,7 +787,7 @@ public class ChangersTest {
         parser.parseJava(context);
 
         final ProgramUnitLocator  locator   = new ProgramUnitLocator(context);
-        final SourceSelection     selection = new SourceSelection(SourceLocation.createLocation(code, code.getContents(), 88, 281));
+        final SourceSelection     selection = new SourceSelection(SourceLocation.createLocation(code, code.getContents(), 88, 238));
         final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
 
         final RemoveCodeRegion remove = new RemoveCodeRegion();
@@ -803,6 +803,32 @@ public class ChangersTest {
 
         final Change  change  = remove.createChange(edit, Maps.<String, Parameter>newHashMap());
         assertThat(change.isValid(), is(true));
+    }
+
+
+    @Test public void testRemoveInvalidSelectedRegion(){
+        final Source  code    = InternalUtil.createGeneralSourceWithInvalidSelection();
+        final Context context = new Context(code);
+
+        parser.parseJava(context);
+
+        final ProgramUnitLocator  locator   = new ProgramUnitLocator(context);
+        final SourceSelection     selection = new SourceSelection(SourceLocation.createLocation(code, code.getContents(), 88, 271));
+        final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
+
+        final RemoveCodeRegion remove = new RemoveCodeRegion();
+        final SingleEdit       edit   = SingleEdit.deleteRegion(selection);
+
+
+        assertThat(locations.isEmpty(), is(false));
+
+        for(NamedLocation eachLocation : locations){
+            final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
+            edit.addNode(target.getNode());
+        }
+
+        final Change  change  = remove.createChange(edit, Maps.<String, Parameter>newHashMap());
+        assertThat(change.isValid(), is(false));
     }
 
 

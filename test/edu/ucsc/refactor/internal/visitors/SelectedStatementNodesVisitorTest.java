@@ -126,7 +126,7 @@ public class SelectedStatementNodesVisitorTest {
         parser.parseJava(context);
 
 
-        final Location userSelection = SourceLocation.createLocation(code, code.getContents(), 88, 281);
+        final Location userSelection = SourceLocation.createLocation(code, code.getContents(), 88, 238);
 
         final SelectedStatementNodesVisitor statements = new SelectedStatementNodesVisitor(userSelection, true);
         context.accept(statements);

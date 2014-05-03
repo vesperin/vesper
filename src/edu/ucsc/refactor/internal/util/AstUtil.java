@@ -5,10 +5,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import edu.ucsc.refactor.Location;
-import edu.ucsc.refactor.NamedLocation;
 import edu.ucsc.refactor.Source;
-import edu.ucsc.refactor.internal.ProgramUnitLocation;
-import edu.ucsc.refactor.internal.visitors.*;
+import edu.ucsc.refactor.internal.visitors.LabelVisitor;
+import edu.ucsc.refactor.internal.visitors.LinkedNodesVisitor;
+import edu.ucsc.refactor.internal.visitors.SideEffectNodesVisitor;
+import edu.ucsc.refactor.internal.visitors.SimpleNameVisitor;
 import edu.ucsc.refactor.util.Locations;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.*;
@@ -70,84 +71,6 @@ public class AstUtil {
             }
         } while (parent.getClass() != thatClass);
         return exactCast(thatClass, parent);
-    }
-
-    public static int getAnnotationsSize(IBinding binding) {
-        return (binding.getAnnotations() != null
-                    ? binding.getAnnotations().length
-                    : 0
-        );
-    }
-
-    /**
-     * Note that LineComment and BlockComment nodes are not normally visited in an AST because
-     * they are not considered part of main structure of the AST. Use CompilationUnit.getCommentList()
-     * to find these additional comments nodes.
-     *
-     * @param unit  the current compilation unit
-     * @param base  the selection range
-     * @return the locations covered by selection range
-     */
-    public static List<NamedLocation> getCoveredCommentsLocation(CompilationUnit unit, Location base){
-        final List<NamedLocation>   locations   = Lists.newArrayList();
-        final List                  comments    = unit.getCommentList();
-        final CommentsVisitor       visitor     = new CommentsVisitor();
-        final Source                source      = Source.from(unit);
-
-
-        for(Object each : comments){
-            final Comment comment = (Comment) each;
-            comment.accept(visitor);
-            Location other;
-            for(LineComment line : visitor.getLineComments()){
-                other = Locations.locate(source, line);
-                if(Locations.covers(base, other) || Locations.bothSame(base, other)){
-                    if(!containsLocation(locations, other)){
-                        locations.add(new ProgramUnitLocation(line, other));
-                    }
-                }
-            }
-
-            for(BlockComment block : visitor.getBlockComments()){
-                other = Locations.locate(source, block);
-                if(Locations.covers(base, other) || Locations.bothSame(base, other)){
-                    if(!containsLocation(locations, other)){
-                        locations.add(new ProgramUnitLocation(block, other));
-                    }
-
-                }
-            }
-        }
-
-        return locations;
-
-    }
-
-    private static boolean containsLocation(List<NamedLocation> locations, Location location){
-        for(Location each : locations){
-            if(Locations.bothSame(each, location)){
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-
-    public static List<Location> getChildrenLocation(ASTNode parent){
-        final List<Location> locations = Lists.newArrayList();
-        final List<ASTNode> children = AstUtil.getChildren(parent);
-        for(ASTNode eachChild : children){
-            locations.add(Locations.locate(eachChild));
-            if(eachChild instanceof Block){
-                final List<ASTNode> children2 = AstUtil.getChildren(eachChild);
-                for(ASTNode o : children2){
-                    locations.add(Locations.locate(o));
-                }
-            }
-        }
-
-        return locations;
     }
 
 
@@ -255,37 +178,6 @@ public class AstUtil {
     }
 
 
-    public static void copyParameters(List src, MethodDeclaration dst) {
-        for (Object eachObj : src) {
-            final SingleVariableDeclaration next  = (SingleVariableDeclaration) eachObj;
-            final SingleVariableDeclaration param = AstUtil.copySubtree(
-                    SingleVariableDeclaration.class,
-                    dst.getAST(),
-                    next
-            );
-
-            //noinspection unchecked
-            dst.parameters().add(param); // unchecked warning
-        }
-    }
-
-
-    public static void copyArguments(List src, MethodInvocation dst) {
-        for (Object eachObj : src) {
-            final SingleVariableDeclaration next  = (SingleVariableDeclaration) eachObj;
-            final SingleVariableDeclaration param = AstUtil.copySubtree(
-                    SingleVariableDeclaration.class,
-                    dst.getAST(),
-                    next
-            );
-
-            //noinspection unchecked
-            dst.arguments().add(param); // unchecked warning
-        }
-    }
-
-
-
     public static void syncSourceProperty(Source updatedSource, ASTNode node) {
         if (node instanceof CompilationUnit) {
             node.setProperty(Source.SOURCE_FILE_PROPERTY, updatedSource);
@@ -368,6 +260,71 @@ public class AstUtil {
 
         // Is the method at the same position as the other node?
         return (Locations.bothSame(nodeLocation, selection));
+    }
+
+
+    public static Set<IBinding> getUniqueBindings(ASTNode node) {
+        final Set<IBinding>  result   = Sets.newHashSet();
+        final List<ASTNode> children = AstUtil.getChildren(node);
+        if(children.isEmpty()){
+            return result;
+        }
+
+        for(ASTNode each : children){
+            if(AstUtil.isOfType(SimpleType.class, each)) continue;
+            final SimpleName name       = AstUtil.getSimpleName(each);
+            if(name == null) continue;
+            final IBinding   binding    = name.resolveBinding();
+
+            if (binding == null) {
+                continue;
+            }
+
+            if(!result.contains(binding)){
+                result.add(binding);
+                result.addAll(getUniqueBindings(each));
+            }
+        }
+
+        return result;
+    }
+
+
+
+    public static boolean contains(Set<IBinding> bindings, IBinding binding){
+        for(IBinding each : bindings){
+            if(each.equals(binding) || each == binding ) return true;
+        }
+
+        return false;
+    }
+
+
+    public static boolean isField(ASTNode node) {
+        final IVariableBinding binding = AstUtil.getVariableBinding(node);
+        return (AstUtil.isOfType(FieldDeclaration.class, node) || (binding != null && (binding.isField())));
+    }
+
+    public static boolean isParameter(ASTNode node) {
+        final IVariableBinding binding = AstUtil.getVariableBinding(node);
+        return (AstUtil.isOfType(SingleVariableDeclaration.class, node) || (binding != null && (binding.isParameter())));
+    }
+
+    public static boolean isMethod(ASTNode node) {
+        return (AstUtil.isOfType(MethodDeclaration.class, node)
+                ||  AstUtil.getMethodDeclaration(node) != null) ;
+    }
+
+
+    public static boolean isLocalVariable(ASTNode node){
+        final IVariableBinding binding = AstUtil.getVariableBinding(node);
+        return (AstUtil.isOfType(VariableDeclarationStatement.class, node) || (binding != null && !(binding.isField() || binding.isParameter())));
+    }
+
+
+    public static boolean isClass(ASTNode node) {
+        return AstUtil.isOfType(TypeDeclaration.class, node)
+                ||  AstUtil.getTypeDeclaration(node) != null;
     }
 
 
@@ -505,6 +462,11 @@ public class AstUtil {
      * @return {@code true} if the referenced member has any side effects.
      */
     public static boolean isSideEffectFound(SimpleName reference) {
+        return getSideEffects(reference).size() > 0;
+    }
+
+
+    public static List<Expression> getSideEffects(SimpleName reference){
         ASTNode parent = reference.getParent();
 
         while (parent instanceof QualifiedName) {
@@ -524,17 +486,17 @@ public class AstUtil {
         } else if (nameParentType == ASTNode.SINGLE_VARIABLE_DECLARATION) {
             final SingleVariableDeclaration declaration = (SingleVariableDeclaration) parent;
             node = declaration.getInitializer();
-            if (node == null) { return false; }
+            if (node == null) { return ImmutableList.of(); }
         } else if (nameParentType == ASTNode.VARIABLE_DECLARATION_FRAGMENT) {
             node = parent;
         } else {
-            return false;
+            return ImmutableList.of();
         }
 
         final SideEffectNodesVisitor visitor = new SideEffectNodesVisitor();
         node.accept(visitor);
 
-        return visitor.getSideEffectNodes().size() > 0;
+        return visitor.getSideEffectNodes();
     }
 
 
@@ -566,20 +528,6 @@ public class AstUtil {
         }
 
         return result;
-    }
-
-
-    public static boolean hasVoidReturn(MethodDeclaration method){
-        if(method.getReturnType2().isPrimitiveType() ){
-            final PrimitiveType primitiveType = AstUtil.exactCast(
-                    PrimitiveType.class,
-                    method.getReturnType2()
-            );
-
-            return primitiveType.getPrimitiveTypeCode() == PrimitiveType.VOID;
-        }
-
-        return false;
     }
 
 

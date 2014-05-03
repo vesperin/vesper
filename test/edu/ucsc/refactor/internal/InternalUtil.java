@@ -22,6 +22,20 @@ public class InternalUtil {
                 + "String msg = \"Hi!\";\n"
                 + "\tString boom(String msg){ if(null != msg) { return boom(null);} "
                 + "return \"Hi!\";}\n"
+                + "\t/** {@link Name#boom(String)}**/String baam(String msg){ "
+                + " return msg; }\n"
+                + "}";
+
+        return new Source("Name.java", content);
+    }
+
+    public static Source createGeneralSourceWithInvalidSelection(){
+        final String content = "import java.util.List; \n"
+                + "import java.util.Collection; \n"
+                + "class Name {\n"
+                + "String msg = \"Hi!\";\n"
+                + "\tString boom(){ if(null != msg) { return boom(null);} "
+                + "return \"Hi!\";}\n"
                 + "\t/** {@link Name#boom(String)}**/String baam(String msg){ this.msg = msg "
                 + "+ (msg+this.msg); return boom(this.msg); }\n"
                 + "}";
