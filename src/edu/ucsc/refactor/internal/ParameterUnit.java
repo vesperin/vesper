@@ -1,5 +1,6 @@
 package edu.ucsc.refactor.internal;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import edu.ucsc.refactor.Context;
 import edu.ucsc.refactor.Location;
@@ -28,42 +29,21 @@ public class ParameterUnit extends AbstractProgramUnit {
     }
 
     @Override public List<NamedLocation> getLocations(Context context) {
-        final List<NamedLocation> namedLocations = Lists.newArrayList();
-        final List<Location> instances = Locations.locateWord(context.getSource(), getName());
-        for(Location each : instances){
+        Preconditions.checkNotNull(context);
 
-            final SelectedStatementNodesVisitor statements = new SelectedStatementNodesVisitor(
-                    each,
-                    true
-            );
+        return getNamedLocations(context);
+    }
 
-            context.accept(statements);
-            statements.checkIfSelectionCoversValidStatements();
+    @Override protected void addDeclaration(List<NamedLocation> namedLocations, Location each, ASTNode eachNode) {
+        final SingleVariableDeclaration parameter = AstUtil.parent(
+                SingleVariableDeclaration.class,
+                eachNode
+        );
 
-            if(!statements.isSelectionCoveringValidStatements()){ return namedLocations; }
-
-            // Note: once formatted, it is hard to locate a method. This mean that statements getSelectedNodes
-            // is empty, and the only non null node is the statements.lastCoveringNode, which can be A BLOCK
-            // if method is the selection. Therefore, I should get the parent of this block to get the method
-            // or class to remove.
-
-            for(ASTNode eachNode : statements.getSelectedNodes()){
-                // ignore instance creation, parameter passing,... just give me its declaration
-
-                final SingleVariableDeclaration parameter = AstUtil.parent(
-                        SingleVariableDeclaration.class,
-                        eachNode
-                );
-
-                if(parameter != null){
-                    if(!AstUtil.contains(namedLocations, parameter)){
-                        namedLocations.add(new ProgramUnitLocation(parameter, each));
-                    }
-                }
-
+        if(parameter != null){
+            if(!AstUtil.contains(namedLocations, parameter)){
+                namedLocations.add(new ProgramUnitLocation(parameter, each));
             }
         }
-
-        return namedLocations;
     }
 }

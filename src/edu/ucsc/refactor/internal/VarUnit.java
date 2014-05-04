@@ -31,42 +31,19 @@ public class VarUnit extends AbstractProgramUnit {
     @Override public List<NamedLocation> getLocations(Context context) {
         Preconditions.checkNotNull(context);
 
-        final List<NamedLocation> namedLocations = Lists.newArrayList();
-        final List<Location> instances = Locations.locateWord(context.getSource(), getName());
-        for(Location each : instances){
+        return getNamedLocations(context);
+    }
 
-            final SelectedStatementNodesVisitor statements = new SelectedStatementNodesVisitor(
-                    each,
-                    true
-            );
+    @Override protected void addDeclaration(List<NamedLocation> namedLocations, Location each, ASTNode eachNode) {
+        final VariableDeclarationStatement localVar = AstUtil.parent(
+                VariableDeclarationStatement.class,
+                eachNode
+        );
 
-            context.accept(statements);
-            statements.checkIfSelectionCoversValidStatements();
-
-            if(!statements.isSelectionCoveringValidStatements()){ return namedLocations; }
-
-            // Note: once formatted, it is hard to locate a method. This mean that statements getSelectedNodes
-            // is empty, and the only non null node is the statements.lastCoveringNode, which can be A BLOCK
-            // if method is the selection. Therefore, I should get the parent of this block to get the method
-            // or class to remove.
-
-            for(ASTNode eachNode : statements.getSelectedNodes()){
-                // ignore instance creation, parameter passing,... just give me its declaration
-
-                final VariableDeclarationStatement localVar = AstUtil.parent(
-                        VariableDeclarationStatement.class,
-                        eachNode
-                );
-
-                if(localVar != null){
-                    if(!AstUtil.contains(namedLocations, localVar)){
-                        namedLocations.add(new ProgramUnitLocation(localVar, each));
-                    }
-                }
-
+        if(localVar != null){
+            if(!AstUtil.contains(namedLocations, localVar)){
+                namedLocations.add(new ProgramUnitLocation(localVar, each));
             }
         }
-
-        return namedLocations;
     }
 }

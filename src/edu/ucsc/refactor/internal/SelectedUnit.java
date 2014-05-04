@@ -2,6 +2,7 @@ package edu.ucsc.refactor.internal;
 
 import com.google.common.collect.Lists;
 import edu.ucsc.refactor.Context;
+import edu.ucsc.refactor.Location;
 import edu.ucsc.refactor.NamedLocation;
 import edu.ucsc.refactor.SourceSelection;
 import edu.ucsc.refactor.internal.visitors.SelectedStatementNodesVisitor;
@@ -61,4 +62,6 @@ public class SelectedUnit extends AbstractProgramUnit  {
             throw new IllegalStateException("Not a wildcard unit");
         }
     }
+
+    @Override protected void addDeclaration(List<NamedLocation> namedLocations, Location each, ASTNode eachNode) {}
 }
