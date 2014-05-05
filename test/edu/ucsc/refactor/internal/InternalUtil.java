@@ -91,6 +91,34 @@ public class InternalUtil {
     }
 
 
+    public static Source createScratchedSourceWithOneFieldAccessedInMethod(){
+
+        final String content = "class ScratchedCodeSnippet {\n" +
+                "\tint[] arr = null;" +
+                "\tpublic void sort(String[] args) {\n" +
+                "\t\tarr = new int[]{ 12, 23, 43, 34, 3, 6, 7, 1, 9, 6 };\n" +
+                "\t\t{\n" +
+                "\t\t\tint temp;\n" +
+                "\t\t\tfor (int i = 0; i < arr.length; i++) {\n" +
+                "\t\t\t\tfor (int j = 0; j < arr.length - i; j++) {\n" +
+                "\t\t\t\t\tif (arr[j] > arr[j + 1]) {\n" +
+                "\t\t\t\t\t\ttemp = arr[j];\n" +
+                "\t\t\t\t\t\tarr[j + 1] = arr[j];\n" +
+                "\t\t\t\t\t\tarr[j + 1] = temp;\n" +
+                "\t\t\t\t\t}\n" +
+                "\t\t\t\t}\n" +
+                "\t\t\t}\n" +
+                "\t\t}\n" +
+                "\t}\n" +
+                "}";
+
+        return createSource(
+                "ScratchedCodeSnippet.java",
+                new StringBuilder(content)
+        );
+    }
+
+
     public static Source createBrokenBubbleSortSource() {
         final String content = "class ScratchedCodeSnippet {\n" +
                 "\tpublic static void main(String[] arguments) {\n" +
