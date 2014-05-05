@@ -1,16 +1,15 @@
 package edu.ucsc.refactor.internal;
 
 import edu.ucsc.refactor.Change;
-import edu.ucsc.refactor.Note;
 import edu.ucsc.refactor.Source;
-import edu.ucsc.refactor.spi.CommitRequest;
 import edu.ucsc.refactor.spi.CommitSummary;
 import edu.ucsc.refactor.spi.Name;
+import edu.ucsc.refactor.util.Commit;
 import edu.ucsc.refactor.util.StringUtil;
 import org.eclipse.jdt.core.dom.ASTNode;
 
 import java.util.Date;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.Queue;
 import java.util.logging.Logger;
 
 /**
@@ -21,8 +20,6 @@ import java.util.logging.Logger;
 public class LocalCommitRequest extends AbstractCommitRequest {
     private static final Logger LOGGER  = Logger.getLogger(LocalCommitRequest.class.getName());
 
-    private final AtomicLong timeOfCommit;
-
     /**
      * Instantiates a new {@link LocalCommitRequest}
      *
@@ -30,67 +27,60 @@ public class LocalCommitRequest extends AbstractCommitRequest {
      */
     public LocalCommitRequest(Change change) {
         super(change);
-
-        this.timeOfCommit = new AtomicLong(Long.MIN_VALUE);
     }
 
-    CommitRequest abort(String reason) {
-        updateCommitSummary(CommitSummary.forCanceledCommit(reason));
-        return this;
-    }
 
-    @Override public CommitRequest commit() throws RuntimeException {
-        final Source    current             = getLoad().peek().getSource();
-        final boolean   isAboutToBeUpdated  = !getLoad().isEmpty();
+    @Override public Commit commit() throws RuntimeException {
+
+        final boolean   isDirty         = isDirty();
+
+        CommitSummary summary = CommitSummary.forPendingCommit();
 
 
-        if(!isAboutToBeUpdated){ return abort("There is nothing to commit!"); }
+        if(!isDirty){
 
+            summary = summary.updateSummary(CommitSummary.forCanceledCommit("There is nothing to commit!"));
+            return Commit.createInvalidCommit(getChange().getCause().getName(), summary);
+        }
 
-        final String    username            = System.getProperty("user.name");
-        final String    fileName            = StringUtil.extractName(current.getName());
-        final ASTNode   node                = getChange().getCause().getAffectedNodes().get(0); // never null
+        final Source    beforeCommit       = getSourceBeforeCommit();
+        final String    username           = System.getProperty("user.name");
+        final ASTNode   node               = getChange().getCause().getAffectedNodes().get(0); // never null
+
+        final Downstream downstream = new Downstream(node);
 
         try {
-            final String    updatedSourceContent = squashedDeltas(fileName, getLoad(), node);
-            // todo(Huascar) since we already set the updated source into the compilation unit,
-            // I wonder weather we can just call Source.from(node) and get the latest version of
-            // the Source instead of doing this:
-            final Source    updatedSource        = new Source(
-                    current.getName(),
-                    updatedSourceContent,
-                    current.getDescription()
-            );
 
-            updatedSource.setId(current.getId());
-            updatedSource.setSignature(current.getUniqueSignature());
-
-            for(Note each : current.getNotes()){
-                updatedSource.addNote(each);
-            }
-
-            updateSource(updatedSource);
+            final Source afterCommit  = getSourceAfterCommit(beforeCommit, getLoad());
+            final long   now          = System.nanoTime();
 
             // fill out the `more` information
             final Name info = getChange().getCause().getName();
+            final Date date = new Date(now);
 
-            tick();
-
-            final Date  date  = new Date(commitTimestamp());
-
-            updateCommitSummary(
+            summary = summary.updateSummary(
                     CommitSummary.forSuccessfulCommit(
                             username,
                             date,
-                            info.getKey() + ":" + info.getSummary(),
-                            updatedSource
+                            (info.getKey() + ":" + info.getSummary())
                     )
             );
 
-            return this;
+            final Commit valid =  Commit.createValidCommit(
+                    info,
+                    beforeCommit,
+                    afterCommit,
+                    summary
+            );
+
+
+            downstream.push(valid);
+
+            return valid;
+
         } catch (Throwable ex){
 
-            updateCommitSummary(
+            summary = summary.updateSummary(
                     CommitSummary.forFailedCommit(
                             ex.getMessage()
                     )
@@ -98,25 +88,33 @@ public class LocalCommitRequest extends AbstractCommitRequest {
 
             LOGGER.throwing("unable to commit change", "commit()", ex);
 
-            throw new RuntimeException(ex);
+            throw new RuntimeException(summary.more());
         }
 
     }
 
 
-    protected void updateCommitSummary(CommitSummary status){
-        this.status = this.status.updateSummary(status);
+    private Source getSourceBeforeCommit(){
+        // todo(Huascar) since we already set the updated source into the compilation unit,
+        // I wonder weather we can just call Source.from(node) and get the latest version of
+        // the Source instead of doing this:
+        return getLoad().peek().getSource();
     }
 
-    private void tick(){
-        timeOfCommit.set(System.nanoTime());
+
+    private static Source getSourceAfterCommit(Source seed, Queue<Delta> load){
+        final String    fileName             = StringUtil.extractFileName(seed.getName());
+        final String    updatedSourceContent = squashedDeltas(fileName, load);
+
+        return Source.from(seed, updatedSourceContent);
     }
 
-    /**
-     * @return the time of commit in milliseconds,
-     *      Long.MIN_VALUE if it has not been committed.
-     */
-    public long commitTimestamp() {
-        return timeOfCommit.get();
+
+    private boolean isDirty(){
+        return !getLoad().isEmpty();
+    }
+
+    @Override public String toString() {
+        return String.format("CommitRequest for %s", getChange().getCause().getName().getKey());
     }
 }

@@ -3,6 +3,7 @@ package edu.ucsc.refactor.cli.commands;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import edu.ucsc.refactor.Credential;
+import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.cli.*;
 import edu.ucsc.refactor.cli.results.Results;
 import io.airlift.airline.Arguments;
@@ -52,7 +53,12 @@ public class ReplCommand extends VesperCommand {
             }
 
             if(runRepl(credential, environment, prompt)){
-                return Results.infoResult(environment.getOrigin().getContents());
+                final Source origin = environment.getOrigin();
+                if(origin == null){
+                    return Results.infoResult("Good bye!");
+                } else {
+                    return Results.infoResult(origin.getContents());
+                }
             }
 
         } catch (Throwable ex){
@@ -100,7 +106,7 @@ public class ReplCommand extends VesperCommand {
                     global.restart();
                     global.track(repl.getEnvironment().getOrigin());
                     repl.clears();
-                    repl.print("quitting " + Interpreter.VERSION + " Good bye!\n");
+                    repl.print("quitting " + Interpreter.VERSION + "....\n");
                     return true; // exiting ivr
                 }
             }

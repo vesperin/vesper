@@ -3,7 +3,6 @@ package edu.ucsc.refactor.internal;
 import edu.ucsc.refactor.internal.changers.ChangersTest;
 import edu.ucsc.refactor.internal.detectors.DetectorsTest;
 import edu.ucsc.refactor.internal.util.ASTUtilTest;
-import edu.ucsc.refactor.internal.visitors.SelectedASTNodeVisitorTest;
 import edu.ucsc.refactor.internal.visitors.SelectedStatementNodesVisitorTest;
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -18,7 +17,6 @@ import org.junit.runners.Suite;
         DetectorsTest.class,
         ChangersTest.class,
         ASTUtilTest.class,
-        SelectedASTNodeVisitorTest.class,
         SelectedStatementNodesVisitorTest.class
 })
 public class InternalTestSuite {

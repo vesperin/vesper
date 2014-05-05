@@ -17,7 +17,7 @@ import org.junit.runners.Suite;
         ChangeRequestTest.class,
         SourceTest.class,
         SourceSelectionTest.class,
-        RefactorerTest.class,
+        RefactorersTest.class,
         ContextTest.class,
         VesperTest.class
 

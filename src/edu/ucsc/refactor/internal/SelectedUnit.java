@@ -2,6 +2,7 @@ package edu.ucsc.refactor.internal;
 
 import com.google.common.collect.Lists;
 import edu.ucsc.refactor.Context;
+import edu.ucsc.refactor.Location;
 import edu.ucsc.refactor.NamedLocation;
 import edu.ucsc.refactor.SourceSelection;
 import edu.ucsc.refactor.internal.visitors.SelectedStatementNodesVisitor;
@@ -43,6 +44,11 @@ public class SelectedUnit extends AbstractProgramUnit  {
 
         if(!statements.isSelectionCoveringValidStatements()){ return locations; }
 
+        // Note, once formatted, it is hard to locate a method. This mean that statements getSelectedNodes
+        // is empty, and the only non null node is the statements.lastCoveringNode, which can be A BLOCK
+        // if method is the selection. Therefore, I should get the parent of this block to get the method
+        // or class to remove.
+
         for(ASTNode each : statements.getSelectedNodes()){
             // ignore instance creation, parameter passing,... just give me its declaration
             locations.add(new ProgramUnitLocation(each, Locations.locate(each)));
@@ -56,4 +62,6 @@ public class SelectedUnit extends AbstractProgramUnit  {
             throw new IllegalStateException("Not a wildcard unit");
         }
     }
+
+    @Override protected void addDeclaration(List<NamedLocation> namedLocations, Location each, ASTNode eachNode) {}
 }

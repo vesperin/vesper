@@ -3,17 +3,12 @@ package edu.ucsc.refactor.internal;
 import com.google.common.base.Joiner;
 import com.google.common.io.Files;
 import edu.ucsc.refactor.Change;
-import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.spi.CommitRequest;
-import edu.ucsc.refactor.spi.CommitSummary;
-import edu.ucsc.refactor.internal.util.AstUtil;
-import org.eclipse.jdt.core.dom.ASTNode;
 
 import java.io.File;
 import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -23,9 +18,6 @@ public abstract class AbstractCommitRequest implements CommitRequest {
 
     private final Change                    change;
     private final Queue<Delta>              load;
-    private final AtomicReference<Source>   fileMatchingLastDelta;
-
-    protected CommitSummary                 status;
 
     /**
      * Creates a new {@link AbstractCommitRequest}
@@ -38,9 +30,6 @@ public abstract class AbstractCommitRequest implements CommitRequest {
         for(Delta each : change.getDeltas()){ // in order
             this.load.add(each);
         }
-
-        this.fileMatchingLastDelta  = new AtomicReference<Source>();
-        this.status                 = CommitSummary.forPendingCommit();
     }
 
 
@@ -49,16 +38,14 @@ public abstract class AbstractCommitRequest implements CommitRequest {
         return name;
     }
 
-    static String squashedDeltas(String name, Queue<Delta> deltas, ASTNode node) throws RuntimeException {
+    static String squashedDeltas(String name, Queue<Delta> deltas) throws RuntimeException {
         File tempFile = null;
+
         try {
             tempFile = File.createTempFile(fixPrefixTooShort(name), DOT_JAVA);
             while (!deltas.isEmpty()){
                 final Delta next = deltas.remove();
                 Files.write(next.getAfter().getBytes(), tempFile);
-                if(deltas.isEmpty()){  // optimization
-                    AstUtil.syncSourceProperty(next.getSource(), node);
-                }
             }
 
             Files.readLines(tempFile, Charset.defaultCharset());
@@ -83,29 +70,8 @@ public abstract class AbstractCommitRequest implements CommitRequest {
 
     @Override public boolean isValid() { return this.change.isValid(); }
 
-    public Source getSource() {
-        assert this.fileMatchingLastDelta.get() != null;
-
-        return this.fileMatchingLastDelta.get();
-    }
-
     protected Queue<Delta> getLoad() { return this.load; }
 
     protected Change getChange() { return this.change; }
 
-
-    @Override public CommitSummary getCommitSummary() { return this.status; }
-
-
-    @Override public String more() { return status.more(); }
-
-    protected boolean updateSource(Source src){
-        return this.fileMatchingLastDelta.compareAndSet(
-                this.fileMatchingLastDelta.get(),
-                src
-        );
-    }
-
-
-    @Override public String toString() { return more(); }
 }

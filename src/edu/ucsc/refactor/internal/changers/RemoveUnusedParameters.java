@@ -8,14 +8,17 @@ import edu.ucsc.refactor.Parameter;
 import edu.ucsc.refactor.internal.Delta;
 import edu.ucsc.refactor.internal.SourceChange;
 import edu.ucsc.refactor.internal.util.AstUtil;
+import edu.ucsc.refactor.internal.visitors.MethodInvocationVisitor;
 import edu.ucsc.refactor.spi.Names;
 import edu.ucsc.refactor.spi.Smell;
 import edu.ucsc.refactor.spi.SourceChanger;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -61,37 +64,38 @@ public class RemoveUnusedParameters extends SourceChanger {
         final boolean cameFromDetector = cause.getName().isSame(Smell.UNUSED_PARAMETER);
 
         final List<ASTNode> nodes   = cause.getAffectedNodes();
-        final int           length  = nodes.size();
 
         if(cameFromDetector){
-            // at least the method declaration, and the actual parameter
-            Preconditions.checkArgument(length >= 2, "invalid detection of unused parameter");
-
-            final MethodDeclaration         method    = AstUtil.exactCast(MethodDeclaration.class, nodes.get(METHOD_DECLARATION));
-            final SingleVariableDeclaration parameter = AstUtil.exactCast(SingleVariableDeclaration.class, nodes.get(SINGLE_VARIABLE_DECLARATION));
-
-            rewrite.remove(parameter, null);
-
-            final Iterable<ASTNode> invocations = Iterables.skip(nodes, 2/*skip first two elements*/);
-
-            for(ASTNode invocation : invocations){
-                final MethodInvocation methodInvocation = AstUtil.exactCast(MethodInvocation.class, invocation);
-                final Expression argument = (Expression) methodInvocation.arguments().get
-                        (method.parameters().indexOf(parameter));
-
-                rewrite.remove(argument, null);
-            }
+            removeOnceAndForAll(rewrite, nodes);
         } else {
-            final SingleVariableDeclaration parameterReference = AstUtil.exactCast(SingleVariableDeclaration.class, nodes.get(0));
+            final SingleVariableDeclaration parameterReference = ((nodes.get(0) instanceof SimpleName) ? AstUtil.exactCast(SingleVariableDeclaration.class, nodes.get(0).getParent()) : AstUtil.exactCast(SingleVariableDeclaration.class, nodes.get(0)));
             final List<SimpleName>  usages  = AstUtil.findByNode(parameterReference.getParent(), parameterReference.getName());
 
 
-            if(usages.size() > 1){
+            if(AstUtil.isSideEffectFound(parameterReference.getName()) || usages.size() > 1){
                 throw new RuntimeException(
                         parameterReference.getName().getIdentifier() +
                                 " cannot be deleted. It is used somewhere" +
                                 " in the method's body."
                 );
+            } else {
+                final List<ASTNode> requiredNodes = new ArrayList<ASTNode>();
+
+                final MethodDeclaration host = AstUtil.parent(MethodDeclaration.class, parameterReference);
+
+                requiredNodes.add(host);
+                requiredNodes.add(parameterReference);
+
+
+                final MethodInvocationVisitor invokes = new MethodInvocationVisitor(host.getName());
+                root.accept(invokes);
+
+                final Set<MethodInvocation> invocations = invokes.getMethodInvocations();
+                for(MethodInvocation each : invocations){
+                    requiredNodes.add(each);
+                }
+
+                removeOnceAndForAll(rewrite, requiredNodes);
             }
 
         }
@@ -99,5 +103,27 @@ public class RemoveUnusedParameters extends SourceChanger {
 
 
         return createDelta(root, rewrite);
+    }
+
+    private static void removeOnceAndForAll(final ASTRewrite rewrite, final List<ASTNode> nodes){
+        final int length  = nodes.size();
+
+        // at least the method declaration, and the actual parameter
+        Preconditions.checkArgument(length >= 2, "invalid detection of unused parameter");
+
+        final MethodDeclaration         method    = AstUtil.exactCast(MethodDeclaration.class, nodes.get(METHOD_DECLARATION));
+        final SingleVariableDeclaration parameter = AstUtil.exactCast(SingleVariableDeclaration.class, nodes.get(SINGLE_VARIABLE_DECLARATION));
+
+        rewrite.remove(parameter, null);
+
+        final Iterable<ASTNode> invocations = Iterables.skip(nodes, 2/*skip first two elements*/);
+
+        for(ASTNode invocation : invocations){
+            final MethodInvocation methodInvocation = AstUtil.exactCast(MethodInvocation.class, invocation);
+            final Expression argument = (Expression) methodInvocation.arguments().get
+                    (method.parameters().indexOf(parameter));
+
+            rewrite.remove(argument, null);
+        }
     }
 }

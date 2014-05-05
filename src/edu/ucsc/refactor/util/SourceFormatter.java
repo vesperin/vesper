@@ -1,4 +1,4 @@
-package edu.ucsc.refactor.internal;
+package edu.ucsc.refactor.util;
 
 import edu.ucsc.refactor.spi.Formatter;
 import org.eclipse.jdt.core.JavaCore;

@@ -3,11 +3,11 @@ package edu.ucsc.refactor.cli;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import edu.ucsc.refactor.*;
-import edu.ucsc.refactor.spi.CommitRequest;
-import edu.ucsc.refactor.spi.CommitSummary;
 import edu.ucsc.refactor.spi.ProgramUnit;
 import edu.ucsc.refactor.spi.UnitLocator;
+import edu.ucsc.refactor.util.Commit;
 import edu.ucsc.refactor.util.CommitHistory;
+import edu.ucsc.refactor.util.CommitPublisher;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -16,20 +16,18 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public class Environment {
-    final AtomicReference<Refactorer>       refactorer;
-    final AtomicReference<Source>           origin;
-    final AtomicReference<Configuration>    remoteConfig;
-    final Queue<CommitRequest>              checkpoints;
-    final Queue<String>                     errors;
+    final AtomicReference<NavigableRefactorer>      refactorer;
+    final AtomicReference<Source>                   origin;
+    final AtomicReference<Configuration>            remoteConfig;
+    final Queue<String>                             errors;
 
     /**
      * Constructs a new Interpreter's Environment.
      */
     public Environment(){
-        refactorer      = new AtomicReference<Refactorer>();
+        refactorer      = new AtomicReference<NavigableRefactorer>();
         origin          = new AtomicReference<Source>();
         remoteConfig    = new AtomicReference<Configuration>();
-        checkpoints     = new LinkedList<CommitRequest>();
         errors          = new LinkedList<String>();
     }
 
@@ -111,6 +109,14 @@ public class Environment {
         }
     }
 
+    /**
+     * @return The list of pushed commits. These commits can now be
+     * flushed out of the {@code Refactorer}'s commit history
+     */
+    public List<Commit> publishCommitHistory(){
+        return getCommitPublisher().publish();
+    }
+
 
     /**
      * Perform a ChangeRequest and then returns the committed request.
@@ -118,12 +124,11 @@ public class Environment {
      * @param request The ChangeRequest to be performed.
      * @return the committed request.
      */
-    public CommitRequest perform(ChangeRequest request){
-        final Change        change  = getCodeRefactorer().createChange(request);
-        final CommitRequest applied = getCodeRefactorer().apply(change);
+    public Commit perform(ChangeRequest request){
+        final Change change  = getCodeRefactorer().createChange(request);
+        final Commit applied = getCodeRefactorer().apply(change);
         if(applied != null){
-            update(applied.getCommitSummary().getSource());
-            enqueueCommitRequest(applied);
+            update(applied.getSourceAfterChange());
         } else {
             addError(change.getErrors());
         }
@@ -137,7 +142,6 @@ public class Environment {
         this.refactorer.set(null);
         this.origin.set(null);
         this.remoteConfig.set(null);
-        this.checkpoints.clear();
     }
 
     /**
@@ -148,6 +152,16 @@ public class Environment {
      */
     public List<NamedLocation> lookup(ProgramUnit unit){
         return getCodeLocator().locate(unit);
+    }
+
+    /**
+     * Deletes a commit from a commit history.
+     *
+     * @param commit The commit to be deleted.
+     * @return {@code true} if commit was deleted, {@code false} otherwise.
+     */
+    public boolean forgetCommit(Commit commit) {
+        return getCodeRefactorer().getCommitHistory(getOrigin()).delete(commit);
     }
 
     /**
@@ -177,36 +191,18 @@ public class Environment {
     }
 
     /**
-     * Publishes a commit request.
-     *
-     * @param commitRequest The commit request to be published to a remote upstream.
-     * @return The updated commit summary.
+     * @return The Commit Publisher
      */
-    public CommitSummary publish(CommitRequest commitRequest){
-        return getCodeRefactorer().publish(commitRequest).getCommitSummary();
+    public CommitPublisher getCommitPublisher() {
+        return getCodeRefactorer().getCommitPublisher(getOrigin());
     }
 
 
     /**
      * @return the {@code Refactorer} for the tracked {@code Source}
      */
-    public Refactorer getCodeRefactorer() {
+    public NavigableRefactorer getCodeRefactorer() {
         return refactorer.get();
-    }
-
-    /**
-     * @return {@code true} if there are requests to be published, {@code false} otherwise.
-     */
-    public boolean isFilledWithRequests(){
-        return !getCommittedRequests().isEmpty();
-    }
-
-
-    /**
-     * @return a {@code Queue} of committed requests.
-     */
-    public Queue<CommitRequest> getCommittedRequests(){
-        return checkpoints;
     }
 
 
@@ -237,29 +233,13 @@ public class Environment {
         if(origin != null){
             final Configuration remote      = remoteConfig.get();
             final Refactorer    refactorer  = remote == null
-                    ? Vesper.createRefactorer(getOrigin())
-                    : Vesper.createRefactorer(remote, getOrigin());
+                    ? Vesper.createRefactorer()
+                    : Vesper.createRefactorer(remote);
 
-            this.refactorer.set(refactorer);
+            this.refactorer.set(Vesper.createNavigableRefactorer(refactorer, getOrigin()));
         } else {
             this.refactorer.set(null);
         }
-    }
-
-    /**
-     * Collects commit requests for later publishing.
-     *
-     * @param request The commit request to be collected.
-     */
-    public void enqueueCommitRequest(CommitRequest request){
-        checkpoints.add(request);
-    }
-
-    /**
-     * @return the de-queued CommitRequest.
-     */
-    public CommitRequest dequeueCommitRequest(){
-        return getCommittedRequests().remove();
     }
 
     /**
@@ -281,7 +261,7 @@ public class Environment {
      * @return {@code true} if it knows, {@code false} otherwise.
      */
     public boolean isTracked(Source code) {
-        for(Source each : getCodeRefactorer().getTrackedSources()){
+        for(Source each : getCodeRefactorer().getSources()){
             if(each.equals(code)){ return true; }
         }
 
@@ -304,23 +284,29 @@ public class Environment {
     public Source resetSource(String name) {
         Preconditions.checkNotNull(name);
 
-        final List<Source> all = getCodeRefactorer().getTrackedSources();
+        final List<Source> all = getCodeRefactorer().getSources();
 
         for(Source each : all){
             if(each.getName().equals(name)){
-
                 final boolean isOrigin  = each.equals(getOrigin());
 
-                final Source to         = getCodeRefactorer().regress(each);
-                final Source indexed    = getCodeRefactorer().rewriteHistory(to);
+                Source result =  each;
 
-                final boolean isUpdateNeeded = !each.equals(indexed);
+                final int size = getCommitHistory().size();
 
-                if(isOrigin && isUpdateNeeded){
-                    update(indexed);
+                for(int idx = 0; idx < size; idx++){
+                    final Source to         = getCodeRefactorer().previous(result);
+                    final Source indexed    = getCodeRefactorer().rewriteHistory(to);
+
+                    final boolean isUpdateNeeded = !each.equals(indexed);
+
+                    if(isOrigin && isUpdateNeeded){
+                        update(indexed);
+                        result =  indexed;
+                    }
                 }
 
-                return each;
+                return result;
             }
         }
 

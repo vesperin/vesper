@@ -2,19 +2,15 @@ package edu.ucsc.refactor.internal.visitors;
 
 import edu.ucsc.refactor.Context;
 import edu.ucsc.refactor.Location;
+import edu.ucsc.refactor.NamedLocation;
 import edu.ucsc.refactor.Source;
-import edu.ucsc.refactor.internal.EclipseJavaParser;
-import edu.ucsc.refactor.internal.InternalUtil;
-import edu.ucsc.refactor.internal.SourceLocation;
+import edu.ucsc.refactor.internal.*;
 import edu.ucsc.refactor.spi.JavaParser;
-import edu.ucsc.refactor.util.Locations;
-import org.eclipse.jdt.core.dom.ASTNode;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -66,18 +62,11 @@ public class SelectedStatementNodesVisitorTest {
 
         parser.parseJava(context);
 
-        final Location boom = InternalUtil.locateWord(code, "boom");
 
-        final SelectedASTNodeVisitor visitor = new SelectedASTNodeVisitor(boom);
-        context.accept(visitor);
+        final ProgramUnitLocator locator = new ProgramUnitLocator(context);
+        final NamedLocation namedLocation = locator.locate(new MethodUnit("boom")).get(0);
 
-        final ASTNode boomNode =  visitor.getMatchedNode();
-
-        assertNotNull(boomNode);
-
-        final Location boomLocation = Locations.locate(boomNode);
-
-        final SelectedStatementNodesVisitor statements = new SelectedStatementNodesVisitor(boomLocation, true);
+        final SelectedStatementNodesVisitor statements = new SelectedStatementNodesVisitor(namedLocation, true);
         context.accept(statements);
         statements.checkIfSelectionCoversValidStatements();
 
@@ -92,16 +81,9 @@ public class SelectedStatementNodesVisitorTest {
 
         parser.parseJava(context);
 
-        final Location boom = InternalUtil.locateWord(code, "boom");
+        final ProgramUnitLocator locator = new ProgramUnitLocator(context);
+        final NamedLocation boomLocation = locator.locate(new MethodUnit("boom")).get(0);
 
-        final SelectedASTNodeVisitor visitor = new SelectedASTNodeVisitor(boom);
-        context.accept(visitor);
-
-        final ASTNode boomNode =  visitor.getMatchedNode();
-
-        assertNotNull(boomNode);
-
-        final Location boomLocation = Locations.locate(boomNode);
 
         final Location invalid = SourceLocation.createLocation(
                 boomLocation.getSource(),
@@ -126,7 +108,7 @@ public class SelectedStatementNodesVisitorTest {
         parser.parseJava(context);
 
 
-        final Location userSelection = SourceLocation.createLocation(code, code.getContents(), 88, 281);
+        final Location userSelection = SourceLocation.createLocation(code, code.getContents(), 88, 238);
 
         final SelectedStatementNodesVisitor statements = new SelectedStatementNodesVisitor(userSelection, true);
         context.accept(statements);

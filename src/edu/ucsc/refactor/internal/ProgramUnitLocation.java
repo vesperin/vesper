@@ -20,10 +20,11 @@ public class ProgramUnitLocation implements NamedLocation {
     private final Location          location;
 
 
-    private static final int METHOD_DECLARATION   = ASTNode.METHOD_DECLARATION;
-    private static final int TYPE_DECLARATION     = ASTNode.TYPE_DECLARATION;
-    private static final int VARIABLE_DECLARATION = ASTNode.SINGLE_VARIABLE_DECLARATION;
-    private static final int FIELD_DECLARATION    = ASTNode.FIELD_DECLARATION;
+    private static final int METHOD_DECLARATION             = ASTNode.METHOD_DECLARATION;
+    private static final int TYPE_DECLARATION               = ASTNode.TYPE_DECLARATION;
+    private static final int VARIABLE_DECLARATION           = ASTNode.SINGLE_VARIABLE_DECLARATION;
+    private static final int FIELD_DECLARATION              = ASTNode.FIELD_DECLARATION;
+    private static final int VARIABLE_DECLARATION_STATEMENT = ASTNode.VARIABLE_DECLARATION_STATEMENT;
 
 
     /**
@@ -63,6 +64,13 @@ public class ProgramUnitLocation implements NamedLocation {
                 final TypeDeclaration  clazz = AstUtil.exactCast(TypeDeclaration.class, field.getParent());
                 return "type(" + clazz.getName().getIdentifier() + ")";
             }
+
+            case VARIABLE_DECLARATION_STATEMENT:   {
+                final VariableDeclarationStatement statement = AstUtil.exactCast(VariableDeclarationStatement.class, node);
+                final MethodDeclaration method = AstUtil.parent(MethodDeclaration.class, statement.getParent());
+                return "method(" + method.getName().getIdentifier() + ")";
+            }
+
 
             default: throw new NoSuchElementException("unknown ASTNode");
         }

@@ -3,10 +3,12 @@ package edu.ucsc.refactor.internal;
 import edu.ucsc.refactor.Context;
 import edu.ucsc.refactor.spi.JavaParser;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
+import java.util.Map;
 import java.util.logging.Logger;
 
 /**
@@ -28,7 +30,11 @@ public class EclipseJavaParser implements JavaParser {
         astParser.setKind(ASTParser.K_COMPILATION_UNIT);
         astParser.setResolveBindings(true);
         astParser.setEnvironment(null, null, null, true);
-        astParser.setCompilerOptions(JavaCore.getOptions());
+
+
+        final Map options = JavaCore.getOptions();
+        JavaCore.setComplianceOptions(JavaCore.VERSION_1_6, options);
+        astParser.setCompilerOptions(options);
     }
 
     @Override public CompilationUnit parseJava(Context context) {
@@ -54,9 +60,12 @@ public class EclipseJavaParser implements JavaParser {
                 return NOTHING;
             }
 
+            // if the unit has problems, then fail fast
+            throwCompilationErrorIfExist(unit);
+
             context.setCompilationUnit(unit);
 
-        } catch (Throwable error){
+        } catch (Exception error){
             LOGGER.severe(
                     "Parser Error: "
                             + SourceLocation.createLocation(context.getSource())
@@ -68,6 +77,20 @@ public class EclipseJavaParser implements JavaParser {
         }
 
         return unit;
+    }
+
+    private static void throwCompilationErrorIfExist(CompilationUnit unit) {
+        final IProblem[] problems = unit.getProblems();
+        if(problems.length > 0){
+            final CompilationProblemException exception = new CompilationProblemException();
+            for(IProblem each : problems){
+                if(each.isError() && (each.getID() & IProblem.Syntax) != 0){ // catch only syntax related issues
+                    exception.cache(new Throwable(each.getMessage()));
+                }
+            }
+
+            exception.throwCachedException();
+        }
     }
 
 }

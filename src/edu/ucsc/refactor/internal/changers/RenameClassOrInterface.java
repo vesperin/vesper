@@ -26,7 +26,7 @@ public class RenameClassOrInterface extends SourceChanger {
 
     @Override protected Change initChanger(CauseOfChange cause, Map<String, Parameter> parameters) {
         final Change change  = new SourceChange(cause, this, parameters);
-        final String newName = (String) parameters.get(Parameters.TYPE_NEW_NAME).getValue();
+        final String newName = (String) parameters.get(Parameters.MEMBER_NEW_NAME).getValue();
 
         try {
             for(ASTNode each : cause.getAffectedNodes()){
@@ -70,8 +70,6 @@ public class RenameClassOrInterface extends SourceChanger {
         copy.accept(renameType);
 
         rewrite.replace(unit, copy, null);
-
-        src.setName(newName);
 
         return createDelta(src, rewrite);
     }

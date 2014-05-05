@@ -1,11 +1,11 @@
 package edu.ucsc.refactor.internal;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import com.google.common.base.Preconditions;
 import edu.ucsc.refactor.Context;
+import edu.ucsc.refactor.Location;
 import edu.ucsc.refactor.NamedLocation;
-import edu.ucsc.refactor.internal.visitors.MethodDeclarationVisitor;
-import edu.ucsc.refactor.util.Locations;
+import edu.ucsc.refactor.internal.util.AstUtil;
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
 import java.util.List;
@@ -26,18 +26,21 @@ public class MethodUnit extends AbstractProgramUnit {
     }
 
     @Override public List<NamedLocation> getLocations(Context context) {
-        final MethodDeclarationVisitor visitor = new MethodDeclarationVisitor();
-        context.accept(visitor);
+        Preconditions.checkNotNull(context);
 
-        final List<NamedLocation> locations = Lists.newArrayList();
+        return getNamedLocations(context);
+    }
 
-        final List<MethodDeclaration> methods = visitor.getMethodDeclarations();
-        for(MethodDeclaration each : methods){
-            if(each.getName().getIdentifier().equalsIgnoreCase(getName())){
-                locations.add(new ProgramUnitLocation(each, Locations.locate(each)));
+    @Override protected void addDeclaration(List<NamedLocation> namedLocations, Location each, ASTNode eachNode) {
+        final MethodDeclaration methodDeclaration = AstUtil.parent(
+                MethodDeclaration.class,
+                eachNode
+        );
+
+        if(methodDeclaration != null){
+            if(!AstUtil.contains(namedLocations, methodDeclaration) && getName().equals(methodDeclaration.getName().getIdentifier())){
+                namedLocations.add(new ProgramUnitLocation(methodDeclaration, each));
             }
         }
-
-        return ImmutableList.copyOf(locations);
     }
 }

@@ -74,6 +74,8 @@ public class RemoveUnusedTypes extends SourceChanger {
                                     " cannot be deleted. It is used somewhere" +
                                     " in the Source."
                     );
+                } else {
+                    rewrite.remove(declaration, null);
                 }
             }
 

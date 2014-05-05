@@ -1,126 +1,202 @@
 package edu.ucsc.refactor.internal;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import edu.ucsc.refactor.Credential;
 import edu.ucsc.refactor.Note;
 import edu.ucsc.refactor.Source;
-import edu.ucsc.refactor.spi.CommitRequest;
 import edu.ucsc.refactor.spi.CommitSummary;
 import edu.ucsc.refactor.spi.Name;
-import edu.ucsc.refactor.spi.Upstream;
+import edu.ucsc.refactor.spi.Repository;
+import edu.ucsc.refactor.util.Commit;
 import edu.ucsc.refactor.util.Notes;
+import edu.ucsc.refactor.util.SourceHistory;
 import edu.ucsc.refactor.util.StringUtil;
 import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.Gist;
 import org.eclipse.egit.github.core.GistFile;
+import org.eclipse.egit.github.core.GistRevision;
 import org.eclipse.egit.github.core.service.GistService;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
+import java.util.logging.Logger;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public class RemoteRepository implements Upstream {
-    private final GistService service;
-    private final Credential  credential;
+public class Upstream implements Repository {
+    private static final Logger LOGGER = Logger.getLogger(Upstream.class.getName());
+
+    private final Credential    credential;
+    private final GistService   service;
 
     /**
-     * Construct a new RemoteRepository
+     * Construct a new {@code Credential} object with the
+     * remote {@code repository}'s credential.
      *
-     * @param key The storage service key
+     * @param credential Authentication information.
      */
-    public RemoteRepository(Credential key){
-        this(key, new GistService());
+    public Upstream(Credential credential){
+        this(credential, new GistService());
     }
 
     /**
-     * Construct a new RemoteRepository
+     * Construct a new Upstream
      *
-     * @param key The storage service key
+     * @param credential The storage service key
      * @param service The GistService object
      */
-    public RemoteRepository(Credential key, GistService service){
-        if(key != null && "None".equals(key.getUsername())){
-            service.getClient().setCredentials(key.getUsername(), key.getPassword());
+    public Upstream(Credential credential, GistService service){
+        this.credential = Preconditions.checkNotNull(credential);
+        this.service    = Preconditions.checkNotNull(service);
+
+        if("None".equals(credential.getUsername())){
+            service.getClient().setCredentials(credential.getUsername(), credential.getPassword());
         }
-        this.service    = service;
-        this.credential = key;
+
     }
 
-    @Override public CommitRequest publish(CommitRequest request) {
-        if(!request.isValid()) return request;
 
+    @Override public Commit push(Commit commit) {
+        Preconditions.checkArgument(!credential.isNoneCredential(), "incorrect credentials; this refactorer is not setup yet for remote publishing!");
+        Preconditions.checkNotNull(commit, "push() received a null commit");
         try {
-            final Source updatedSource = request.getCommitSummary().getSource();
-            Gist gist = new GistBuilder(service)
-                    .content(updatedSource.getContents())
-                    .file(updatedSource)
+            final Source after = commit.getSourceAfterChange();
+
+            final Gist gist = new GistBuilder(service)
+                    .content(after.getContents())
+                    .file(after)
                     .build();
 
-            ((AbstractCommitRequest)request).updateSource(sync(updatedSource, gist));
-
             // fill out the `more` information
-            final Name info = ((AbstractCommitRequest)request).getChange().getCause().getName();
+            final Name   info       = commit.getNameOfChange();
 
-            ((LocalCommitRequest)request).updateCommitSummary(
+            sync(after, gist);
+
+            final String username   = credential.getUsername();
+
+            commit.amendSummary(
                     CommitSummary.forSuccessfulCommit(
                             gist.getId(),
-                            getUser(),
+                            username,
                             gist.getCreatedAt(),
-                            updatedSource,
                             gist.getUrl(),
-                            info.getKey() + ":" + info.getSummary()
+                            info.getSummary()
                     )
             );
 
-            return request;
+
         } catch (Throwable ex){
-            ((LocalCommitRequest)request).updateCommitSummary(
+            commit.amendSummary(
                     CommitSummary.forFailedCommit(ex.getMessage())
             );
-
-            return request;
         }
 
+        return commit;
     }
 
-    private static Source sync(Source src, Gist gist) throws IOException {
-        final String        id           = gist.getId();
-        final String        description  = gist.getDescription();
+    @Override public SourceHistory pull(String historyForId) {
+        try {
+            Preconditions.checkArgument(!StringUtil.isStringEmpty(historyForId), "invalid source id");
 
-        String name     = null;
-        String content  = null;
+            final Gist gist = service.getGist(historyForId);
+            final List<GistRevision> revisions = gist.getHistory();
 
-        for(String eachKey : gist.getFiles().keySet()){ // it should be only one file
-            name    = gist.getFiles().get(eachKey).getFilename();
-            content = gist.getFiles().get(eachKey).getContent();
+            final SourceHistory history = new SourceHistory();
+
+            for(GistRevision revision : revisions){
+                addSourceFromUrl(history, historyForId, revision.getVersion(), revision.getUrl());
+            }
+
+
+            return history;
+
+        } catch (Throwable ex){
+            LOGGER.throwing("Unable to pull history", "pull()", ex);
+            return new SourceHistory();
+        }
+    }
+
+
+    // Read from a URL and return the content in a String
+    public static void addSourceFromUrl(SourceHistory history, String sourceId, String version, String urlString) throws IOException {
+        String jsonContent = readUrlContent(urlString);
+
+        final JsonElement jsonElement           = new JsonParser().parse(jsonContent);
+        final JsonObject  elementAsJsonObject   = jsonElement.getAsJsonObject();
+        final JsonObject  fileObject            = elementAsJsonObject.get("files").getAsJsonObject();
+
+        for(Map.Entry<String, JsonElement> each : fileObject.entrySet()){
+
+            final String     fileName   = each.getKey();
+            final JsonObject eachFile   = fileObject.get(fileName).getAsJsonObject();
+
+            if(eachFile.has("content")){
+                // todo(Huascar) there must be some process that will finish the updating of
+                // these retrieved sources (e.g., adding their comments.
+                final Source src = new Source(fileName, eachFile.get("content").getAsString());
+                src.setId(sourceId);
+                src.setVersion(version);
+                history.add(src);
+            }
+        }
+    }
+
+
+    private static String readUrlContent(String urlString) throws IOException {
+        final URL     url  = new URL(urlString);
+        final Scanner scan = new Scanner(url.openStream());
+
+        String content = "";
+
+        while (scan.hasNext()){
+            content += scan.nextLine();
         }
 
-        Preconditions.checkNotNull(name);
-        Preconditions.checkNotNull(content);
-        Preconditions.checkNotNull(description);
-        Preconditions.checkArgument(src.getName().equals(name), "name mismatch");
-        Preconditions.checkArgument(description.equals(src.getDescription()), "description mismatch");
+        scan.close();
 
-        assert name     != null;
-        assert content  != null;
+        return content;
+    }
+
+    private static void sync(Source src, Gist gist) throws IOException {
+
+        final Gist nonNullGist = Preconditions.checkNotNull(gist);
+
+        final String        id           = nonNullGist.getId();
+        final String        description  = nonNullGist.getDescription();
+
+        String name;
+        String content;
+
+        Preconditions.checkArgument(!nonNullGist.getFiles().isEmpty(), "Upstream#sync error: Not Gist files were found!");
+        Preconditions.checkArgument(nonNullGist.getFiles().size() == 1, "Upstream#sync error: Gist should contain only one file");
+
+        for(String eachKey : nonNullGist.getFiles().keySet()){ // it should be only one file
+            name    = nonNullGist.getFiles().get(eachKey).getFilename();
+            content = nonNullGist.getFiles().get(eachKey).getContent();
+
+            Preconditions.checkNotNull(name);
+            Preconditions.checkNotNull(content);
+            Preconditions.checkNotNull(description);
+            Preconditions.checkArgument(src.getName().equals(name), "name mismatch");
+            Preconditions.checkArgument(description.equals(src.getDescription()), "description mismatch");
+        }
 
         src.setId(id);
-
-        return src;
     }
 
-    Credential getCredential(){
-        return credential;
-    }
 
-    public String getUser() {
-        return getCredential().getUsername();
+    @Override public String toString() {
+        return "Upstream";
     }
-
 
     /**
      * Helper class to create or update a {@code Gist}.
@@ -197,8 +273,12 @@ public class RemoteRepository implements Upstream {
                         service.createComment(result.getId(), eachNote.getContent());
                     }
 
+                    this.code.setVersion(Iterables.get(result.getHistory(), 0).getVersion());
+
                 } else {
                     if(isDirty(this, remote)){
+
+                        // anything below is about creating revisions to file
 
                         for(String each : remote.getFiles().keySet()){ // ONLY one file
                             remote.getFiles().get(each).setContent(content);
@@ -217,6 +297,8 @@ public class RemoteRepository implements Upstream {
                         for(Note eachNote : newNotes){
                             service.createComment(result.getId(), eachNote.getContent());
                         }
+
+                        this.code.setVersion(Iterables.getLast(result.getHistory()).getVersion());
                     }
                 }
             } catch (Throwable ex){

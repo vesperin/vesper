@@ -1,10 +1,11 @@
 package edu.ucsc.refactor;
 
+import com.google.common.collect.ImmutableList;
 import edu.ucsc.refactor.internal.HostImpl;
+import edu.ucsc.refactor.internal.InternalCheckpointedRefactorerCreator;
 import edu.ucsc.refactor.internal.InternalRefactorerCreator;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -24,9 +25,9 @@ import java.util.List;
  *
  *     final Source          code       = new Source(...);
  *     // using your own configuration:
- *     // refactorer = Vesper.createRefactorer(new MyConfiguration(), code);
+ *     // refactorer = Vesper.createRefactorer(new MyConfiguration());
  *     // using default configuration
- *     final Refactorer      refactorer = Vesper.createRefactorer(code);
+ *     final Refactorer      refactorer = Vesper.createRefactorer();
  *
  *     final Map<String, Parameter> userInput = ...;
  *
@@ -65,13 +66,42 @@ import java.util.List;
  *     // III. Publishing locally committed changes to a remote repository (e.g., Gist.Github.com)
  *
  *     // Let's assume that vesper has been given the right credentials to access a remote repo
- *     // (e.g., see default configuration for how to do this).
+ *     // (e.g., see default configuration for how to do this). Let's call this authenticated repo
+ *     AuthenticatedUpstream..
  *
+ *     final CommitPublisher publisher = new CommitPublisher();
  *     // publish changes
- *     final CommitRequest published = refactorer.publish(applied);
- *     System.out.println(published.more());
+ *     final Commit published = publisher.publish(applied, new AuthenticatedUpstream());
+ *     System.out.println(published.getCommitSummary().more());
  *
- *     // IV. More?
+ *     // Assuming a source have been changed many times and we have kept a commit history
+ *     // of those changes. THis mean that the user has used the NavigableRefactorer.
+ *     // Here is how to use this refactorer in order to publish those changes
+ *
+ *     final NavigableRefactorer cf = Vesper.createNavigableRefactorer(code);
+ *     // .. changes are made to 'code'
+ *
+ *     final CommitPublisher publisher = cf.getCommitPublisher(code);
+ *     // publish changes
+ *     publisher.publish();
+ *
+ *     // IV. Retrieving the SourceHistory of a Source (previously curated)
+ *
+ *     final SourceRecalling recalling = new SourceRecalling(new AuthenticatedUpstream(), "123456");
+ *
+ *     final SourceHistory history = recalling.recall();
+ *
+ *     // iterating over the history is a just a matter of a simple for-each loop
+ *     Source pivot = null;
+ *     for(Source eachSrc : history){
+ *         if(pivot == null){
+ *             pivot = eachSrc; continue;
+ *         }
+ *
+ *         System.out.println(recalling.differences(pivot, eachSrc).toString());
+ *     }
+ *
+ *     // V. More?
  *
  *     // see {@code Refactorer}'s API for more details.
  *
@@ -92,10 +122,23 @@ public final class Vesper {
      * Creates a refactorer for the given set of sources.
      * @return a new Refactorer
      */
-    public static Refactorer createRefactorer(Source... sources){
+    public static Refactorer createRefactorer(){
+        return createRefactorer(DEFAULT_CONFIG);
+    }
+
+
+    /**
+     * Creates a refactorer for the given set of sources using
+     * {@link Vesper}'s main configuration object.
+     *
+     * @param configuration The current configuration
+     *
+     * @return a new Refactorer
+     */
+    public static Refactorer createRefactorer(Configuration configuration) {
         return createRefactorer(
-                DEFAULT_CONFIG,
-                sources
+                configuration,
+                new HostImpl()
         );
     }
 
@@ -106,67 +149,67 @@ public final class Vesper {
      *
      * @param configuration The current configuration
      * @param host          The current host.
-     * @param sources The list of sources.
      *
      * @return a new Refactorer
      */
     public static Refactorer createRefactorer(
             Configuration configuration,
-            Host host, Iterable<Source> sources
+            Host host
     ){
 
-        Vesper.nonNull(configuration, host, sources);
+        Vesper.nonNull(configuration, host);
 
 
         // installs a configuration to Vesper's host.
         host.install(configuration);
 
         return new InternalRefactorerCreator(host)
-                .addSources(sources)
                 .build();
     }
 
-
     /**
-     * Creates a refactorer for the given set of sources using
-     * {@link Vesper}'s main configuration object.
+     * Creates a navigable refactorer for the given array of sources
      *
-     * @param configuration The current configuration
-     * @param sources The list of sources.
-     *
-     * @return a new Refactorer
-     */
-    public static Refactorer createRefactorer(
-            Configuration configuration,
-            Iterable<Source> sources
-    ){
-
-        return createRefactorer(
-                configuration,
-                new HostImpl(),
-                sources
-        );
-    }
-
-
-    /**
-     * Creates a refactorer for the given set of sources using
-     * {@link Vesper}'s main configuration object.
-     *
-     * @param configuration The current configuration
      * @param sources The array of sources.
      *
      * @return a new Refactorer
      */
-    public static Refactorer createRefactorer(
-            Configuration configuration,
-            Source... sources
-    ){
+    public static NavigableRefactorer createNavigableRefactorer(Source... sources){
+        return Vesper.createNavigableRefactorer(Vesper.createRefactorer(), sources);
+    }
 
-        return createRefactorer(
-                configuration,
-                Arrays.asList(sources)
-        );
+    /**
+     * Creates a navigable refactorer for the given array of sources
+     *
+     * @param refactorer The plain refactorer
+     * @param sources The array of sources.
+     *
+     * @return a new Refactorer
+     */
+    public static NavigableRefactorer createNavigableRefactorer(Refactorer refactorer, Source... sources){
+        final ImmutableList<Source> seed = ImmutableList.copyOf(sources);
+
+        if(seed.contains(null)) {
+            throw new CreationException(
+                    ImmutableList.of(new Throwable("createRefactorer() has been given a null configuration."))
+            );
+        }
+
+        return Vesper.createNavigableRefactorer(refactorer, seed);
+    }
+
+    /**
+     * Creates a navigable refactorer from a plain refactorer and for the given array of sources
+     *
+     * @param refactorer The plain refactorer
+     * @param sources The array of sources.
+     *
+     * @return a new Refactorer
+     */
+    private static NavigableRefactorer createNavigableRefactorer(Refactorer refactorer, Iterable<Source> sources){
+        return new InternalCheckpointedRefactorerCreator(refactorer)
+                .addSources(sources)
+                .build();
     }
 
     /**
@@ -179,7 +222,7 @@ public final class Vesper {
     }
 
 
-    static void nonNull(Configuration configuration, Host host, Iterable<Source> sources) throws
+    static void nonNull(Configuration configuration, Host host) throws
             CreationException {
 
         final List<Throwable> throwables = new ArrayList<Throwable>();
@@ -192,12 +235,6 @@ public final class Vesper {
         if(host == null){
             throwables.add(
                     new Throwable("createRefactorer() has been given a null host.")
-            );
-        }
-
-        if(sources == null){
-            throwables.add(
-                    new Throwable("createRefactorer() has been given no sources to inspect.")
             );
         }
 

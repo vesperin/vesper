@@ -12,7 +12,6 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({
         StringsTest.class,
         LocationsTest.class,
-        IoTest.class,
         NotesTest.class,
         CommitHistoryTest.class
 })

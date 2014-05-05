@@ -7,7 +7,6 @@ import edu.ucsc.refactor.spi.JavaParser;
 import edu.ucsc.refactor.spi.SourceChanger;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -16,7 +15,7 @@ import java.util.List;
  */
 public class HostImpl implements Host {
 
-    private final Collection<Throwable> errors;
+    private final List<Throwable>       errors;
     private final List<IssueDetector>   detectors;
     private final List<SourceChanger>   changers;
 
@@ -119,7 +118,8 @@ public class HostImpl implements Host {
     }
 
     @Override public boolean isRemoteUpstreamEnabled() {
-        return getStorageKey() != null;
+        final Credential cred = getStorageKey();
+        return cred != null && !getStorageKey().isNoneCredential();
     }
 
     @Override public void throwCreationErrorIfErrorsExist() throws RuntimeException {

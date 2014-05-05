@@ -1,17 +1,17 @@
 package edu.ucsc.refactor.internal;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import edu.ucsc.refactor.Context;
 import edu.ucsc.refactor.Location;
 import edu.ucsc.refactor.NamedLocation;
 import edu.ucsc.refactor.internal.util.AstUtil;
-import edu.ucsc.refactor.internal.visitors.SelectedASTNodeVisitor;
+import edu.ucsc.refactor.internal.visitors.SelectedStatementNodesVisitor;
 import edu.ucsc.refactor.util.Locations;
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
 import java.util.List;
-import java.util.Set;
 
 /**
  * This represents a parameter of a class's method.
@@ -29,22 +29,21 @@ public class ParameterUnit extends AbstractProgramUnit {
     }
 
     @Override public List<NamedLocation> getLocations(Context context) {
-        final Set<NamedLocation> locations = Sets.newHashSet();
-        final List<Location> instances = Locations.locateWord(context.getSource(), getName());
-        for(Location each : instances){
-            final SelectedASTNodeVisitor visitor = new SelectedASTNodeVisitor(each);
-            context.accept(visitor);
+        Preconditions.checkNotNull(context);
 
-            final SingleVariableDeclaration variable = AstUtil.parent(
-                    SingleVariableDeclaration.class,
-                    visitor.getMatchedNode()
-            );
+        return getNamedLocations(context);
+    }
 
-            if(variable != null){
-                locations.add(new ProgramUnitLocation(variable, each));
+    @Override protected void addDeclaration(List<NamedLocation> namedLocations, Location each, ASTNode eachNode) {
+        final SingleVariableDeclaration parameter = AstUtil.parent(
+                SingleVariableDeclaration.class,
+                eachNode
+        );
+
+        if(parameter != null){
+            if(!AstUtil.contains(namedLocations, parameter)){
+                namedLocations.add(new ProgramUnitLocation(parameter, each));
             }
         }
-
-        return ImmutableList.copyOf(locations);
     }
 }

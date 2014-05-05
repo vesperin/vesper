@@ -1,6 +1,7 @@
 package edu.ucsc.refactor;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 import edu.ucsc.refactor.util.Notes;
 import edu.ucsc.refactor.util.StringUtil;
 import edu.ucsc.refactor.util.UniqueIdentifierGenerator;
@@ -18,11 +19,12 @@ public class Source {
 
     private final String        contents;
     private final String        description;
-    private final Notes notes;
+    private final Notes         notes;
 
     private final AtomicReference<String> name;
     private final AtomicReference<String> id;
 
+    private final AtomicReference<String> version;
     private final AtomicReference<String> signature;
 
     /**
@@ -47,12 +49,50 @@ public class Source {
      * @param description The file's description.
      */
     public Source(String name, String contents, String description){
+        Preconditions.checkArgument(
+                StringUtil.size(
+                        StringUtil.extractFileName(Preconditions.checkNotNull(name))
+                ) > 2, "name of class is too short"
+        );
+
         this.name        = new AtomicReference<String>(name);
         this.contents    = contents;
         this.description = description;
         this.id          = new AtomicReference<String>();
         this.notes       = new Notes();
         this.signature   = new AtomicReference<String>();
+        this.version     = new AtomicReference<String>();
+    }
+
+    /**
+     * Creates a copy of {@code Source} from a seed {@code Source}
+     * and some new content.
+     *
+     * @param seed The seed {@code Source}
+     * @param newContent The new {@code Source}'s content.
+     * @return The {@code Source}
+     */
+    public static Source from(Source seed, String newContent){
+        final String tentativeName      = StringUtil.extractClassName(newContent);
+        final String nameWithoutJavaExt = StringUtil.extractFileName(seed.getName());
+
+        final String name          = StringUtil.equals(nameWithoutJavaExt, tentativeName) ? nameWithoutJavaExt : tentativeName;
+
+        final Source  copy  = new Source(
+                name + ".java",
+                newContent,
+                seed.getDescription().replace(nameWithoutJavaExt, name)
+        );
+
+        copy.setId(seed.getId());
+        copy.setSignature(seed.getUniqueSignature());
+
+        for(Note each : seed.getNotes()){
+            copy.addNote(each);
+        }
+
+
+        return copy;
     }
 
     /**
@@ -89,7 +129,7 @@ public class Source {
     }
 
     private static String generateDescription(String fromName){
-        return "Java: " + StringUtil.splitCamelCase(StringUtil.extractName(fromName));
+        return "Java: " + StringUtil.splitCamelCase(StringUtil.extractFileName(fromName));
     }
 
     /**
@@ -153,6 +193,13 @@ public class Source {
      */
     public String getUniqueSignature(){ return this.signature.get(); }
 
+    /**
+     * @return The Source version.
+     */
+    public String getVersion(){
+        return version.get();
+    }
+
 
     @Override public int hashCode() {
         return Objects.hashCode(getName(), getContents());
@@ -200,13 +247,23 @@ public class Source {
         return this.signature.compareAndSet(this.signature.get(), signature);
     }
 
+    /**
+     * Sets a version in text form.
+     *
+     * @param version version string
+     * @return {@code true} if version was set, {@code false} otherwise.
+     */
+    public boolean setVersion(String version){
+        return this.version.compareAndSet(this.version.get(), version);
+    }
+
     @Override public String toString() {
         final Objects.ToStringHelper builder = Objects.toStringHelper(getClass());
         if(getId() != null){
             builder.add("id", getId());
         }
 
-        builder.add("name", StringUtil.extractName(getName()));
+        builder.add("name", StringUtil.extractFileName(getName()));
         return builder.toString();
 
     }

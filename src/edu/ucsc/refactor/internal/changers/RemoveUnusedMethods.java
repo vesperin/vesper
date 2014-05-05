@@ -54,6 +54,7 @@ public class RemoveUnusedMethods extends SourceChanger {
 
 
     private Delta removeUnusedMethods(CompilationUnit root, ASTRewrite rewrite, CauseOfChange cause){
+        // todo FIX, it can also come from
         final boolean cameFromDetector = cause.getName().isSame(Smell.UNUSED_METHOD);
 
         for(ASTNode affected : cause.getAffectedNodes()){
@@ -68,6 +69,8 @@ public class RemoveUnusedMethods extends SourceChanger {
                                     " cannot be deleted. It is used somewhere" +
                                     " in the Source."
                     );
+                } else {
+                    rewrite.remove(declaration, null);
                 }
             }
         }

@@ -2,8 +2,8 @@ package edu.ucsc.refactor.internal.visitors;
 
 import edu.ucsc.refactor.Location;
 import edu.ucsc.refactor.Source;
-import edu.ucsc.refactor.spi.Refactoring;
 import edu.ucsc.refactor.internal.util.AstUtil;
+import edu.ucsc.refactor.spi.Refactoring;
 import org.eclipse.jdt.core.dom.*;
 
 import java.util.NoSuchElementException;
@@ -62,6 +62,9 @@ public class RenameAstNodeVisitor extends ASTVisitor {
                     case RENAME_TYPE: // rename class or interface
                         renameType(node, newName);
                         break;
+                    case RENAME_VARIABLE:
+                        renameVariable(node, declaration, newName);
+                        break;
                     default:
                         throw new NoSuchElementException(this.refactoring + " not found!");
                 }
@@ -79,7 +82,14 @@ public class RenameAstNodeVisitor extends ASTVisitor {
             }
         } else {
             if(!(node.getParent() instanceof FieldAccess)){ // local variables
-                node.setIdentifier(newName);
+                if(node.getParent() instanceof ArrayAccess){
+                    final ArrayAccess arrayAccess = AstUtil.parent(ArrayAccess.class, node);
+                    if(arrayAccess.getArray() == node){
+                        node.setIdentifier(newName);
+                    }
+                } else {
+                    node.setIdentifier(newName);
+                }
             }
         }
 
@@ -96,8 +106,19 @@ public class RenameAstNodeVisitor extends ASTVisitor {
     static void renameField(SimpleName node, VariableDeclaration declaration, String newName){
         // todo(Huascar) should we rename the getter and setter?
         if(declaration == null){
-            if((node.getParent() instanceof FieldAccess)){ // field
+            final QualifiedName qualifiedName = AstUtil.parent(QualifiedName.class, node);
+            if((node.getParent() instanceof FieldAccess)
+                || node.getParent() instanceof Assignment){ // field
                 node.setIdentifier(newName);
+            } else if(qualifiedName != null) {
+                if(qualifiedName.getQualifier() == node){
+                    node.setIdentifier(newName);
+                }
+            } else if(node.getParent() instanceof ArrayAccess){
+                final ArrayAccess arrayAccess = AstUtil.parent(ArrayAccess.class, node);
+                if(arrayAccess.getArray() == node){
+                    node.setIdentifier(newName);
+                }
             }
         } else {
             if(declaration.getParent() instanceof FieldDeclaration){
@@ -106,9 +127,34 @@ public class RenameAstNodeVisitor extends ASTVisitor {
         }
     }
 
+
+    static void renameVariable(SimpleName node, VariableDeclaration declaration, String newName){
+        if(declaration == null){
+            final QualifiedName qualifiedName = AstUtil.parent(QualifiedName.class, node);
+            if(node.getParent() instanceof Assignment){ // field
+                node.setIdentifier(newName);
+            } else if(qualifiedName != null){
+                if(qualifiedName.getQualifier() == node){
+                    node.setIdentifier(newName);
+                }
+            } else if(node.getParent() instanceof ArrayAccess){
+                final ArrayAccess arrayAccess = AstUtil.parent(ArrayAccess.class, node);
+                if(arrayAccess.getArray() == node){
+                    node.setIdentifier(newName);
+                }
+            }
+        } else {
+            if(declaration.getParent() instanceof VariableDeclarationStatement){
+                node.setIdentifier(newName);
+            }
+        }
+
+    }
+
     static void renameType(SimpleName node, String newName){
         if(node.getParent() instanceof TypeDeclaration
-                || node.getParent() instanceof ConstructorInvocation){
+                || node.getParent() instanceof ConstructorInvocation
+                || node.getParent() instanceof MethodRef){
             node.setIdentifier(newName);
         }
     }

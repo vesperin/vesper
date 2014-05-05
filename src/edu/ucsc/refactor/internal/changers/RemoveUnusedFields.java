@@ -49,10 +49,10 @@ public class RemoveUnusedFields extends SourceChanger {
     }
 
     private Delta removeUnusedFields(CompilationUnit root, ASTRewrite rewrite, CauseOfChange cause){
-        final boolean cameFromDetector = cause.getName().isSame(Smell.UNUSED_TYPE);
+        final boolean cameFromDetector = cause.getName().isSame(Smell.UNUSED_FIELD);
 
         for(ASTNode affected : cause.getAffectedNodes()){
-            final FieldDeclaration declaration = (FieldDeclaration) affected;
+            final FieldDeclaration declaration = AstUtil.parent(FieldDeclaration.class, affected);
 
             if(cameFromDetector){
                 rewrite.remove(declaration, null);
@@ -70,6 +70,8 @@ public class RemoveUnusedFields extends SourceChanger {
                                         " cannot be deleted. It is referenced" +
                                         " throughout the source code"
                         );
+                    } else {
+                        rewrite.remove(declaration, null);
                     }
 
                 }
