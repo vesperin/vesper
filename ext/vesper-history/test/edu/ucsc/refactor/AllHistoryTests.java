@@ -16,8 +16,8 @@ import org.junit.runners.Suite;
         NavigableVesperTest.class
 
 })
-public class AllTests {
+public class AllHistoryTests {
     public static Test suite() {
-        return new TestSuite(AllTests.class.getName());
+        return new TestSuite(AllHistoryTests.class.getName());
     }
 }
