@@ -44,15 +44,16 @@ public class RefactorersTest {
 
     @Test public void testRefactorerIssueDetection(){
         final Refactorer refactorer = Vesper.createRefactorer();
-
-        final Set<Issue> issues = refactorer.detectIssues(SRC);
+        final Introspector introspector = refactorer.getIntrospector(SRC);
+        final Set<Issue> issues = introspector.detectIssues(SRC);
         assertThat(issues.isEmpty(), is(false));
     }
 
     @Test public void testRefactorerCreateChanges() {
         // for issue and for edit
         final Refactorer refactorer = Vesper.createRefactorer();
-        final Set<Issue> issues     = refactorer.detectIssues(SRC);
+        final Introspector introspector = refactorer.getIntrospector(SRC);
+        final Set<Issue> issues     = introspector.detectIssues(SRC);
 
         assertThat(issues.isEmpty(), is(false));
 
@@ -83,10 +84,11 @@ public class RefactorersTest {
     @Test public void testRefactorerRecommendChange(){
         // for any issues found on the SRC
         final Refactorer refactorer = Vesper.createRefactorer();
-        final List<Change> changes = refactorer.recommendChanges(SRC, refactorer.detectIssues(SRC));
+        final Introspector introspector = refactorer.getIntrospector(SRC);
+        final List<Change> changes = refactorer.recommendChanges(SRC, introspector.detectIssues(SRC));
 
         assertThat(changes.isEmpty(), is(false));
-        assertThat(changes.size(), is(2));
+        assertThat(changes.size(), is(3));
     }
 
     @Test public void testRefactorerUnitLocator() {

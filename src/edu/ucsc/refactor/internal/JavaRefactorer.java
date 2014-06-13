@@ -2,18 +2,18 @@ package edu.ucsc.refactor.internal;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.util.Edits;
 import edu.ucsc.refactor.spi.CommitRequest;
-import edu.ucsc.refactor.spi.IssueDetector;
 import edu.ucsc.refactor.spi.SourceChanger;
 import edu.ucsc.refactor.spi.UnitLocator;
 import edu.ucsc.refactor.util.Commit;
-import org.eclipse.jdt.core.dom.CompilationUnit;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -26,7 +26,6 @@ public class JavaRefactorer implements Refactorer {
     private final Map<Source, Context>      cachedContexts;
 
 
-    private final SourceChecking inspector;
     private final SourceChanging changer;
 
 
@@ -38,7 +37,6 @@ public class JavaRefactorer implements Refactorer {
         this.host           = (HostImpl) host;
         this.cachedContexts = Maps.newHashMap();
 
-        this.inspector  = new SourceChecking(host.getIssueDetectors());
         this.changer    = new SourceChanging(host.getSourceChangers());
     }
 
@@ -108,20 +106,6 @@ public class JavaRefactorer implements Refactorer {
     }
 
 
-    @Override public Set<Issue> detectIssues(Source code) {
-        Preconditions.checkNotNull(code);
-        try {
-            final Context context = validContext(code);
-            if(context == null) { return ImmutableSet.of(); }
-
-            return inspector.detectIssues(context);
-        } catch (Exception ex){
-            getRefactoringHost().addError(ex);
-            LOGGER.throwing(this.getClass().getName(), "detectIssues()", ex);
-            return ImmutableSet.of();
-        }
-    }
-
     HostImpl getRefactoringHost(){
         return this.host;
     }
@@ -167,6 +151,11 @@ public class JavaRefactorer implements Refactorer {
         return getLocator(context);
     }
 
+    @Override public Introspector getIntrospector(Source readSource) {
+        Preconditions.checkNotNull(readSource);
+        final Context context = validContext(readSource);
+        return new CodeIntrospector(this.host, context);
+    }
 
     UnitLocator getLocator(Context context) {
         Preconditions.checkNotNull(context);
@@ -192,81 +181,6 @@ public class JavaRefactorer implements Refactorer {
         return builder.toString();
     }
 
-
-    /**
-     * Helper class that allow {@code Refactorer} to scan the given
-     * {@code Source}s in search of issues.
-     */
-    static class SourceChecking {
-        private final List<IssueDetector> detectors;
-
-        SourceChecking(List<IssueDetector> detectors){
-            this.detectors = detectors;
-        }
-
-
-        /**
-         * Let all the {@link IssueDetector}s scan the {@link CompilationUnit}s and
-         * find the {@link Issue}s.
-         *
-         * @param context The Java context to scan through for issues.
-         * @param selection  The user's code selection.
-         * @return The detected issues.
-         */
-        Set<Issue> detectIssues(Context context, SourceSelection selection){
-            if(context == null || selection == null) {
-                throw new IllegalArgumentException(
-                        "detectIssues() received a null context or a null source selection"
-                );
-            }
-
-            context.setScope(selection);
-            LOGGER.fine("Detecting issues...");
-
-            Set<Issue> issues = new HashSet<Issue>();
-
-            for (IssueDetector detector : getDetectors()) {
-                issues.addAll(detector.detectIssues(context));
-            }
-
-            LOGGER.fine("Done detecting issues");
-            return issues;
-        }
-
-
-
-
-        /**
-         * Let all the {@link IssueDetector}s scan the {@link CompilationUnit}s and
-         * find the {@link Issue}s.
-         *
-         * @param context The context (and its compilation units) to scan trough for issues.
-         * @return The detected issues.
-         */
-        Set<Issue> detectIssues(Context context) {
-            if(context == null) {
-                throw new IllegalArgumentException(
-                        "detectIssues() received a null context"
-                );
-            }
-            final Source file = context.getSource();
-            return detectIssues(
-                    context,
-                    new SourceSelection(file, 0, file.getLength())  // scan whole file
-            );
-        }
-
-
-        /**
-         * Returns the list of issue detectors.
-         *
-         * @return The list of issue detectors.
-         */
-        List<IssueDetector> getDetectors() {
-            return detectors;
-        }
-
-    }
 
     /**
      * Helper class that allows the {@code Refactorer} to change a given {@code Source}s

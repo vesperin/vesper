@@ -75,7 +75,8 @@ public class NavigableJavaRefactorer implements NavigableRefactorer {
 
 
     @Override public Set<Issue> detectIssues(Source code) {
-        final Set<Issue> issues = refactorer.detectIssues(code);
+        final Introspector introspector = refactorer.getIntrospector(code);
+        final Set<Issue> issues = introspector.detectIssues(code);
         for(Issue each : issues){
             registerIssue(code, each);
         }
@@ -95,6 +96,9 @@ public class NavigableJavaRefactorer implements NavigableRefactorer {
         return findings;
     }
 
+    @Override public Introspector getIntrospector(Source src) {
+        return refactorer.getIntrospector(src);
+    }
 
     @Override public List<Issue> getIssues(Source key) {
         if(getIssueRegistry().containsKey(key)){

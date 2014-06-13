@@ -1,5 +1,6 @@
 package edu.ucsc.refactor.internal;
 
+import edu.ucsc.refactor.Introspector;
 import edu.ucsc.refactor.Refactorer;
 import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.util.StopWatch;

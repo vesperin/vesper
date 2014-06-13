@@ -38,7 +38,8 @@ public class VesperTest {
                 new ShallowHost()
         );
 
-        final Set<Issue> issues = refactorer.detectIssues(CODE);
+        final Introspector introspector = refactorer.getIntrospector(CODE);
+        final Set<Issue> issues = introspector.detectIssues(CODE);
         assertThat(!issues.isEmpty(), is(true));
 
         final List<Change> suggestedChanges = refactorer.recommendChanges(CODE, issues);

@@ -28,7 +28,9 @@ public class NavigableVesperTest extends VesperTest {
                 new SemiShallowHost()
         );
 
-        final Set<Issue> issues = refactorer.detectIssues(CODE);
+        final NavigableRefactorer navigableRefactorer = NavigableVesper.createNavigableRefactorer(refactorer);
+
+        final Set<Issue> issues = navigableRefactorer.detectIssues(CODE);
         assertThat(!issues.isEmpty(), is(true));
 
         final List<Change> suggestedChanges = refactorer.recommendChanges(src, issues);
