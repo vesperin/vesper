@@ -8,7 +8,10 @@ import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -18,6 +21,16 @@ public class EclipseJavaParser implements JavaParser {
     private static final String             CLASS_NAME  = EclipseJavaParser.class.getName();
     private static final Logger             LOGGER      = Logger.getLogger(CLASS_NAME);
     private static final CompilationUnit    NOTHING     = null;
+
+    private static Set<Integer> BLACK_LIST;
+    static {
+        Set<Integer> blackList = new HashSet<Integer>();
+        blackList.add(IProblem.FieldRelated);
+        blackList.add(IProblem.MethodRelated);
+        blackList.add(IProblem.Internal);
+        blackList.add(IProblem.ConstructorRelated);
+        BLACK_LIST = Collections.unmodifiableSet(blackList);
+    }
 
     private ASTParser astParser;
 
@@ -65,7 +78,7 @@ public class EclipseJavaParser implements JavaParser {
 
             context.setCompilationUnit(unit);
 
-        } catch (Exception error){
+        } catch (RuntimeException error){
             LOGGER.severe(
                     "Parser Error: "
                             + SourceLocation.createLocation(context.getSource())
@@ -73,7 +86,7 @@ public class EclipseJavaParser implements JavaParser {
                             ? error.getCause().getLocalizedMessage() + "." : ".")
             );
 
-            throw new RuntimeException(error);
+            throw error;
         }
 
         return unit;
@@ -84,13 +97,38 @@ public class EclipseJavaParser implements JavaParser {
         if(problems.length > 0){
             final CompilationProblemException exception = new CompilationProblemException();
             for(IProblem each : problems){
-                if(each.isError() && (each.getID() & IProblem.Syntax) != 0){ // catch only syntax related issues
-                    exception.cache(new Throwable(each.getMessage()));
+                final boolean hasSyntaxProblem          = (each.getID() & IProblem.Syntax) != 0;
+
+                if(each.isError() && (hasSyntaxProblem || inBlackList(each))){
+                    final String message = buildMessage(each);
+                    exception.cache(new Throwable(message));
                 }
             }
 
             exception.throwCachedException();
         }
+    }
+
+    private static boolean inBlackList(IProblem each){
+        int counter = 0;
+        for(Integer eachID : BLACK_LIST){
+            if((each.getID() & eachID) != 0){
+                System.out.println(counter);
+                return true;
+            }
+            counter++;
+        }
+
+        return false;
+    }
+
+    private static String buildMessage(IProblem problem) {
+        final int start     = problem.getSourceStart();
+        final int end       = problem.getSourceEnd();
+        final int line      = problem.getSourceLineNumber();
+        final String msg    = problem.getMessage();
+
+        return msg + ". Location(line=" + line + ", start=" + start + ", end=" + end + ").";
     }
 
 }

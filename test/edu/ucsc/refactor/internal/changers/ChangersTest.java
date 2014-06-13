@@ -895,7 +895,7 @@ public class ChangersTest {
     }
 
 
-    @Test public void testRemoveInvalidSelectedRegion(){
+    @Test(expected = RuntimeException.class) public void testRemoveInvalidSelectedRegion(){
         final Source  code    = InternalUtil.createGeneralSourceWithInvalidSelection();
         final Context context = new Context(code);
 
