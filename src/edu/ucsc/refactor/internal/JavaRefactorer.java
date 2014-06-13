@@ -95,7 +95,7 @@ public class JavaRefactorer implements Refactorer {
         final Source          code    = select.first().getSource();
         final Context         context = validContext(code);
 
-        final UnitLocator           inferredUnitLocator = getLocator(context.getSource());
+        final UnitLocator           inferredUnitLocator = getLocator(context);
         final List<NamedLocation>   namedLocations      = inferredUnitLocator.locate(
                 new SelectedUnit(select)
         );
@@ -163,12 +163,13 @@ public class JavaRefactorer implements Refactorer {
 
     @Override public UnitLocator getLocator(Source readSource) {
         Preconditions.checkNotNull(readSource);
+        final Context context = validContext(readSource);
+        return getLocator(context);
+    }
 
-        final Context context = (getValidContexts().containsKey(readSource)
-                ? getValidContexts().get(readSource)
-                : validContext(readSource)
-        );
 
+    UnitLocator getLocator(Context context) {
+        Preconditions.checkNotNull(context);
         return new ProgramUnitLocator(context);
     }
 

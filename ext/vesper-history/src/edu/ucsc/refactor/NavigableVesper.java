@@ -1,10 +1,7 @@
 package edu.ucsc.refactor;
 
-import edu.ucsc.refactor.internal.HostImpl;
-import edu.ucsc.refactor.internal.InternalRefactorerCreator;
-
-import java.util.ArrayList;
-import java.util.List;
+import com.google.common.collect.ImmutableList;
+import edu.ucsc.refactor.internal.InternalNavigableRefactorerCreator;
 
 /**
  * <p>
@@ -105,97 +102,53 @@ import java.util.List;
  *
  * </pre>
  *
- *
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public final class Vesper {
-    private final static Configuration DEFAULT_CONFIG = new DefaultConfiguration();
+public class NavigableVesper {
+    private NavigableVesper(){}
 
     /**
-     * Private constructor to prevent instantiation.
-     */
-    private Vesper(){}
-
-    /**
-     * Creates a refactorer for the given set of sources.
+     * Creates a navigable refactorer for the given array of sources
+     *
+     * @param sources The array of sources.
+     *
      * @return a new Refactorer
      */
-    public static Refactorer createRefactorer(){
-        return createRefactorer(DEFAULT_CONFIG);
+    public static NavigableRefactorer createNavigableRefactorer(Source... sources){
+        return NavigableVesper.createNavigableRefactorer(Vesper.createRefactorer(), sources);
     }
 
-
     /**
-     * Creates a refactorer for the given set of sources using
-     * {@link Vesper}'s main configuration object.
+     * Creates a navigable refactorer for the given array of sources
      *
-     * @param configuration The current configuration
+     * @param refactorer The plain refactorer
+     * @param sources The array of sources.
      *
      * @return a new Refactorer
      */
-    public static Refactorer createRefactorer(Configuration configuration) {
-        return createRefactorer(
-                configuration,
-                new HostImpl()
-        );
+    public static NavigableRefactorer createNavigableRefactorer(Refactorer refactorer, Source... sources){
+        final ImmutableList<Source> seed = ImmutableList.copyOf(sources);
+
+        if(seed.contains(null)) {
+            throw new CreationException(
+                    ImmutableList.of(new Throwable("createRefactorer() has been given a null configuration."))
+            );
+        }
+
+        return NavigableVesper.createNavigableRefactorer(refactorer, seed);
     }
 
-
     /**
-     * Creates a refactorer for the given set of sources using
-     * {@link Vesper}'s main configuration object.
+     * Creates a navigable refactorer from a plain refactorer and for the given array of sources
      *
-     * @param configuration The current configuration
-     * @param host          The current host.
+     * @param refactorer The plain refactorer
+     * @param sources The array of sources.
      *
      * @return a new Refactorer
      */
-    public static Refactorer createRefactorer(
-            Configuration configuration,
-            Host host
-    ){
-
-        Vesper.nonNull(configuration, host);
-
-
-        // installs a configuration to Vesper's host.
-        host.install(configuration);
-
-        return new InternalRefactorerCreator(host)
+    private static NavigableRefactorer createNavigableRefactorer(Refactorer refactorer, Iterable<Source> sources){
+        return new InternalNavigableRefactorerCreator(refactorer)
+                .addSources(sources)
                 .build();
-    }
-
-
-
-    /**
-     * Default {@code Vesper}'s configuration
-     */
-    static class DefaultConfiguration extends AbstractConfiguration {
-        @Override protected void configure() {
-            installDefaultSettings();
-        }
-    }
-
-
-    static void nonNull(Configuration configuration, Host host) throws
-            CreationException {
-
-        final List<Throwable> throwables = new ArrayList<Throwable>();
-        if(configuration == null){
-            throwables.add(
-                    new Throwable("createRefactorer() has been given a null configuration.")
-            );
-        }
-
-        if(host == null){
-            throwables.add(
-                    new Throwable("createRefactorer() has been given a null host.")
-            );
-        }
-
-        if(!throwables.isEmpty()){
-            throw new CreationException(throwables);
-        }
-
     }
 }

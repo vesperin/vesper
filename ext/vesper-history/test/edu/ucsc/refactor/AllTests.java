@@ -1,5 +1,6 @@
-package edu.ucsc.refactor.util;
+package edu.ucsc.refactor;
 
+import edu.ucsc.refactor.util.CommitHistorySuite;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import org.junit.runner.RunWith;
@@ -10,12 +11,13 @@ import org.junit.runners.Suite;
  */
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-        StringsTest.class,
-        LocationsTest.class,
-        NotesTest.class
+        CommitHistorySuite.class,
+        NavigableRefactorerTest.class,
+        NavigableVesperTest.class
+
 })
-public class UtilSuiteTest {
+public class AllTests {
     public static Test suite() {
-        return new TestSuite(UtilSuiteTest.class.getName());
+        return new TestSuite(AllTests.class.getName());
     }
 }
