@@ -2,7 +2,6 @@ package edu.ucsc.refactor.internal;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.util.Edits;
 import edu.ucsc.refactor.spi.CommitRequest;
@@ -22,11 +21,8 @@ import java.util.logging.Logger;
 public class JavaRefactorer implements Refactorer {
     private static final Logger LOGGER = Logger.getLogger(JavaRefactorer.class.getName());
 
-    private final HostImpl                  host;
-    private final Map<Source, Context>      cachedContexts;
-
-
-    private final SourceChanging changer;
+    private final HostImpl          host;
+    private final SourceChanging    changer;
 
 
     /**
@@ -34,9 +30,7 @@ public class JavaRefactorer implements Refactorer {
      * @param host Vesper's {@code Host}
      */
     public JavaRefactorer(Host host) {
-        this.host           = (HostImpl) host;
-        this.cachedContexts = Maps.newHashMap();
-
+        this.host       = (HostImpl) host;
         this.changer    = new SourceChanging(host.getSourceChangers());
     }
 
@@ -49,9 +43,7 @@ public class JavaRefactorer implements Refactorer {
 
         if(applied.isValid()){
             try {
-                final Commit committed = applied.commit();
-                clearCachedContext(committed.getSourceBeforeChange());
-                return committed;
+                return applied.commit();
             } catch (RuntimeException ex){
                 LOGGER.throwing("Unable to commit change", "apply()", ex);
                 return null; // nothing was committed
@@ -75,15 +67,6 @@ public class JavaRefactorer implements Refactorer {
         return changer.createChange(
                 (isIssue ? cause : prepSingleEdit(cause, request)), parameters
         );
-    }
-
-    void clearCachedContext(Source before){
-        getValidContexts().remove(before);
-    }
-
-
-    void clearCachedContexts(){
-        getValidContexts().clear();
     }
 
 
@@ -111,23 +94,14 @@ public class JavaRefactorer implements Refactorer {
     }
 
 
-    Map<Source, Context> getValidContexts(){
-        return cachedContexts;
-    }
-
-
     Context validContext(Source code){
-        final Context context = (getValidContexts().containsKey(code)
-                ? getValidContexts().get(code)
-                : getRefactoringHost().silentlyCreateContext(code));
+        final Context context = getRefactoringHost().silentlyCreateContext(code);
 
         if(!canScanContextForIssues(context)) {
             LOGGER.fine("Cannot scan this context. Check configuration.");
             return null;
         }
 
-        // cached contexts, just in case we need to reuse them
-        getValidContexts().put(code, context);
         return context;
     }
 
@@ -174,7 +148,6 @@ public class JavaRefactorer implements Refactorer {
             recommendations.add(createChange(ChangeRequest.forIssue(issue, code)));
         }
 
-        clearCachedContexts();
         return recommendations;
     }
 

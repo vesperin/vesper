@@ -20,17 +20,17 @@ public class CodeIntrospector implements Introspector {
     private static final Logger LOGGER = Logger.getLogger(CodeIntrospector.class.getName());
 
     private final Host      host;
-    private final Context   cachedContext;
+    private final Context   seedContext;
 
     /**
      * Construct a code introspector.
      *
      * @param host {@code Vesper}'s main {@link Host}.
-     * @param cachedContext cached {@code Context}
+     * @param seedContext cached {@code Context}
      */
-    public CodeIntrospector(Host host, Context cachedContext){
+    public CodeIntrospector(Host host, Context seedContext){
         this.host           = Preconditions.checkNotNull(host);
-        this.cachedContext  = cachedContext;
+        this.seedContext = seedContext;
     }
 
     /**
@@ -43,7 +43,7 @@ public class CodeIntrospector implements Introspector {
     }
 
     @Override public Set<Issue> detectIssues() {
-        return detectIssues(cachedContext);
+        return detectIssues(seedContext);
     }
 
     @Override public Set<Issue> detectIssues(Source code) {

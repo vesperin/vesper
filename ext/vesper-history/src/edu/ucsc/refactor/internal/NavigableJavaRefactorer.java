@@ -96,6 +96,7 @@ public class NavigableJavaRefactorer implements NavigableRefactorer {
         return findings;
     }
 
+
     @Override public Introspector getIntrospector() {
         return refactorer.getIntrospector();
     }
@@ -139,7 +140,7 @@ public class NavigableJavaRefactorer implements NavigableRefactorer {
     }
 
     @Override public List<Source> getSources() {
-        return new ArrayList<Source>(refactorer.getValidContexts().keySet());
+        return new ArrayList<Source>(findings.keySet());
     }
 
 
@@ -147,7 +148,7 @@ public class NavigableJavaRefactorer implements NavigableRefactorer {
         // clear current issue registry for source
         final Source before = commit.getSourceBeforeChange();
         getIssueRegistry().remove(before);
-        refactorer.getValidContexts().remove(before);
+        findings.remove(before);
 
         final String key = commit.getUniqueSignature();
 
@@ -227,7 +228,6 @@ public class NavigableJavaRefactorer implements NavigableRefactorer {
         final String signature = from.getUniqueSignature();
 
         if(timeline.containsKey(signature)){
-            refactorer.clearCachedContexts();
 
             timeline.remove(signature);
             timeline.put(signature, sliced);
