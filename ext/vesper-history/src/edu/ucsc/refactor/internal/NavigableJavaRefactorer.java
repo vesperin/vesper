@@ -96,6 +96,10 @@ public class NavigableJavaRefactorer implements NavigableRefactorer {
         return findings;
     }
 
+    @Override public Introspector getIntrospector() {
+        return refactorer.getIntrospector();
+    }
+
     @Override public Introspector getIntrospector(Source src) {
         return refactorer.getIntrospector(src);
     }
