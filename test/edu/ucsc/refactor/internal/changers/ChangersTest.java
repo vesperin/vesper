@@ -413,8 +413,7 @@ public class ChangersTest {
     }
 
 
-    @Test (expected = RuntimeException.class)
-    public void testRemoveWholeMethodSelectionFromBrokenSource() throws Exception {
+    @Test (expected = RuntimeException.class) public void testRemoveWholeMethodSelectionFromBrokenSource() throws Exception {
         final Source src = InternalUtil.createBrokenSourceWithOneMethod();
 
         final Context context = new Context(src);
@@ -895,29 +894,13 @@ public class ChangersTest {
     }
 
 
-    @Test(expected = RuntimeException.class) public void testRemoveInvalidSelectedRegion(){
+    @Test public void testRemoveInvalidSelectedRegion(){
         final Source  code    = InternalUtil.createGeneralSourceWithInvalidSelection();
-        final Context context = new Context(code);
 
-        parser.parseJava(context);
+        final Introspector introspector = Vesper.createRefactorer().getIntrospector();
+        final List<String> problems     = introspector.verifySource(code);
 
-        final ProgramUnitLocator  locator   = new ProgramUnitLocator(context);
-        final SourceSelection     selection = new SourceSelection(SourceLocation.createLocation(code, code.getContents(), 88, 271));
-        final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
-
-        final RemoveCodeRegion remove = new RemoveCodeRegion();
-        final SingleEdit       edit   = SingleEdit.deleteRegion(selection);
-
-
-        assertThat(locations.isEmpty(), is(false));
-
-        for(NamedLocation eachLocation : locations){
-            final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
-            edit.addNode(target.getNode());
-        }
-
-        final Change  change  = remove.createChange(edit, Maps.<String, Parameter>newHashMap());
-        assertThat(change.isValid(), is(false));
+        assertThat(problems.isEmpty(), is(false));
     }
 
 

@@ -68,6 +68,13 @@ public interface Refactorer {
     UnitLocator getLocator(Source src);
 
     /**
+     * It creates a new {@code Introspector} object.
+     *
+     * @return a new {@code Introspector} object
+     */
+    Introspector getIntrospector();
+
+    /**
      * It examines a {@code Source} object.
      *
      * @param src The current {@code Source}

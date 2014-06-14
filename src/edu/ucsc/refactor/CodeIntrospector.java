@@ -1,16 +1,24 @@
 package edu.ucsc.refactor;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import edu.ucsc.refactor.internal.CompilationProblemException;
 import edu.ucsc.refactor.spi.IssueDetector;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public class CodeIntrospector implements Introspector {
+
+    private static final Logger LOGGER = Logger.getLogger(CodeIntrospector.class.getName());
+
     private final Host      host;
     private final Context   cachedContext;
 
@@ -43,9 +51,10 @@ public class CodeIntrospector implements Introspector {
             final Context context = this.host.createContext(code);
 
             if(context == null) { return ImmutableSet.of(); }
+
             return detectIssues(context);
         } catch (Exception ex){
-            this.host.addError(ex);
+            LOGGER.severe(ex.getMessage());
             return ImmutableSet.of();
         }
     }
@@ -79,5 +88,20 @@ public class CodeIntrospector implements Introspector {
                 context,
                 new SourceSelection(context.getSource(), 0, context.getSource().getLength()) // scan whole source code
         );
+    }
+
+    @Override public List<String> verifySource(Source code) {
+        try {
+            this.host.createContext(code);
+            return ImmutableList.of();
+        } catch (CompilationProblemException cpe){
+            final List<String> problems = Lists.newArrayList();
+
+            for(Throwable each : cpe.getErrorMessages()){
+                problems.add(each.getMessage());
+            }
+
+            return ImmutableList.copyOf(problems);
+        }
     }
 }

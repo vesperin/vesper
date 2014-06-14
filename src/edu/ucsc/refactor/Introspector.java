@@ -3,6 +3,7 @@ package edu.ucsc.refactor;
 import edu.ucsc.refactor.spi.IssueDetector;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -76,4 +77,22 @@ public interface Introspector {
      * @return The detected issues.
      */
     Set<Issue> detectIssues(Context context);
+
+    /**
+     * Verifies whether this {@code Source} is valid; purely a syntax checking.
+     *
+     * More specifically, this method checks for:
+     *
+     * <ol>
+     *     <li>Field related problems; e.g., undefined field</li>
+     *     <li>Method related problems; e.g., undefined methods</li>
+     *     <li>Internal related problems; e.g., two classes in same file</li>
+     *     <li>Constructor related problems; e.g., undefined constructor</li>
+     * </ol>
+     *
+     *
+     * @param code The {@code Source} to be verified.
+     * @return a list of error messages or []
+     */
+    List<String> verifySource(Source code);
 }

@@ -119,7 +119,7 @@ public class JavaRefactorer implements Refactorer {
     Context validContext(Source code){
         final Context context = (getValidContexts().containsKey(code)
                 ? getValidContexts().get(code)
-                : getRefactoringHost().createContext(code));
+                : getRefactoringHost().silentlyCreateContext(code));
 
         if(!canScanContextForIssues(context)) {
             LOGGER.fine("Cannot scan this context. Check configuration.");
@@ -149,6 +149,10 @@ public class JavaRefactorer implements Refactorer {
         Preconditions.checkNotNull(readSource);
         final Context context = validContext(readSource);
         return getLocator(context);
+    }
+
+    @Override public Introspector getIntrospector() {
+        return new CodeIntrospector(this.host);
     }
 
     @Override public Introspector getIntrospector(Source readSource) {

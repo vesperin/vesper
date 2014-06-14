@@ -31,7 +31,7 @@ public class ContextTest {
 
 
     @Test public void testCompiledJavaContextCreation(){
-        final Context context = HOST.createContext(TEST_CLASS);
+        final Context context = HOST.silentlyCreateContext(TEST_CLASS);
         assertNotNull(context);
         assertNotNull(context.getCompilationUnit());
         assertNotNull(context.getContents());
@@ -40,7 +40,7 @@ public class ContextTest {
     }
 
     @Test public void testJavaContextWithSourceSelection(){
-        final Context       context = HOST.createContext(TEST_CLASS);
+        final Context           context = HOST.silentlyCreateContext(TEST_CLASS);
         final SourceSelection   entry   = new SourceSelection(TEST_CLASS, 37, 62);
 
         context.setScope(entry);

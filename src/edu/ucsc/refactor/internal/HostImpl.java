@@ -68,16 +68,22 @@ public class HostImpl implements Host {
         return credential;
     }
 
-    @Override public Context createContext(Source source) {
+
+    @Override public Context silentlyCreateContext(Source source) {
         try {
-            if(source.getUniqueSignature() == null){  // very important...
-                source.generateUniqueSignature();
-            }
-            return parseJava(new Context(source));
+            return createContext(source);
         } catch (Throwable ex){
             addError(ex);
             return null;
         }
+    }
+
+    @Override public Context createContext(Source source) {
+        if(source.getUniqueSignature() == null){  // very important...
+            source.generateUniqueSignature();
+        }
+
+        return parseJava(new Context(source));
     }
 
     /**
@@ -123,9 +129,13 @@ public class HostImpl implements Host {
     }
 
     @Override public void throwCreationErrorIfErrorsExist() throws RuntimeException {
-        // Blow up if we encountered errors.
-        if (!errors.isEmpty()) {
-            throw new CreationException(errors);
+        try {
+            // Blow up if we encountered errors.
+            if (!errors.isEmpty()) {
+                throw new CreationException(errors);
+            }
+        } finally {
+            errors.clear();
         }
     }
 

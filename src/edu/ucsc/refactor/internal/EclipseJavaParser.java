@@ -110,13 +110,10 @@ public class EclipseJavaParser implements JavaParser {
     }
 
     private static boolean inBlackList(IProblem each){
-        int counter = 0;
         for(Integer eachID : BLACK_LIST){
             if((each.getID() & eachID) != 0){
-                System.out.println(counter);
                 return true;
             }
-            counter++;
         }
 
         return false;
