@@ -2,6 +2,7 @@ package edu.ucsc.refactor.internal;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.spi.UnitLocator;
@@ -76,11 +77,16 @@ public class NavigableJavaRefactorer implements NavigableRefactorer {
 
     @Override public Set<Issue> detectIssues(Source code) {
         final Introspector introspector = refactorer.getIntrospector(code);
-        final Set<Issue> issues = introspector.detectIssues(code);
-        for(Issue each : issues){
-            registerIssue(code, each);
+        try {
+            final Set<Issue> issues = introspector.detectIssues(code);
+            for(Issue each : issues){
+                registerIssue(code, each);
+            }
+            return issues;
+        } catch (RuntimeException ex){
+            refactorer.getRefactoringHost().addError(ex);
+            return ImmutableSet.of();
         }
-        return issues;
     }
 
     private Issue registerIssue(Source source, Issue issue) {
@@ -239,6 +245,9 @@ public class NavigableJavaRefactorer implements NavigableRefactorer {
         return from;
     }
 
+    void throwCreationErrorsIfExist(){
+        refactorer.getRefactoringHost().throwCreationErrorIfErrorsExist();
+    }
 
     @Override public String toString() {
         final Objects.ToStringHelper builder = Objects.toStringHelper(getClass());

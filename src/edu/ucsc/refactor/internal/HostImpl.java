@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static edu.ucsc.refactor.Context.throwCompilationErrorIfExist;
+
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
@@ -68,15 +70,6 @@ public class HostImpl implements Host {
         return credential;
     }
 
-
-    @Override public Context silentlyCreateContext(Source source) {
-        try {
-            return createContext(source);
-        } catch (Throwable ex){
-            addError(ex);
-            return null;
-        }
-    }
 
     @Override public Context createContext(Source source) {
         if(source.getUniqueSignature() == null){  // very important...

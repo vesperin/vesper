@@ -418,6 +418,8 @@ public class ChangersTest {
 
         final Context context = new Context(src);
         parser.parseJava(context);
+        Context.throwCompilationErrorIfExist(context);
+        fail("if the code gets here");
     }
 
 

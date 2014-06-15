@@ -95,7 +95,7 @@ public class JavaRefactorer implements Refactorer {
 
 
     Context validContext(Source code){
-        final Context context = getRefactoringHost().silentlyCreateContext(code);
+        final Context context = getRefactoringHost().createContext(code);
 
         if(!canScanContextForIssues(context)) {
             LOGGER.fine("Cannot scan this context. Check configuration.");
@@ -137,6 +137,7 @@ public class JavaRefactorer implements Refactorer {
 
     UnitLocator getLocator(Context context) {
         Preconditions.checkNotNull(context);
+        Preconditions.checkArgument(!context.isMalformedContext());
         return new ProgramUnitLocator(context);
     }
 

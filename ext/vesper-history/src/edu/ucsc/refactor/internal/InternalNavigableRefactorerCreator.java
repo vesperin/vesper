@@ -1,6 +1,5 @@
 package edu.ucsc.refactor.internal;
 
-import edu.ucsc.refactor.Introspector;
 import edu.ucsc.refactor.Refactorer;
 import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.util.StopWatch;
@@ -45,6 +44,7 @@ public class InternalNavigableRefactorerCreator {
             checkpointedJavaRefactorer.detectIssues(src);
         }
 
+        checkpointedJavaRefactorer.throwCreationErrorsIfExist();
         stopwatch.resetAndLog("Collecting issue detection requests");
 
         return checkpointedJavaRefactorer;

@@ -4,7 +4,6 @@ import edu.ucsc.refactor.spi.IssueDetector;
 import edu.ucsc.refactor.spi.JavaParser;
 import edu.ucsc.refactor.spi.SourceChanger;
 
-import java.lang.RuntimeException;
 import java.util.List;
 
 /**
@@ -56,19 +55,6 @@ public interface Host {
      * @param credential The access credentials
      */
     void addCredentials(Credential credential);
-
-    /**
-     * Creates a new Java context for the source file.  This
-     * process includes the parsing of the created Java context.
-     *
-     * Any errors that occurred during the parsing of the Source will be
-     * persisted rather than thrown. If one wants to manage how to handle
-     * these exceptions, then use {@link #createContext(Source)} instead.
-     *
-     * @param source The source file.
-     * @return a new Java context.
-     */
-    Context silentlyCreateContext(Source source);
 
     /**
      * Creates a new Java context for the source file.  This
