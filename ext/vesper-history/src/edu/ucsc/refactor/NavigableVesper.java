@@ -5,82 +5,35 @@ import edu.ucsc.refactor.internal.InternalNavigableRefactorerCreator;
 
 /**
  * <p>
- * Vesper, in classical latin, means `evening.` However, the reason I named this
- * API vesper is because I really like Vesper martinis :-) and not because I love evenings, which
- * I do.
+ * An extension to the Vesper API.
  * </p>
  *
  * <p>
- * The following code shows how one can start using the Vesper library.
+ * The following code shows how one can start using the NavigableVesper API.
  * </p>
  *
  * <pre>
  *     import static edu.ucsc.refactor.ChangeRequest.forIssue;
  *     import static edu.ucsc.refactor.ChangeRequest.reformatSource;
  *
- *     final Source          code       = new Source(...);
- *     // using your own configuration:
- *     // refactorer = Vesper.createRefactorer(new MyConfiguration());
- *     // using default configuration
- *     final Refactorer      refactorer = Vesper.createRefactorer();
+ *     final Source               code       = new Source(...);
+ *     final NavigableRefactorer  refactorer = NavigableVesper.createNavigableRefactorer(Vesper.createRefactorer());
  *
  *     final Map<String, Parameter> userInput = ...;
  *
- *     // I. Ask the refactorer to recommend changes for you
  *
- *     // print the reason for the change
+ *     // I. Publishing locally committed changes to a remote repository (e.g., Gist.Github.com)
  *
- *     final List<Change> changes = refactorer.recommendChanges(code);
- *     for(Change each : changes){
- *        System.out.println(each.getCause().getName());
- *     }
+ *     // Assuming a source have been changed many times.
+ *     // Here is how to use this navigable refactorer in order to publish those changes
  *
- *     // perform a single recommended change
- *
- *     final CommitRequest applied = refactor.apply(changes.get(0));
- *     System.out.println(applied.more());
- *
- *     // or handle All recommended changes
- *
- *     List<Change> recommended = refactorer.recommendChanges(code);
- *     while(!recommended.isEmpty()){
- *         final CommitRequest applied = refactor.apply(recommended.get(0));
- *         System.out.println(applied.more());
- *         recommended = refactorer.recommendChanges(code); // get an updated list of changes
- *     }
- *
- *
- *     // II. Dealing with random edits started by the user
- *
- *     // reformat Source's content
- *
- *     Change reformat = refactorer.createChange(reformatSource(code));
- *     final CommitRequest applied = refactor.apply(reformat);
- *     System.out.println(applied.more());
- *
- *     // III. Publishing locally committed changes to a remote repository (e.g., Gist.Github.com)
- *
- *     // Let's assume that vesper has been given the right credentials to access a remote repo
- *     // (e.g., see default configuration for how to do this). Let's call this authenticated repo
- *     AuthenticatedUpstream..
- *
- *     final CommitPublisher publisher = new CommitPublisher();
- *     // publish changes
- *     final Commit published = publisher.publish(applied, new AuthenticatedUpstream());
- *     System.out.println(published.getCommitSummary().more());
- *
- *     // Assuming a source have been changed many times and we have kept a commit history
- *     // of those changes. THis mean that the user has used the NavigableRefactorer.
- *     // Here is how to use this refactorer in order to publish those changes
- *
- *     final NavigableRefactorer cf = Vesper.createNavigableRefactorer(code);
  *     // .. changes are made to 'code'
  *
- *     final CommitPublisher publisher = cf.getCommitPublisher(code);
+ *     final CommitPublisher publisher = refactorer.getCommitPublisher(code);
  *     // publish changes
  *     publisher.publish();
  *
- *     // IV. Retrieving the SourceHistory of a Source (previously curated)
+ *     // II. Retrieving the SourceHistory of a Source (previously curated)
  *
  *     final SourceRecalling recalling = new SourceRecalling(new AuthenticatedUpstream(), "123456");
  *
