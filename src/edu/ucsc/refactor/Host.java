@@ -95,12 +95,6 @@ public interface Host {
     void install(Configuration configuration);
 
     /**
-     * @return {@code true} if {@code Vesper} is set to allow remote commits,
-     * {@code false} otherwise.
-     */
-    boolean isRemoteUpstreamEnabled();
-
-    /**
      * Throws a {@code CreationException} if any exception has been
      * thrown and caught during the creation of the {@code Refactorer}.
      *

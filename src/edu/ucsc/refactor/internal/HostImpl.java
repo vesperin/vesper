@@ -10,8 +10,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static edu.ucsc.refactor.Context.throwCompilationErrorIfExist;
-
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
@@ -40,7 +38,7 @@ public class HostImpl implements Host {
     }
 
     @Override public void addError(String message, Object... arguments) {
-        errors.add(new Throwable(String.format(message, arguments)));
+        addError(new Throwable(String.format(message, arguments)));
     }
 
     @Override public void addJavaParser(JavaParser parser) {
@@ -114,11 +112,6 @@ public class HostImpl implements Host {
 
     @Override public void install(Configuration configuration) {
         configuration.configure(this);
-    }
-
-    @Override public boolean isRemoteUpstreamEnabled() {
-        final Credential cred = getStorageKey();
-        return cred != null && !getStorageKey().isNoneCredential();
     }
 
     @Override public void throwCreationErrorIfErrorsExist() throws RuntimeException {
