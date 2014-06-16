@@ -1,6 +1,8 @@
-package edu.ucsc.refactor;
+package edu.ucsc.refactor.util;
 
 import com.google.common.base.Objects;
+import edu.ucsc.refactor.Location;
+import edu.ucsc.refactor.SourceSelection;
 
 import java.util.concurrent.atomic.AtomicReference;
 

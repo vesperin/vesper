@@ -2,6 +2,7 @@ package edu.ucsc.refactor;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import edu.ucsc.refactor.util.Note;
 import edu.ucsc.refactor.util.Notes;
 import edu.ucsc.refactor.util.StringUtil;
 import edu.ucsc.refactor.util.UniqueIdentifierGenerator;

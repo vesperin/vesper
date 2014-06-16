@@ -1,7 +1,5 @@
 package edu.ucsc.refactor.util;
 
-import edu.ucsc.refactor.Note;
-
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.TreeSet;

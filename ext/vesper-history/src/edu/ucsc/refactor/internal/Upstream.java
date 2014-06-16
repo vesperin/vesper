@@ -6,7 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import edu.ucsc.refactor.Credential;
-import edu.ucsc.refactor.Note;
+import edu.ucsc.refactor.util.Note;
 import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.spi.CommitSummary;
 import edu.ucsc.refactor.spi.Name;

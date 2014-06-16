@@ -2,7 +2,7 @@ package edu.ucsc.refactor.cli;
 
 import edu.ucsc.refactor.Issue;
 import edu.ucsc.refactor.NamedLocation;
-import edu.ucsc.refactor.Note;
+import edu.ucsc.refactor.util.Note;
 import edu.ucsc.refactor.cli.results.*;
 import edu.ucsc.refactor.util.Commit;
 import edu.ucsc.refactor.util.Notes;

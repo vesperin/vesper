@@ -1,6 +1,5 @@
 package edu.ucsc.refactor.util;
 
-import edu.ucsc.refactor.Note;
 import org.junit.Test;
 
 import java.util.NoSuchElementException;

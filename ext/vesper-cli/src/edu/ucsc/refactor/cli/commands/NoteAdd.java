@@ -1,7 +1,7 @@
 package edu.ucsc.refactor.cli.commands;
 
 import com.google.common.base.Preconditions;
-import edu.ucsc.refactor.Note;
+import edu.ucsc.refactor.util.Note;
 import edu.ucsc.refactor.cli.Environment;
 import edu.ucsc.refactor.cli.Result;
 import edu.ucsc.refactor.cli.VesperCommand;
