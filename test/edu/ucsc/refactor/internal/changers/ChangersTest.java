@@ -59,6 +59,13 @@ public class ChangersTest {
     }
 
 
+    @Test public void testChangerForSourceWithGenerics() throws Exception {
+        final Context ctx = new Context(InternalUtil.createSourceWithGenerics());
+        parser.parseJava(ctx);
+        assertThat(ctx.isMalformedContext(), is(true));
+    }
+
+
     @Test public void testChangerForUsedTypeDeclaration() throws Exception {
 
         final Context context = new Context(

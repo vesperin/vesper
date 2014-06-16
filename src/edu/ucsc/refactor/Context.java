@@ -33,6 +33,14 @@ public class Context {
         blackList.add(IProblem.MethodRelated);
         blackList.add(IProblem.Internal);
         blackList.add(IProblem.ConstructorRelated);
+        blackList.add(IProblem.IllegalPrimitiveOrArrayTypeForEnclosingInstance);
+        blackList.add(IProblem.MissingEnclosingInstanceForConstructorCall);
+        blackList.add(IProblem.MissingEnclosingInstance);
+        blackList.add(IProblem.IncorrectEnclosingInstanceReference);
+        blackList.add(IProblem.IllegalEnclosingInstanceSpecification);
+        blackList.add(IProblem.CannotDefineStaticInitializerInLocalType);
+        blackList.add(IProblem.OuterLocalMustBeFinal);
+        blackList.add(IProblem.CannotDefineInterfaceInLocalType);
         BLACK_LIST = Collections.unmodifiableSet(blackList);
     }
 
