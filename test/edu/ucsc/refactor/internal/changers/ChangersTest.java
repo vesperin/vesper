@@ -94,6 +94,39 @@ public class ChangersTest {
         }
     }
 
+    @Test public void testWeirdError() throws Exception {
+        // rule: Source's FileName should match the class name in code snippet;
+        // otherwise this will blow up
+        String content =         "public class SortArray \n" +
+                "{\n" +
+                "    public static void main(String[] args)\n" +
+                "    {\n" +
+                "        int[] arr={4,6,4,2,764,23,23};\n" +
+                "        sort(arr);\n" +
+                "    }\n" +
+                "    static void sort(int[] arr)\n" +
+                "    {\n" +
+                "        int k;\n" +
+                "        for(int i=0;i<arr.length;i++)\n" +
+                "        {\n" +
+                "            for(int j=i;j<arr.length-1;j++)\n" +
+                "                {\n" +
+                "                    if(arr[i]<arr[j+1])\n" +
+                "                    {\n" +
+                "                        k=arr[j+1];\n" +
+                "                        arr[j+1]=arr[i];\n" +
+                "                        arr[i]=k;\n" +
+                "                    }\n" +
+                "                }\n" +
+                "            System.out.print(arr[i]+\" \");\n" +
+                "        }   \n" +
+                "    }\n" +
+                "}";
+        final Context ctx = new Context(new Source("SortArray.java", content));
+        parser.parseJava(ctx);
+        assertThat(ctx.isMalformedContext(), is(false));
+    }
+
 
     @Test public void testTheStackoverflowWebExample() {
         final Context context = new Context(

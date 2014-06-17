@@ -38,7 +38,7 @@ public class EclipseJavaParser implements JavaParser {
 
     @Override public CompilationUnit parseJava(Context context) {
 
-        astParser.setUnitName("vesper");
+        astParser.setUnitName(context.getSource().getName());
 
         LOGGER.fine("Parsing context: " + context);
 
