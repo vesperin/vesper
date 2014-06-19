@@ -87,6 +87,11 @@ public abstract class SourceChanger implements Changer {
      * @return a new {@link Delta} object.
      */
     protected Delta createDelta(Source source, ASTRewrite rewrite){
+        return createDelta(source, rewrite, false);
+    }
+
+
+    protected Delta createDelta(Source source, ASTRewrite rewrite, boolean goformat){
         final IDocument document    = source.toDocument();
 
         Delta delta = new Delta(source);
@@ -101,7 +106,7 @@ public abstract class SourceChanger implements Changer {
             LOGGER.throwing("Could not rewrite the AST tree.", "createDelta", e);
         }
 
-        delta.setAfter(StringUtil.trim(document.get()));
+        delta.setAfter(StringUtil.trim((goformat ? format(document) : document.get())));
 
         return delta;
     }

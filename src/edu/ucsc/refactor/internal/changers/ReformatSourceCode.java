@@ -3,6 +3,7 @@ package edu.ucsc.refactor.internal.changers;
 import edu.ucsc.refactor.CauseOfChange;
 import edu.ucsc.refactor.Change;
 import edu.ucsc.refactor.Parameter;
+import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.internal.Delta;
 import edu.ucsc.refactor.internal.SourceChange;
 import edu.ucsc.refactor.spi.Refactoring;
@@ -39,6 +40,6 @@ public class ReformatSourceCode extends SourceChanger {
 
     private Delta reformat(ASTNode astNode) {
         final ASTRewrite rewrite = ASTRewrite.create(astNode.getAST());
-        return createDelta(astNode, rewrite);
+        return createDelta(Source.from(astNode), rewrite, true);
     }
 }
