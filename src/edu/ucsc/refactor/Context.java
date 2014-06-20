@@ -20,9 +20,10 @@ import java.util.Set;
 public class Context {
     private final Source    file;
 
-    private Location        scope;
-    private CompilationUnit compilationUnit;
-    private List<String>    syntaxRelatedProblems;
+    private Location                    scope;
+    private CompilationUnit             compilationUnit;
+    private List<String>                syntaxRelatedProblems;
+    private CompilationProblemException cpe;
 
 
 
@@ -52,6 +53,7 @@ public class Context {
     public Context(Source file){
         this.file                   = file;
         this.syntaxRelatedProblems  = Lists.newArrayList();
+        this.cpe                    = new CompilationProblemException();
     }
 
 
@@ -126,7 +128,7 @@ public class Context {
                 this.getSource()
         );
 
-        addCompilationErrorIfExist(this.compilationUnit, this.syntaxRelatedProblems);
+        addCompilationErrorIfExist(this.compilationUnit, this.syntaxRelatedProblems, this.cpe);
     }
 
     /**
@@ -168,19 +170,14 @@ public class Context {
 
     public static Context throwCompilationErrorIfExist(Context context){
         if(context.isMalformedContext()){
-            final CompilationProblemException cpe = new CompilationProblemException();
-            for(String problem : context.getSyntaxRelatedProblems()){
-                cpe.cache(new Throwable(problem));
-            }
-
-            cpe.throwCachedException();
+            context.cpe.throwCachedException();
         }
 
         return context;
     }
 
 
-    private static void addCompilationErrorIfExist(CompilationUnit unit, List<String> syntaxRelatedProblems) {
+    private static void addCompilationErrorIfExist(CompilationUnit unit, List<String> syntaxRelatedProblems, CompilationProblemException cpe) {
         final IProblem[] problems = unit.getProblems();
         if(problems.length > 0){
             for(IProblem each : problems){
@@ -189,6 +186,7 @@ public class Context {
                 if(each.isError() && (hasSyntaxProblem || inBlackList(each))){
                     final String message = buildMessage(each);
                     syntaxRelatedProblems.add(message);
+                    cpe.cache(new Throwable(message));
                 }
             }
         }

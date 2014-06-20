@@ -35,8 +35,8 @@ public class NavigableRefactorerTest {
     }
 
     @Test public void testMultipleNavigableRefactorers(){
-        final Refactorer first  = NavigableVesper.createNavigableRefactorer(SRC);
-        final Refactorer second = NavigableVesper.createNavigableRefactorer(SRC);
+        final NavigableRefactorer first  = NavigableVesper.createNavigableRefactorer(SRC);
+        final NavigableRefactorer second = NavigableVesper.createNavigableRefactorer(SRC);
         assertNotSame(first, second);
     }
 
