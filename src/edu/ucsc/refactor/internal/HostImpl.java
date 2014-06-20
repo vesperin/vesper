@@ -38,7 +38,7 @@ public class HostImpl implements Host {
     }
 
     @Override public void addError(String message, Object... arguments) {
-        errors.add(new Throwable(String.format(message, arguments)));
+        addError(new Throwable(String.format(message, arguments)));
     }
 
     @Override public void addJavaParser(JavaParser parser) {
@@ -68,16 +68,13 @@ public class HostImpl implements Host {
         return credential;
     }
 
+
     @Override public Context createContext(Source source) {
-        try {
-            if(source.getUniqueSignature() == null){  // very important...
-                source.generateUniqueSignature();
-            }
-            return parseJava(new Context(source));
-        } catch (Throwable ex){
-            addError(ex);
-            return null;
+        if(source.getUniqueSignature() == null){  // very important...
+            source.generateUniqueSignature();
         }
+
+        return parseJava(new Context(source));
     }
 
     /**
@@ -117,15 +114,14 @@ public class HostImpl implements Host {
         configuration.configure(this);
     }
 
-    @Override public boolean isRemoteUpstreamEnabled() {
-        final Credential cred = getStorageKey();
-        return cred != null && !getStorageKey().isNoneCredential();
-    }
-
     @Override public void throwCreationErrorIfErrorsExist() throws RuntimeException {
-        // Blow up if we encountered errors.
-        if (!errors.isEmpty()) {
-            throw new CreationException(errors);
+        try {
+            // Blow up if we encountered errors.
+            if (!errors.isEmpty()) {
+                throw new CreationException(errors);
+            }
+        } finally {
+            errors.clear();
         }
     }
 

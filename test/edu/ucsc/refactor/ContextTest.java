@@ -27,6 +27,7 @@ public class ContextTest {
         assertNotNull(context.getContents());
         assertThat(context.getContents(), equalTo(TEST_CLASS.getContents()));
         assertThat(context.getSource(), equalTo(TEST_CLASS));
+        assertFalse(context.isMalformedContext());
     }
 
 
@@ -37,14 +38,16 @@ public class ContextTest {
         assertNotNull(context.getContents());
         assertThat(context.getContents(), equalTo(TEST_CLASS.getContents()));
         assertThat(context.getSource(), equalTo(TEST_CLASS));
+        assertFalse(context.isMalformedContext());
     }
 
     @Test public void testJavaContextWithSourceSelection(){
-        final Context       context = HOST.createContext(TEST_CLASS);
+        final Context           context = HOST.createContext(TEST_CLASS);
         final SourceSelection   entry   = new SourceSelection(TEST_CLASS, 37, 62);
 
         context.setScope(entry);
         assertNotNull(context.getScope());
+        assertFalse(context.isMalformedContext());
     }
 
 }

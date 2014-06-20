@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+
+<project name="vesper-history" basedir="." default="jar">
+
+    <import file="../../tasks.xml"/>
+
+    <path id="compile.classpath">
+        <fileset dir="${lib.dir}" includes="*.jar"/>
+        <fileset dir="lib" includes="*.jar"/>
+        <fileset dir="../../build/dist" includes="*.jar"/>
+    </path>
+
+    <target name="jar" depends="jar.vesper" description="Build jar.">
+        <dirname property="common.basedir" file="${ant.file.tasks}"/>
+        <jar destfile="${build.dir}/${ant.project.name}-${version}.jar">
+            <zipfileset src="${build.dir}/${ant.project.name}-with-deps.jar"
+                        excludes="META-INF/**/*"/>
+        </jar>
+    </target>
+
+
+    <target name="jar.vesper" depends="compile"
+            description="Build jar with dependencies embedded.">
+        <mkdir dir="${build.dir}/dist"/>
+        <dirname property="common.basedir" file="${ant.file.tasks}"/>
+        <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
+                 classpath="${common.basedir}/lib/jarjar-1.4.jar"/>
+        <jarjar jarfile="${build.dir}/${ant.project.name}-with-deps.jar">
+            <fileset dir="${build.dir}/classes"/>
+            <!--used info in this link: http://gemsofprogramming.wordpress.com/2011/07/01/jar-manifest-security-exception-what-the/
+             to fix error: Exception in thread “main” java.lang.SecurityException: Invalid signature
+            -->
+            <zipfileset excludes="META-INF/**/*" src="${common.basedir}/build/dist/vesper-${version}.jar"/>
+            <zipfileset excludes="META-INF/**/*" src="lib/org.eclipse.egit.github.core-3.3.0-SNAPSHOT-sources.jar"/>
+            <zipfileset excludes="META-INF/**/*" src="lib/jgrapht-core-0.9.0.jar"/>
+        </jarjar>
+    </target>
+
+</project>

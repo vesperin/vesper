@@ -1,11 +1,9 @@
 package edu.ucsc.refactor.cli.commands;
 
 import com.google.common.base.Objects;
-import edu.ucsc.refactor.Note;
 import edu.ucsc.refactor.cli.Environment;
 import edu.ucsc.refactor.cli.Result;
 import edu.ucsc.refactor.cli.VesperCommand;
-import edu.ucsc.refactor.cli.results.NotesResult;
 import edu.ucsc.refactor.cli.results.Results;
 import edu.ucsc.refactor.util.Notes;
 import io.airlift.airline.Command;

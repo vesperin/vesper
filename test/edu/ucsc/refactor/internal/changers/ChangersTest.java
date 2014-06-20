@@ -59,6 +59,13 @@ public class ChangersTest {
     }
 
 
+    @Test public void testChangerForSourceWithGenerics() throws Exception {
+        final Context ctx = new Context(InternalUtil.createSourceWithGenerics());
+        parser.parseJava(ctx);
+        assertThat(ctx.isMalformedContext(), is(true));
+    }
+
+
     @Test public void testChangerForUsedTypeDeclaration() throws Exception {
 
         final Context context = new Context(
@@ -85,6 +92,39 @@ public class ChangersTest {
 
             assertThat(change.isValid(), is(false));
         }
+    }
+
+    @Test public void testWeirdError() throws Exception {
+        // rule: Source's FileName should match the class name in code snippet;
+        // otherwise this will blow up
+        String content =         "public class SortArray \n" +
+                "{\n" +
+                "    public static void main(String[] args)\n" +
+                "    {\n" +
+                "        int[] arr={4,6,4,2,764,23,23};\n" +
+                "        sort(arr);\n" +
+                "    }\n" +
+                "    static void sort(int[] arr)\n" +
+                "    {\n" +
+                "        int k;\n" +
+                "        for(int i=0;i<arr.length;i++)\n" +
+                "        {\n" +
+                "            for(int j=i;j<arr.length-1;j++)\n" +
+                "                {\n" +
+                "                    if(arr[i]<arr[j+1])\n" +
+                "                    {\n" +
+                "                        k=arr[j+1];\n" +
+                "                        arr[j+1]=arr[i];\n" +
+                "                        arr[i]=k;\n" +
+                "                    }\n" +
+                "                }\n" +
+                "            System.out.print(arr[i]+\" \");\n" +
+                "        }   \n" +
+                "    }\n" +
+                "}";
+        final Context ctx = new Context(new Source("SortArray.java", content));
+        parser.parseJava(ctx);
+        assertThat(ctx.isMalformedContext(), is(false));
     }
 
 
@@ -413,12 +453,13 @@ public class ChangersTest {
     }
 
 
-    @Test (expected = RuntimeException.class)
-    public void testRemoveWholeMethodSelectionFromBrokenSource() throws Exception {
+    @Test (expected = RuntimeException.class) public void testRemoveWholeMethodSelectionFromBrokenSource() throws Exception {
         final Source src = InternalUtil.createBrokenSourceWithOneMethod();
 
         final Context context = new Context(src);
         parser.parseJava(context);
+        Context.throwCompilationErrorIfExist(context);
+        fail("if the code gets here");
     }
 
 
@@ -897,27 +938,11 @@ public class ChangersTest {
 
     @Test public void testRemoveInvalidSelectedRegion(){
         final Source  code    = InternalUtil.createGeneralSourceWithInvalidSelection();
-        final Context context = new Context(code);
 
-        parser.parseJava(context);
+        final Introspector introspector = Vesper.createRefactorer().getIntrospector();
+        final List<String> problems     = introspector.verifySource(code);
 
-        final ProgramUnitLocator  locator   = new ProgramUnitLocator(context);
-        final SourceSelection     selection = new SourceSelection(SourceLocation.createLocation(code, code.getContents(), 88, 271));
-        final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
-
-        final RemoveCodeRegion remove = new RemoveCodeRegion();
-        final SingleEdit       edit   = SingleEdit.deleteRegion(selection);
-
-
-        assertThat(locations.isEmpty(), is(false));
-
-        for(NamedLocation eachLocation : locations){
-            final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
-            edit.addNode(target.getNode());
-        }
-
-        final Change  change  = remove.createChange(edit, Maps.<String, Parameter>newHashMap());
-        assertThat(change.isValid(), is(false));
+        assertThat(problems.isEmpty(), is(false));
     }
 
 

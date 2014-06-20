@@ -10,13 +10,13 @@ import java.util.List;
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public class InternalCheckpointedRefactorerCreator {
+public class InternalNavigableRefactorerCreator {
     private final List<Source> sources;
     private final Refactorer refactorer;
 
     private final StopWatch stopwatch = new StopWatch();
 
-    public InternalCheckpointedRefactorerCreator(Refactorer refactorer){
+    public InternalNavigableRefactorerCreator(Refactorer refactorer){
         this.refactorer = refactorer;
         this.sources    = new ArrayList<Source>();
     }
@@ -27,7 +27,7 @@ public class InternalCheckpointedRefactorerCreator {
      * @param sources The source objects.
      * @return self
      */
-    public InternalCheckpointedRefactorerCreator addSources(Iterable<Source> sources) {
+    public InternalNavigableRefactorerCreator addSources(Iterable<Source> sources) {
         for (Source source : sources) {
             this.sources.add(source);
         }
@@ -44,6 +44,7 @@ public class InternalCheckpointedRefactorerCreator {
             checkpointedJavaRefactorer.detectIssues(src);
         }
 
+        checkpointedJavaRefactorer.throwCreationErrorsIfExist();
         stopwatch.resetAndLog("Collecting issue detection requests");
 
         return checkpointedJavaRefactorer;

@@ -236,7 +236,7 @@ public class Environment {
                     ? Vesper.createRefactorer()
                     : Vesper.createRefactorer(remote);
 
-            this.refactorer.set(Vesper.createNavigableRefactorer(refactorer, getOrigin()));
+            this.refactorer.set(NavigableVesper.createNavigableRefactorer(refactorer, getOrigin()));
         } else {
             this.refactorer.set(null);
         }

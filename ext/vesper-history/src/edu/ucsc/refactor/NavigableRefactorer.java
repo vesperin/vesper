@@ -5,6 +5,7 @@ import edu.ucsc.refactor.util.CommitHistory;
 import edu.ucsc.refactor.util.CommitPublisher;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -47,6 +48,21 @@ public interface NavigableRefactorer extends Refactorer {
      * @return The updated Source.
      */
     Source checkpoint(Commit commit);
+
+    /**
+     * Scans a {@link Source} tracked by the {@code Refactorer}, looking for any {@link Issue}s
+     * in it.
+     *
+     * <p />
+     *
+     * Contexts are cached when invoking this method. THis mean that if this method is not invoked,
+     * then a new context will be created per change request.
+     *
+     * @param code The {@link Source} to be introspected.
+     * @return a set of issues found in {@code Source}.
+     * @throws java.lang.NullPointerException if {@code Source} null.
+     */
+    Set<Issue> detectIssues(Source code);
 
     /**
      * Returns the list of {@code Source}s  tracked by this {@code NavigableRefactorer}.

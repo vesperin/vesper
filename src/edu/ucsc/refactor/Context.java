@@ -1,10 +1,18 @@
 package edu.ucsc.refactor;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
+import edu.ucsc.refactor.internal.CompilationProblemException;
 import edu.ucsc.refactor.util.Locations;
+import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -12,8 +20,30 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 public class Context {
     private final Source    file;
 
-    private Location        scope;
-    private CompilationUnit compilationUnit;
+    private Location                    scope;
+    private CompilationUnit             compilationUnit;
+    private List<String>                syntaxRelatedProblems;
+    private CompilationProblemException cpe;
+
+
+
+    private static Set<Integer> BLACK_LIST;
+    static {
+        Set<Integer> blackList = new HashSet<Integer>();
+        blackList.add(IProblem.FieldRelated);
+        blackList.add(IProblem.MethodRelated);
+        blackList.add(IProblem.Internal);
+        blackList.add(IProblem.ConstructorRelated);
+        blackList.add(IProblem.IllegalPrimitiveOrArrayTypeForEnclosingInstance);
+        blackList.add(IProblem.MissingEnclosingInstanceForConstructorCall);
+        blackList.add(IProblem.MissingEnclosingInstance);
+        blackList.add(IProblem.IncorrectEnclosingInstanceReference);
+        blackList.add(IProblem.IllegalEnclosingInstanceSpecification);
+        blackList.add(IProblem.CannotDefineStaticInitializerInLocalType);
+        blackList.add(IProblem.OuterLocalMustBeFinal);
+        blackList.add(IProblem.CannotDefineInterfaceInLocalType);
+        BLACK_LIST = Collections.unmodifiableSet(blackList);
+    }
 
     /**
      * Construct a new {@link Context} object.
@@ -21,7 +51,9 @@ public class Context {
      * @param file {@link Source} object.
      */
     public Context(Source file){
-        this.file   = file;
+        this.file                   = file;
+        this.syntaxRelatedProblems  = Lists.newArrayList();
+        this.cpe                    = new CompilationProblemException();
     }
 
 
@@ -57,6 +89,26 @@ public class Context {
         return currentScope;
     }
 
+    /**
+     * Gets a list of syntax related problems found during the compilation of
+     * the {@code Source}.
+     *
+     * @return A list of syntax related problems or []
+     */
+    public List<String> getSyntaxRelatedProblems(){
+        return syntaxRelatedProblems;
+    }
+
+    /**
+     * Checks whether this context is malformed or not.
+     *
+     * @return {@code true} if the context is malformed; meaning that {@link #getSyntaxRelatedProblems()}
+     * is non empty.
+     */
+    public boolean isMalformedContext(){
+        return !getSyntaxRelatedProblems().isEmpty();
+    }
+
 
     /**
      * Set the CompilationUnit that belongs to the content of the Source's file.
@@ -75,6 +127,8 @@ public class Context {
                 Source.SOURCE_FILE_PROPERTY,
                 this.getSource()
         );
+
+        addCompilationErrorIfExist(this.compilationUnit, this.syntaxRelatedProblems, this.cpe);
     }
 
     /**
@@ -96,6 +150,11 @@ public class Context {
         return Locations.locate(node);
     }
 
+    /**
+     * Gets the context's {@code Source}.
+     *
+     * @return The context's {@code Source}.
+     */
     public Source getSource() {
         return file;
     }
@@ -108,6 +167,50 @@ public class Context {
     public void setScope(SourceSelection selection) {
         this.scope = selection.toLocation();
     }
+
+    public static Context throwCompilationErrorIfExist(Context context){
+        if(context.isMalformedContext()){
+            context.cpe.throwCachedException();
+        }
+
+        return context;
+    }
+
+
+    private static void addCompilationErrorIfExist(CompilationUnit unit, List<String> syntaxRelatedProblems, CompilationProblemException cpe) {
+        final IProblem[] problems = unit.getProblems();
+        if(problems.length > 0){
+            for(IProblem each : problems){
+                final boolean hasSyntaxProblem  = (each.getID() & IProblem.Syntax) != 0;
+
+                if(each.isError() && (hasSyntaxProblem || inBlackList(each))){
+                    final String message = buildMessage(each);
+                    syntaxRelatedProblems.add(message);
+                    cpe.cache(new Throwable(message));
+                }
+            }
+        }
+    }
+
+    private static boolean inBlackList(IProblem each){
+        for(Integer eachID : BLACK_LIST){
+            if((each.getID() & eachID) != 0){
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static String buildMessage(IProblem problem) {
+        final int start     = problem.getSourceStart();
+        final int end       = problem.getSourceEnd();
+        final int line      = problem.getSourceLineNumber();
+        final String msg    = problem.getMessage();
+
+        return msg + ". Location(line=" + line + ", start=" + start + ", end=" + end + ").";
+    }
+
 
     @Override public String toString() {
         return Objects.toStringHelper(getClass())

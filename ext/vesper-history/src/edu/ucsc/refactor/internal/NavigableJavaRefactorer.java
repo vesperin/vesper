@@ -2,6 +2,7 @@ package edu.ucsc.refactor.internal;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.spi.UnitLocator;
@@ -75,11 +76,17 @@ public class NavigableJavaRefactorer implements NavigableRefactorer {
 
 
     @Override public Set<Issue> detectIssues(Source code) {
-        final Set<Issue> issues = refactorer.detectIssues(code);
-        for(Issue each : issues){
-            registerIssue(code, each);
+        final Introspector introspector = refactorer.getIntrospector(code);
+        try {
+            final Set<Issue> issues = introspector.detectIssues(code);
+            for(Issue each : issues){
+                registerIssue(code, each);
+            }
+            return issues;
+        } catch (RuntimeException ex){
+            refactorer.getRefactoringHost().addError(ex);
+            return ImmutableSet.of();
         }
-        return issues;
     }
 
     private Issue registerIssue(Source source, Issue issue) {
@@ -95,6 +102,14 @@ public class NavigableJavaRefactorer implements NavigableRefactorer {
         return findings;
     }
 
+
+    @Override public Introspector getIntrospector() {
+        return refactorer.getIntrospector();
+    }
+
+    @Override public Introspector getIntrospector(Source src) {
+        return refactorer.getIntrospector(src);
+    }
 
     @Override public List<Issue> getIssues(Source key) {
         if(getIssueRegistry().containsKey(key)){
@@ -131,7 +146,7 @@ public class NavigableJavaRefactorer implements NavigableRefactorer {
     }
 
     @Override public List<Source> getSources() {
-        return new ArrayList<Source>(refactorer.getValidContexts().keySet());
+        return new ArrayList<Source>(findings.keySet());
     }
 
 
@@ -139,7 +154,7 @@ public class NavigableJavaRefactorer implements NavigableRefactorer {
         // clear current issue registry for source
         final Source before = commit.getSourceBeforeChange();
         getIssueRegistry().remove(before);
-        refactorer.getValidContexts().remove(before);
+        findings.remove(before);
 
         final String key = commit.getUniqueSignature();
 
@@ -219,7 +234,6 @@ public class NavigableJavaRefactorer implements NavigableRefactorer {
         final String signature = from.getUniqueSignature();
 
         if(timeline.containsKey(signature)){
-            refactorer.clearCachedContexts();
 
             timeline.remove(signature);
             timeline.put(signature, sliced);
@@ -231,6 +245,9 @@ public class NavigableJavaRefactorer implements NavigableRefactorer {
         return from;
     }
 
+    void throwCreationErrorsIfExist(){
+        refactorer.getRefactoringHost().throwCreationErrorIfErrorsExist();
+    }
 
     @Override public String toString() {
         final Objects.ToStringHelper builder = Objects.toStringHelper(getClass());

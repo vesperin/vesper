@@ -10,12 +10,10 @@ import org.junit.runners.Suite;
  */
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-        StringsTest.class,
-        LocationsTest.class,
-        NotesTest.class
+        CommitHistoryTest.class
 })
-public class UtilSuiteTest {
+public class CommitHistorySuite {
     public static Test suite() {
-        return new TestSuite(UtilSuiteTest.class.getName());
+        return new TestSuite(CommitHistorySuite.class.getName());
     }
 }

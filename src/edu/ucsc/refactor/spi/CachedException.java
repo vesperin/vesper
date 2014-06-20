@@ -54,8 +54,9 @@ public abstract class CachedException extends RuntimeException {
         int index = 1;
 
         for (Throwable errorMessage : errorMessages) {
-            String    message = errorMessage.getMessage();
-            messageFormatter.format("%s) Error at %s:%n", index++, message)
+            final String    message = errorMessage.getLocalizedMessage();
+            final String    line    = "line " + message.substring(message.lastIndexOf("line") + 5, message.lastIndexOf("line") + 6);
+            messageFormatter.format("%s) Error at %s:%n", index++, line)
                     .format(" %s%n%n", message
                     );
         }

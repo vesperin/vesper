@@ -62,6 +62,7 @@ public interface Host {
      *
      * @param source The source file.
      * @return a new Java context.
+     * @throws RuntimeException if there is a compilation error.
      */
     Context createContext(Source source);
 
@@ -92,12 +93,6 @@ public interface Host {
      * Installs a configuration that automatically configures this host.
      */
     void install(Configuration configuration);
-
-    /**
-     * @return {@code true} if {@code Vesper} is set to allow remote commits,
-     * {@code false} otherwise.
-     */
-    boolean isRemoteUpstreamEnabled();
 
     /**
      * Throws a {@code CreationException} if any exception has been

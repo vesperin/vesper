@@ -17,6 +17,12 @@
 
     <target name="dist" depends="distjars, javadoc"
             description="Build entire distribution.">
+        <ant antfile="ext/vesper-history/build.xml" target="distjars" inheritAll="false"/>
+
+        <copy toDir="${build.dir}/dist">
+            <fileset dir="ext/vesper-history/build" includes="*.jar" excludes="*-with-deps.jar"/>
+        </copy>
+
         <ant antfile="ext/vesper-cli/build.xml" target="distjars" inheritAll="false"/>
 
         <copy toDir="${build.dir}/dist">
@@ -69,6 +75,7 @@
                  windowtitle="Vesper 0.0.0 API">
             <sourcepath>
                 <pathelement location="${src.dir}"/>
+                <pathelement location="${history.src.dir}"/>
                 <pathelement location="${cli.src.dir}"/>
             </sourcepath>
             <classpath refid="compile.classpath"/>
@@ -79,6 +86,7 @@
     <target name="clean.all"
             depends="clean"
             description="Remove generated files.">
+        <ant dir="ext/vesper-history" antfile="build.xml" target="clean"/>
         <ant dir="ext/vesper-cli" antfile="build.xml" target="clean"/>
     </target>
 

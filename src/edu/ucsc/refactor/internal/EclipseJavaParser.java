@@ -3,7 +3,6 @@ package edu.ucsc.refactor.internal;
 import edu.ucsc.refactor.Context;
 import edu.ucsc.refactor.spi.JavaParser;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -39,7 +38,7 @@ public class EclipseJavaParser implements JavaParser {
 
     @Override public CompilationUnit parseJava(Context context) {
 
-        astParser.setUnitName("vesper");
+        astParser.setUnitName(context.getSource().getName());
 
         LOGGER.fine("Parsing context: " + context);
 
@@ -60,12 +59,9 @@ public class EclipseJavaParser implements JavaParser {
                 return NOTHING;
             }
 
-            // if the unit has problems, then fail fast
-            throwCompilationErrorIfExist(unit);
-
             context.setCompilationUnit(unit);
 
-        } catch (Exception error){
+        } catch (RuntimeException error){
             LOGGER.severe(
                     "Parser Error: "
                             + SourceLocation.createLocation(context.getSource())
@@ -73,24 +69,10 @@ public class EclipseJavaParser implements JavaParser {
                             ? error.getCause().getLocalizedMessage() + "." : ".")
             );
 
-            throw new RuntimeException(error);
+            throw error;
         }
 
         return unit;
-    }
-
-    private static void throwCompilationErrorIfExist(CompilationUnit unit) {
-        final IProblem[] problems = unit.getProblems();
-        if(problems.length > 0){
-            final CompilationProblemException exception = new CompilationProblemException();
-            for(IProblem each : problems){
-                if(each.isError() && (each.getID() & IProblem.Syntax) != 0){ // catch only syntax related issues
-                    exception.cache(new Throwable(each.getMessage()));
-                }
-            }
-
-            exception.throwCachedException();
-        }
     }
 
 }

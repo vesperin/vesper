@@ -58,22 +58,6 @@ public interface Refactorer {
     Change createChange(ChangeRequest request);
 
     /**
-     * Scans a {@link Source} tracked by the {@code Refactorer}, looking for any {@link Issue}s
-     * in it.
-     *
-     * <p />
-     *
-     * Contexts are cached when invoking this method. THis mean that if this method is not invoked,
-     * then a new context will be created per change request.
-     *
-     *
-     * @param code The {@link Source} to be scanned.
-     * @return a set of issues found in {@code Source}.
-     * @throws java.lang.NullPointerException if {@code Source} null.
-     */
-    Set<Issue> detectIssues(Source code);
-
-    /**
      * Returns a locator of any structural unit of a base {@code Source} (class, member, ...).
      * Units exclude the code in a text form. Units include nodes in an AST.
      *
@@ -82,6 +66,21 @@ public interface Refactorer {
      * @throws java.lang.NullPointerException if {@code Source} null.
      */
     UnitLocator getLocator(Source src);
+
+    /**
+     * It creates a new {@code Introspector} object.
+     *
+     * @return a new {@code Introspector} object
+     */
+    Introspector getIntrospector();
+
+    /**
+     * It examines a {@code Source} object.
+     *
+     * @param src The current {@code Source}
+     * @return a new {@code Introspector} object
+     */
+    Introspector getIntrospector(Source src);
 
     /**
      * Recommends changes for a {@code Source} based on a list of found {@code issues}.

@@ -13,13 +13,13 @@ import org.junit.runners.Suite;
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
         UtilSuiteTest.class,
-        InternalTestSuite.class,
-        ChangeRequestTest.class,
-        SourceTest.class,
-        SourceSelectionTest.class,
-        RefactorersTest.class,
-        ContextTest.class,
-        VesperTest.class
+        InternalTestSuite.class//,
+//        ChangeRequestTest.class,
+//        SourceTest.class,
+//        SourceSelectionTest.class,
+//        RefactorersTest.class,
+//        ContextTest.class,
+//        VesperTest.class
 
 })
 public class AllTests {

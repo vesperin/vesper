@@ -1,5 +1,6 @@
 package edu.ucsc.refactor;
 
+import edu.ucsc.refactor.util.Note;
 import edu.ucsc.refactor.util.StringUtil;
 import org.junit.Test;
 
