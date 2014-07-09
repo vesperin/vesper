@@ -16,7 +16,7 @@ import java.util.List;
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public abstract class SliceCommand extends VesperCommand {
+public abstract class ClipCommand extends VesperCommand {
     @Arguments(description = "Slice operation parameters")
     public List<String> patterns;
 

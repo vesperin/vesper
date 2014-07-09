@@ -35,6 +35,27 @@ public class SingleEdit extends AbstractCauseOfChange {
         );
     }
 
+    /**
+     * Clips a given source selection. Not only the selection is clipped, but also
+     * all the source elements used by the ASTNode representation of the clipped selection.
+     * For example,
+     *
+     * <pre>
+     *     Let's assume we have a class named Foo. This class has three methods; methodA, methodB,
+     *     and methodC. This class also has two fields; fieldA and fieldB. <strong>methodA</strong> uses methodC and
+     *     access fieldA; and methodC does not have any callers. Let's define the CLIP set; which is the set
+     *     that will contain all the ASTNodes that were clipped from a source code. So, if the user wants
+     *     to clip methodA, then this refactoring will include methodA, fieldA, and methodC in the CLIP set. Any
+     *     elements (ASTNodes) not in the CLIP set will be removed from the Source code.
+     * </pre>
+     *
+     * @param selection The source selection to be clipped.
+     * @return The {@code SingleEdit}.
+     */
+    public static SingleEdit clipSelection(SourceSelection selection){
+        return new SingleEdit(Refactoring.CLIP_SELECTION, selection);
+    }
+
 
     /**
      * Deletes a class, which location can be inferred from {@code SourceSelection}

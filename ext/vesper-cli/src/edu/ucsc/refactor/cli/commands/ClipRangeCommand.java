@@ -7,9 +7,9 @@ import io.airlift.airline.Command;
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-@Command(name = "method", description = "Slice a method from the tracked Source")
-public class SliceMethodCommand extends SliceCommand {
+@Command(name = "range", description = "Slice a source code range from the tracked Source")
+public class ClipRangeCommand extends ClipCommand {
     @Override protected ChangeRequest createChangeRequest(SourceSelection selection) {
-        throw new UnsupportedOperationException("to be implemented");
+        return ChangeRequest.clipSelection(selection);
     }
 }

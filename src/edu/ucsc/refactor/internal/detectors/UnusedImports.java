@@ -29,17 +29,7 @@ public class UnusedImports extends IssueDetector {
     }
 
     @Override public void scanJava(Context context) {
-        final CompilationUnit unit      = context.getCompilationUnit();
-        final boolean visitJavaDocTags  = AstUtil.processJavadocComments(unit);
-
-        final ImportsReferencesVisitor visitor = new ImportsReferencesVisitor(visitJavaDocTags);
-        context.accept(visitor);
-
-        final Set<String> importNames   = visitor.getImportNames();
-        final Set<String> staticNames   = visitor.getStaticImportNames();
-
-
-        createIssues(AstUtil.getUnusedImports(unit, importNames, staticNames));
-
+        final CompilationUnit unit = context.getCompilationUnit();
+        createIssues(AstUtil.getUnusedImports(unit));
     }
 }

@@ -2,16 +2,14 @@ package edu.ucsc.refactor.internal.util;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import edu.ucsc.refactor.Location;
 import edu.ucsc.refactor.NamedLocation;
 import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.internal.ProgramUnitLocation;
-import edu.ucsc.refactor.internal.visitors.LabelVisitor;
-import edu.ucsc.refactor.internal.visitors.LinkedNodesVisitor;
-import edu.ucsc.refactor.internal.visitors.SideEffectNodesVisitor;
-import edu.ucsc.refactor.internal.visitors.SimpleNameVisitor;
+import edu.ucsc.refactor.internal.visitors.*;
 import edu.ucsc.refactor.util.Locations;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.*;
@@ -19,6 +17,7 @@ import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Set;
 
 /**
@@ -196,8 +195,23 @@ public class AstUtil {
         return targetType.cast(object);
     }
 
+    public static Set<ImportDeclaration> getUsedImports(CompilationUnit unit){
+        @SuppressWarnings("unchecked")
+        final Set<ImportDeclaration> allImports = Sets.newHashSet(unit.imports());
 
-    public static Set<ASTNode> getUnusedImports(CompilationUnit unit, Set<String> importNames, Set<String> staticNames){
+        allImports.removeAll(getUnusedImports(unit));
+        return allImports;
+    }
+
+    public static Set<ASTNode> getUnusedImports(CompilationUnit unit){
+        final boolean visitJavaDocTags  = AstUtil.processJavadocComments(unit);
+        final ImportsReferencesVisitor visitor = new ImportsReferencesVisitor(visitJavaDocTags);
+        unit.accept(visitor);
+
+        final Set<String> importNames   = visitor.getImportNames();
+        final Set<String> staticNames   = visitor.getStaticImportNames();
+
+
         @SuppressWarnings("unchecked")
         final List<ImportDeclaration> totalImports = unit.imports();
 
@@ -265,14 +279,50 @@ public class AstUtil {
     }
 
 
-    public static Set<IBinding> getUniqueBindings(ASTNode node) {
-        final Set<IBinding>  result   = Sets.newHashSet();
+    public static Set<ASTNode> unwindBindings(ASTNode node){
+        final Set<ASTNode>  result   = Sets.newHashSet();
         final List<ASTNode> children = AstUtil.getChildren(node);
+        if(children.isEmpty()){
+            return ImmutableSet.of();
+        }
+
+        for (ASTNode each : children){
+           //if(result.contains(each)) continue;
+           if(AstUtil.isOfType(Block.class, each)) {
+               result.addAll(unwindBindings(each));
+           } else if(AstUtil.isOfType(IfStatement.class, each)) {
+               result.addAll(unwindBindings(each));
+           } else if(AstUtil.isOfType(ReturnStatement.class, each)) {
+               result.addAll(unwindBindings(each));
+           } else if(AstUtil.isOfType(MethodInvocation.class, each)) {
+               final TypeDeclaration unit = AstUtil.parent(TypeDeclaration.class, each);
+               final MethodInvocation inv = AstUtil.exactCast(MethodInvocation.class, each);
+               final ASTNode dec = AstUtil.findDeclaration(inv.getName().resolveBinding(), unit);
+               result.add(dec);
+           } else if(AstUtil.isOfType(InfixExpression.class, each)) {
+               result.addAll(unwindBindings(each));
+           } else if(AstUtil.isOfType(ExpressionStatement.class, each)) {
+               result.addAll(unwindBindings(each));
+           } else if(AstUtil.isOfType(VariableDeclarationExpression.class, each)) {
+               result.addAll(unwindBindings(each));
+           } else {
+               result.add(each);
+           }
+        }
+
+        return result;
+    }
+
+    public static Set<IBinding> getUniqueBindings(ASTNode node) {
+        final Set<IBinding>  result    = Sets.newHashSet();
+        final Set<ASTNode>   children  = unwindBindings(node);
+
         if(children.isEmpty()){
             return result;
         }
 
         for(ASTNode each : children){
+            if(each == node) continue; // handles recursive calls: methodA(){ methodA(); } => we should handle it once
             if(AstUtil.isOfType(SimpleType.class, each)) continue;
             final SimpleName name       = AstUtil.getSimpleName(each);
             if(name == null) continue;
@@ -331,6 +381,7 @@ public class AstUtil {
 
 
     public static boolean isField(ASTNode node) {
+        if(node == null) return false;
         final IVariableBinding binding = AstUtil.getVariableBinding(node);
         return (AstUtil.isOfType(FieldDeclaration.class, node) || (binding != null && (binding.isField())));
     }
@@ -546,6 +597,22 @@ public class AstUtil {
             result = (SimpleName)node;
         if (node instanceof VariableDeclaration)
             result = ((VariableDeclaration)node).getName();
+
+        if (node instanceof MethodDeclaration)
+            result = ((MethodDeclaration)node).getName();
+
+        if(node instanceof FieldDeclaration) {
+            final Queue<SimpleName> ans = Lists.newLinkedList();
+            final List<VariableDeclarationFragment> fragments   = ((FieldDeclaration)node).fragments();
+            for (VariableDeclarationFragment fragment : fragments) {
+                final SimpleName name = fragment.getName();
+                if(!ans.contains(name)){
+                    ans.add(name);
+                }
+            }
+
+            result = ans.remove();
+        }
 
         if(result == null){
             final SimpleNameVisitor nameVisitor = new SimpleNameVisitor(Locations.locate(node));

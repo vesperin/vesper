@@ -64,12 +64,10 @@ public class Grammar {
                 .withCommand(RemoveLocalVariableCommand.class)
                 .withCommand(RemoveRegionCommand.class);
 
-        builder.withGroup("slice")
-                .withDescription("Slice a code section from the tracked source")
-                .withDefaultCommand(SliceClassCommand.class)
-                .withCommand(SliceClassCommand.class)
-                .withCommand(SliceMethodCommand.class)
-                .withCommand(SliceRangeCommand.class);
+        builder.withGroup("clip")
+                .withDescription("Clip a code section from the tracked source")
+                .withDefaultCommand(ClipRangeCommand.class)
+                .withCommand(ClipRangeCommand.class);
 
     }
 

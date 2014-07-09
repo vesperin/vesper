@@ -29,6 +29,60 @@ public class InternalUtil {
         return new Source("Name.java", content);
     }
 
+
+    public static Source createGeneralCropableSource(){
+        final String content = "import java.util.List; \n"
+                + "import java.util.Collection; \n"
+                + "class Name {\n"
+                + "String msg = \"Hi!\";\n"
+                + "\tString boom(String msg){ if(null != msg) { return boom(null);} "
+                + "return \"Hi!\";}\n"
+                + "\t/** {@link Name#boom(String)}**/String baam(String msg){ "
+                + " return msg; }\n"
+                + "String beem(String text){ return boom(text); }"
+                + "}";
+
+        return new Source("Name.java", content);
+    }
+
+
+    public static Source createGeneralCropableSource2(){
+        final String content = "import java.util.List; \n"
+                + "import java.util.Collection; \n"
+                + "class Name {\n"
+                + "String msg = \"Hi!\";\n"
+                + "\tString boom(String msg){ if(null != msg) { return beem(null);} "
+                + "return \"Hi!\";}\n"
+                + "\t/** {@link Name#boom(String)}**/String baam(String msg){ "
+                + " return msg; }\n"
+                + "String beem(String text){ return this.msg + text; }"
+                + "}";
+
+        return new Source("Name.java", content);
+    }
+
+
+    public static Source createGeneralCropableSource3(){
+        final String content = "import java.util.List; \n"
+                + "import java.util.Collection; \n"
+                + "class Name {\n"
+                + "String msg = \"Hi!\";\n"
+                + "\tString boom(String msg){ if(null != msg) { return beem(null);} "
+                + "return \"Hi!\";}\n"
+                + "\t/** {@link Name#boom(String)}**/String baam(String msg){ "
+                + " return msg; }\n"
+                + "String beem(String text){ check(true, null); return this.msg + text; }"
+                + "\tstatic void check(\n"
+                + "\t\tboolean cond, String message\n"
+                + "\t) throws RuntimeException {\n"
+                + "\t\tcond = !cond;"
+                + "\t\tif(!cond) throw new IllegalArgumentException();\n"
+                + "\t}\n"
+                + "}";
+
+        return new Source("Name.java", content);
+    }
+
     public static Source createGeneralSourceWithInvalidSelection(){
         final String content = "import java.util.List; \n"
                 + "import java.util.Collection; \n"
