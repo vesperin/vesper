@@ -99,6 +99,19 @@ public class ChangeRequest {
         return forEdit(edit, DEFAULT_PARAMETERS);
     }
 
+    /**
+     * Clips a source selection. Check {@link SingleEdit#clipSelection(SourceSelection)}
+     * for details of how this works.
+     *
+     * @param selection The source selection to be clipped.
+     * @return A new {@link ChangeRequest}
+     */
+    public static ChangeRequest clipSelection(SourceSelection selection){
+        return ChangeRequest.forEdit(
+                SingleEdit.clipSelection(selection)
+        );
+    }
+
 
     /**
      * Delete a class change request given selection.

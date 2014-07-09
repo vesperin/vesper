@@ -85,6 +85,7 @@ public abstract class AbstractConfiguration implements Configuration {
         addSourceChanger(new RemoveCodeRegion());
         addSourceChanger(new RenameLocalVariable());
         addSourceChanger(new RemoveUnusedLocalVariable());
+        addSourceChanger(new ClipSelection());
 
         // credentials must be added here..
         addCredentials(null);

@@ -6,7 +6,6 @@ import edu.ucsc.refactor.Parameter;
 import edu.ucsc.refactor.internal.Delta;
 import edu.ucsc.refactor.internal.SourceChange;
 import edu.ucsc.refactor.internal.util.AstUtil;
-import edu.ucsc.refactor.internal.visitors.ImportsReferencesVisitor;
 import edu.ucsc.refactor.spi.Names;
 import edu.ucsc.refactor.spi.Smell;
 import edu.ucsc.refactor.spi.SourceChanger;
@@ -69,14 +68,7 @@ public class RemoveUnusedImports extends SourceChanger {
                 rewrite.remove(importDeclaration, null);
             }
         } else {
-            final boolean visitJavaDocTags  = AstUtil.processJavadocComments(root);
-            final ImportsReferencesVisitor visitor = new ImportsReferencesVisitor(visitJavaDocTags);
-            root.accept(visitor);
-
-            final Set<String> importNames   = visitor.getImportNames();
-            final Set<String> staticNames   = visitor.getStaticImportNames();
-
-            final Set<ASTNode> unusedImports = AstUtil.getUnusedImports(root, importNames, staticNames);
+            final Set<ASTNode> unusedImports = AstUtil.getUnusedImports(root);
             if(unusedImports.isEmpty()){
                 throw new RuntimeException("there is nothing to optimize");
             }
