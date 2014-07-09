@@ -66,10 +66,10 @@ public class RemoveCodeRegion extends SourceChanger {
 
     private Delta removeCodeRegion(TypeDeclaration unit, ASTRewrite rewrite, CauseOfChange cause){
         // check dependencies wrt Root
-        final Set<IBinding> S = interCheck(unit, cause);
+        final Set<IBinding> S = expectNoInterDependenciesViolations(unit, cause);
 
         // check dependencies wrt to its enclosing method (now its method is its universe)
-        intraCheck(unit, cause, S);
+        expectNoIntraDependenciesViolation(cause, S);
 
         for(ASTNode toBeRemoved : cause.getAffectedNodes()){
             rewrite.remove(toBeRemoved, null);
@@ -79,24 +79,18 @@ public class RemoveCodeRegion extends SourceChanger {
         return createDelta(unit, rewrite);
     }
 
-    private static Set<IBinding> interCheck(TypeDeclaration unit, CauseOfChange cause) {
+    private static Set<IBinding> expectNoInterDependenciesViolations(TypeDeclaration unit, CauseOfChange cause) {
         final Set<IBinding> F = generateFieldsUniverse(unit);
         final Set<IBinding> M = generateMethodsUniverse(unit, cause);
         final Set<IBinding> T = generateTypesUniverse(unit);
-        final Set<IBinding> S = generateSelection(unit, cause);
+
+        final Set<IBinding> U = Sets.union(Sets.union(F, M), T);
+        final Set<IBinding> S = collectBindingsInSelection(unit, cause);
 
         final Set<IBinding> R = Sets.newHashSet();
 
         for(IBinding s : S){
-            if(F.contains(s)){
-                R.add(s);
-            }
-
-            if(M.contains(s)){
-                R.add(s);
-            }
-
-            if(T.contains(s)){
+            if(U.contains(s)){
                 R.add(s);
             }
         }
@@ -107,7 +101,7 @@ public class RemoveCodeRegion extends SourceChanger {
         return S;
     }
 
-    private static void intraCheck(TypeDeclaration unit, CauseOfChange cause, Set<IBinding> s) {
+    private static void expectNoIntraDependenciesViolation(CauseOfChange cause, Set<IBinding> s) {
         for( ASTNode eachNode : cause.getAffectedNodes()){
             if(STATEMENTS.contains(eachNode.getNodeType())){
                 final MethodDeclaration parent = AstUtil.parent(MethodDeclaration.class, eachNode);
@@ -126,19 +120,16 @@ public class RemoveCodeRegion extends SourceChanger {
 
                     if(node != null){
                         Location nodeLoc;
-                        if(node instanceof VariableDeclarationFragment){
-                            final IBinding nb = ((VariableDeclarationFragment) node).resolveBinding();
-                            final ASTNode  n  = AstUtil.findDeclaration(nb, unit);
-                            nodeLoc = Locations.locate(n);
+                        if(AstUtil.isOfType(VariableDeclarationFragment.class, node)){
+                            nodeLoc = Locations.locate(node);
                             if(Locations.liesOutside(nodeLoc, selectLoc) && Locations.inside(parentLoc, nodeLoc)){
+                                final IBinding nb = ((VariableDeclarationFragment) node).resolveBinding();
                                 B.add(nb);
                             }
-
-                        } else if (node instanceof SingleVariableDeclaration){
-                            final IBinding nb = ((SingleVariableDeclaration) node).resolveBinding();
-                            final ASTNode n = AstUtil.findDeclaration(nb, unit);
-                            nodeLoc = Locations.locate(n);
+                        } else if (AstUtil.isOfType(SingleVariableDeclaration.class, node)){
+                            nodeLoc = Locations.locate(node);
                             if(Locations.liesOutside(nodeLoc, selectLoc) && Locations.inside(parentLoc, nodeLoc)){
+                                final IBinding nb = ((SingleVariableDeclaration) node).resolveBinding();
                                 B.add(nb);
                             }
                         }
@@ -217,7 +208,7 @@ public class RemoveCodeRegion extends SourceChanger {
     }
 
 
-    private static Set<IBinding> generateSelection(TypeDeclaration unit, CauseOfChange cause){
+    private static Set<IBinding> collectBindingsInSelection(TypeDeclaration unit, CauseOfChange cause){
 
         final Set<IBinding> F  = Sets.newHashSet();
 
@@ -250,9 +241,8 @@ public class RemoveCodeRegion extends SourceChanger {
 
                         if(AstUtil.isField(f)){
 
-                            final IBinding   b  = AstUtil.getDeclaration(eachBinding);
-                            if(!V.contains(b)){
-                                Q.add(b);
+                            if(!V.contains(eachBinding)){
+                                Q.add(eachBinding);
                             }
                         } else {
                             if(!V.contains(eachBinding)){

@@ -121,8 +121,7 @@ public class ClipSelection extends SourceChanger {
                 case IBinding.METHOD:
                     final ASTNode m = AstUtil.findDeclaration(each, unit);
                     if(AstUtil.isMethod(m)){
-                        final MethodDeclaration name       = AstUtil.exactCast(MethodDeclaration.class, m);
-                        U.add(AstUtil.getDeclaration(name.resolveBinding()));
+                        U.add(each);
                     }
 
                     break;
@@ -131,9 +130,7 @@ public class ClipSelection extends SourceChanger {
                     final ASTNode f      = AstUtil.findDeclaration(each, unit);
 
                     if(AstUtil.isField(f)){
-                        final SimpleName name           = AstUtil.getSimpleName(f);
-
-                        U.add(AstUtil.getDeclaration(name.resolveBinding()));
+                        U.add(each);
                     }
 
                     break;
@@ -146,7 +143,7 @@ public class ClipSelection extends SourceChanger {
                                 TypeDeclaration.class, t);
 
                         if(td != unit && typesSet.contains(td)){
-                            U.add(td.resolveBinding());
+                            U.add(each);
                         }
 
                     }
@@ -197,10 +194,8 @@ public class ClipSelection extends SourceChanger {
                         declaringNode      = AstUtil.findDeclaration(eachBinding, unit);
 
                         if(AstUtil.isField(declaringNode)){
-                            final SimpleName name           = AstUtil.getSimpleName(declaringNode);
-                            final IBinding   fieldBinding   = AstUtil.getDeclaration(name.resolveBinding());
-                            if(!visited.contains(fieldBinding)) {
-                                queue.add(fieldBinding);
+                            if(!visited.contains(eachBinding)) {
+                                queue.add(eachBinding);
                             }
                         }
 
@@ -210,13 +205,9 @@ public class ClipSelection extends SourceChanger {
                         declaringNode   = AstUtil.findDeclaration(eachBinding, unit);
 
                         if(AstUtil.isClass(declaringNode)){
-                            final TypeDeclaration td = AstUtil.exactCast(
-                                    TypeDeclaration.class, declaringNode);
 
-                            final ITypeBinding tb = td.resolveBinding();
-
-                            if(!visited.contains(tb)){
-                                queue.add(tb);
+                            if(!visited.contains(eachBinding)){
+                                queue.add(eachBinding);
                             }
                         }
 
