@@ -54,30 +54,17 @@ public class ClipSelection extends SourceChanger {
 
 
     private Delta cropCodeRegionNotInClippedRegion(TypeDeclaration unit, ASTRewrite rewrite, CauseOfChange cause){
-        final Set<IBinding> filtered = Sets.newHashSet();
-        for(ASTNode eachNode : cause.getAffectedNodes()){
-            if(AstUtil.isMethod(eachNode)){
-                final MethodDeclaration d = AstUtil.exactCast(MethodDeclaration.class, eachNode);
-                filtered.add(AstUtil.getDeclaration(d.resolveBinding()));
-            } else {
-                final MethodDeclaration parent = AstUtil.parent(MethodDeclaration.class, eachNode);
-                if(parent != null){
-                    filtered.add(AstUtil.getDeclaration(parent.resolveBinding()));
-                }
-            }
-        }
+        final Set<IBinding> methods     = collectMethodDeclarations(cause);
+        final Set<IBinding> slice       = cropCodeSnippet(unit, methods);
+        final Set<IBinding> universe    = generateUniverse(unit);
 
+        // Get the nodes not in the slice but are in the Universe. These
+        // nodes are the nodes we are interested in removing.
 
-        final Set<IBinding> SLICE       = cropCodeSnippet(unit, filtered);
-        final Set<IBinding> UNIVERSE    = generateUniverse(unit);
+        final Set<IBinding> trash      = difference(universe, slice);
 
-        // do the whole things about set difference and get the nodes not in the slice. these
-        // nodes are the ones to be removed.
-
-        final Set<IBinding> REMOVE      = difference(UNIVERSE, SLICE);
-
-        for(IBinding bindingToRemove: REMOVE){
-            final ASTNode declaringNode = AstUtil.findDeclaration(bindingToRemove, unit);
+        for(IBinding binding: trash){
+            final ASTNode declaringNode = AstUtil.findDeclaration(binding, unit);
 
             rewrite.remove(declaringNode, null);
         }
@@ -85,35 +72,51 @@ public class ClipSelection extends SourceChanger {
         return createDelta(unit, rewrite);
     }
 
+    private Set<IBinding> collectMethodDeclarations(CauseOfChange cause) {
+        final Set<IBinding> filtered = Sets.newHashSet();
+        for(ASTNode eachNode : cause.getAffectedNodes()){
+            if(AstUtil.isMethod(eachNode)){
+                final MethodDeclaration d = AstUtil.exactCast(MethodDeclaration.class, eachNode);
+                filtered.add(d.resolveBinding());
+            } else {
+                final MethodDeclaration parent = AstUtil.parent(MethodDeclaration.class, eachNode);
+                if(parent != null){
+                    filtered.add(parent.resolveBinding());
+                }
+            }
+        }
+        return filtered;
+    }
+
     private static Set<IBinding> generateUniverse(TypeDeclaration unit){
-        ImmutableSet<TypeDeclaration>   T = ImmutableSet.copyOf(unit.getTypes());
-        ImmutableSet<FieldDeclaration>  F = ImmutableSet.copyOf(unit.getFields());
-        ImmutableSet<MethodDeclaration> M = ImmutableSet.copyOf(unit.getMethods());
-        ImmutableSet<ImportDeclaration> I = ImmutableSet.copyOf(AstUtil.getUsedImports(((CompilationUnit) unit.getRoot())));
+        ImmutableSet<TypeDeclaration>   typesSet    = ImmutableSet.copyOf(unit.getTypes());
+        ImmutableSet<FieldDeclaration>  fieldsSet   = ImmutableSet.copyOf(unit.getFields());
+        ImmutableSet<MethodDeclaration> methodsSet  = ImmutableSet.copyOf(unit.getMethods());
+        ImmutableSet<ImportDeclaration> importsSet  = ImmutableSet.copyOf(AstUtil.getUsedImports(((CompilationUnit) unit.getRoot())));
 
 
-        final Set<IBinding> RAW = Sets.newHashSet();
+        final Set<IBinding> universeSet = Sets.newHashSet();
 
-        for(TypeDeclaration t : T){
-            RAW.addAll(AstUtil.getUniqueBindings(t));
+        for(TypeDeclaration t : typesSet){
+            universeSet.addAll(AstUtil.getUniqueBindings(t));
         }
 
-        for(MethodDeclaration m : M){
-            RAW.addAll(AstUtil.getUniqueBindings(m));
+        for(MethodDeclaration m : methodsSet){
+            universeSet.addAll(AstUtil.getUniqueBindings(m));
         }
 
-        for(FieldDeclaration f : F){
-            RAW.addAll(AstUtil.getUniqueBindings(f));
+        for(FieldDeclaration f : fieldsSet){
+            universeSet.addAll(AstUtil.getUniqueBindings(f));
         }
 
-        for(ImportDeclaration i : I){
-            RAW.addAll(AstUtil.getUniqueBindings(i));
+        for(ImportDeclaration i : importsSet){
+            universeSet.addAll(AstUtil.getUniqueBindings(i));
         }
 
 
         final Set<IBinding> U   = Sets.newHashSet();
 
-        for(IBinding each: RAW){
+        for(IBinding each: universeSet){
             switch (each.getKind()){
                 case IBinding.METHOD:
                     final ASTNode m = AstUtil.findDeclaration(each, unit);
@@ -142,7 +145,7 @@ public class ClipSelection extends SourceChanger {
                         final TypeDeclaration td = AstUtil.exactCast(
                                 TypeDeclaration.class, t);
 
-                        if(td != unit && T.contains(td)){
+                        if(td != unit && typesSet.contains(td)){
                             U.add(td.resolveBinding());
                         }
 
@@ -163,30 +166,30 @@ public class ClipSelection extends SourceChanger {
 
     private static Set<IBinding> cropCodeSnippet(TypeDeclaration unit, Set<IBinding> methodBindings){
 
-        final Deque<IBinding>   Q = Lists.newLinkedList(methodBindings);
-        final Set<IBinding>     V = Sets.newHashSet();
-        final Set<IBinding>     S = Sets.newHashSet();
+        final Deque<IBinding>   queue   = Lists.newLinkedList(methodBindings);
+        final Set<IBinding>     visited = Sets.newHashSet();
+        final Set<IBinding>     slice   = Sets.newHashSet();
 
-        while(!Q.isEmpty()){
+        while(!queue.isEmpty()){
 
-            final IBinding s = Q.remove();
+            final IBinding s = queue.remove();
 
-            V.add(s);
-            S.add(s);
+            visited.add(s);
+            slice.add(s);
 
 
-            final ASTNode ss = AstUtil.findDeclaration(s, unit);
-            if(ss == null) continue;
+            final ASTNode node = AstUtil.findDeclaration(s, unit);
+            if(node == null) continue;
 
-            final Set<IBinding> bindings = AstUtil.getUniqueBindings(ss);
+            final Set<IBinding> bindings = AstUtil.getUniqueBindings(node);
             for(IBinding eachBinding: bindings){
                 ASTNode declaringNode;
                 switch (eachBinding.getKind()){
 
                     case IBinding.METHOD:
 
-                        if(!V.contains(eachBinding)){
-                            Q.add(eachBinding);
+                        if(!visited.contains(eachBinding)){
+                            queue.add(eachBinding);
                         }
 
                         break;
@@ -196,8 +199,8 @@ public class ClipSelection extends SourceChanger {
                         if(AstUtil.isField(declaringNode)){
                             final SimpleName name           = AstUtil.getSimpleName(declaringNode);
                             final IBinding   fieldBinding   = AstUtil.getDeclaration(name.resolveBinding());
-                            if(!V.contains(fieldBinding)) {
-                                Q.add(fieldBinding);
+                            if(!visited.contains(fieldBinding)) {
+                                queue.add(fieldBinding);
                             }
                         }
 
@@ -212,8 +215,8 @@ public class ClipSelection extends SourceChanger {
 
                             final ITypeBinding tb = td.resolveBinding();
 
-                            if(!V.contains(tb)){
-                                Q.add(tb);
+                            if(!visited.contains(tb)){
+                                queue.add(tb);
                             }
                         }
 
@@ -225,7 +228,7 @@ public class ClipSelection extends SourceChanger {
 
         }
 
-        return S;
+        return slice;
     }
 
 

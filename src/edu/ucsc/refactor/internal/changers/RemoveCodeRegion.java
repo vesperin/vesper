@@ -27,9 +27,13 @@ import java.util.Set;
  */
 public class RemoveCodeRegion extends SourceChanger {
     private static Set<Integer> STATEMENTS = Sets.newHashSet(
-            ASTNode.FOR_STATEMENT, ASTNode.WHILE_STATEMENT,
-            ASTNode.DO_STATEMENT, ASTNode.EXPRESSION_STATEMENT,
-            ASTNode.IF_STATEMENT, ASTNode.TRY_STATEMENT);
+            ASTNode.FOR_STATEMENT,
+            ASTNode.WHILE_STATEMENT,
+            ASTNode.DO_STATEMENT,
+            ASTNode.EXPRESSION_STATEMENT,
+            ASTNode.IF_STATEMENT,
+            ASTNode.TRY_STATEMENT
+    );
 
 
     @Override public boolean canHandle(CauseOfChange cause) {
