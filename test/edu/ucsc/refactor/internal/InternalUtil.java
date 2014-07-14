@@ -145,6 +145,36 @@ public class InternalUtil {
     }
 
 
+    public static Source createScratchedSourceForClipping(){
+
+        final String content = "class ScratchedCodeSnippet {\n" +
+                "  public static void main(String[] args) {\n" +
+                "    int[] arr = {12, 23, 43, 34, 3, 6, 7, 1, 9, 6};\n" +
+                "    {\n" +
+                "      int temp;\n" +
+                "      for (int i = 0; i < arr.length; i++) {\n" +
+                "        for (int j = 0; j < arr.length - i; j++) {\n" +
+                "          if (arr[j] > arr[j + 1]) {\n" +
+                "            temp = arr[j];\n" +
+                "            arr[j + 1] = arr[j];\n" +
+                "            arr[j + 1] = temp;\n" +
+                "          }\n" +
+                "        }\n" +
+                "      }\n" +
+                "    }\n" +
+                "    for (int i = 0; i < arr.length; i++) {\n" +
+                "      System.out.print(arr[i] + \" \");\n" +
+                "    }\n" +
+                "  }\n" +
+                "}\n";
+
+        return createSource(
+                "ScratchedCodeSnippet.java",
+                new StringBuilder(content)
+        );
+    }
+
+
     public static Source createScratchedSourceWithOneFieldAccessedInMethod(){
 
         final String content = "class ScratchedCodeSnippet {\n" +
