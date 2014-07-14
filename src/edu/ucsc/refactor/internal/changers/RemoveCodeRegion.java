@@ -4,10 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import edu.ucsc.refactor.CauseOfChange;
-import edu.ucsc.refactor.Change;
-import edu.ucsc.refactor.Location;
-import edu.ucsc.refactor.Parameter;
+import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.Delta;
 import edu.ucsc.refactor.internal.SourceChange;
 import edu.ucsc.refactor.internal.util.AstUtil;
@@ -102,13 +99,21 @@ public class RemoveCodeRegion extends SourceChanger {
     }
 
     private static void expectNoIntraDependenciesViolation(CauseOfChange cause, Set<IBinding> s) {
+
+        final SourceSelection selection = new SourceSelection(null);
         for( ASTNode eachNode : cause.getAffectedNodes()){
-            if(STATEMENTS.contains(eachNode.getNodeType())){
+            selection.add(Locations.locate(eachNode));
+        }
+
+        final Location whole = selection.toLocation();
+
+        for( ASTNode eachNode : cause.getAffectedNodes()){
+
+            if(STATEMENTS.contains(eachNode.getNodeType()) || AstUtil.isOfType(VariableDeclarationStatement.class, eachNode)){
                 final MethodDeclaration parent = AstUtil.parent(MethodDeclaration.class, eachNode);
 
 
                 final Location parentLoc = Locations.locate(parent);
-                final Location selectLoc = Locations.locate(eachNode);
 
                 final Set<IBinding> U = AstUtil.getUniqueBindings(parent);
                 final Set<IBinding> B = Sets.newHashSet();
@@ -122,13 +127,13 @@ public class RemoveCodeRegion extends SourceChanger {
                         Location nodeLoc;
                         if(AstUtil.isOfType(VariableDeclarationFragment.class, node)){
                             nodeLoc = Locations.locate(node);
-                            if(Locations.liesOutside(nodeLoc, selectLoc) && Locations.inside(parentLoc, nodeLoc)){
+                            if(Locations.liesOutside(nodeLoc, whole) && Locations.inside(parentLoc, nodeLoc)){
                                 final IBinding nb = ((VariableDeclarationFragment) node).resolveBinding();
                                 B.add(nb);
                             }
                         } else if (AstUtil.isOfType(SingleVariableDeclaration.class, node)){
                             nodeLoc = Locations.locate(node);
-                            if(Locations.liesOutside(nodeLoc, selectLoc) && Locations.inside(parentLoc, nodeLoc)){
+                            if(Locations.liesOutside(nodeLoc, whole) && Locations.inside(parentLoc, nodeLoc)){
                                 final IBinding nb = ((SingleVariableDeclaration) node).resolveBinding();
                                 B.add(nb);
                             }

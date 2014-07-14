@@ -12,10 +12,7 @@ import edu.ucsc.refactor.spi.SourceChanger;
 import edu.ucsc.refactor.util.Commit;
 import edu.ucsc.refactor.util.Locations;
 import edu.ucsc.refactor.util.Parameters;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -364,13 +361,13 @@ public class ChangersTest {
     }
 
     @Test public void testBasicClipSelection() throws Exception {
-        final Source src = InternalUtil.createScratchedSourceWithOneMethod();
+        final Source src = InternalUtil.createScratchedSourceForClipping();
 
         final Context context = new Context(src);
         parser.parseJava(context);
 
         final ProgramUnitLocator locator   = new ProgramUnitLocator(context);
-        final SourceSelection    selection = new SourceSelection(context.getSource(), 30, 358);
+        final SourceSelection    selection = new SourceSelection(context.getSource(), 31, 496);
         final List<NamedLocation>     locations = locator.locate(new SelectedUnit(selection));
 
         final SingleEdit       edit   = SingleEdit.clipSelection(selection);
@@ -386,6 +383,59 @@ public class ChangersTest {
         final SingleEdit     resolved   = Edits.resolve(edit);
 
         checkChangeCreation(remove, resolved);
+    }
+
+
+    @Test public void testRemoveSelectedBlockFromMethod() throws Exception {
+        final Source src = InternalUtil.createScratchedSourceForClipping();
+
+        final Context context = new Context(src);
+        parser.parseJava(context);
+
+        final ProgramUnitLocator locator   = new ProgramUnitLocator(context);
+        final SourceSelection    selection = new SourceSelection(context.getSource(), 76, 492);
+        final List<NamedLocation>     locations = locator.locate(new SelectedUnit(selection));
+
+        final SingleEdit       edit   = SingleEdit.deleteRegion(selection);
+        assertThat(locations.isEmpty(), is(false));
+
+        for(NamedLocation eachLocation : locations){
+            final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
+            edit.addNode(target.getNode());
+        }
+
+
+        final RemoveCodeRegion  remove  = new RemoveCodeRegion();
+        final SingleEdit     resolved   = Edits.resolve(edit);
+
+        checkChangeCreation(remove, resolved);
+    }
+
+
+    @Test public void testInvalidRemoveSelectedBlockFromMethod() throws Exception {
+        final Source src = InternalUtil.createScratchedSourceForClipping();
+
+        final Context context = new Context(src);
+        parser.parseJava(context);
+
+        final ProgramUnitLocator locator   = new ProgramUnitLocator(context);
+        final SourceSelection    selection = new SourceSelection(context.getSource(), 128, 492);
+        final List<NamedLocation>     locations = locator.locate(new SelectedUnit(selection));
+
+        final SingleEdit       edit   = SingleEdit.deleteRegion(selection);
+        assertThat(locations.isEmpty(), is(false));
+
+        for(NamedLocation eachLocation : locations){
+            final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
+            edit.addNode(target.getNode());
+        }
+
+
+        final RemoveCodeRegion  remove  = new RemoveCodeRegion();
+        final SingleEdit     resolved   = Edits.resolve(edit);
+
+        final Change  change  = remove.createChange(resolved, Parameters.newMemberName("hey"));
+        assertThat(change.isValid(), is(false));
     }
 
 
