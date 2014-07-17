@@ -54,27 +54,44 @@ public class RemoveUnusedLocalVariable extends SourceChanger {
         for(ASTNode affected : cause.getAffectedNodes()){
             final VariableDeclarationStatement declaration = AstUtil.parent(VariableDeclarationStatement.class, affected);
 
-            if(cameFromDetector){  // not used anywhere in the code
-                rewrite.remove(declaration, null);
-            } else {
-                final List fragments = declaration.fragments();
-                for(Object eachObject : fragments){
-                    final VariableDeclarationFragment fragment   = (VariableDeclarationFragment) eachObject;
-                    final SimpleName                  name       = fragment.getName();
-                    final List<SimpleName>            references = AstUtil.findByNode(root, name);
+            if(declaration != null){
+                if(cameFromDetector){  // not used anywhere in the code
+                    rewrite.remove(declaration, null);
+                } else {
+                    final List fragments = declaration.fragments();
+                    for(Object eachObject : fragments){
+                        final VariableDeclarationFragment fragment   = (VariableDeclarationFragment) eachObject;
+                        final SimpleName                  name       = fragment.getName();
+                        final List<SimpleName>            references = AstUtil.findByNode(root, name);
 
-                    if(AstUtil.isSideEffectFound(name) || references.size() > 1){
-                        throw new RuntimeException(
-                                name.getIdentifier() +
-                                        " cannot be deleted. It is referenced" +
-                                        " within the current scope!"
-                        );
-                    } else {
-                        rewrite.remove(declaration, null);
+                        if(AstUtil.isSideEffectFound(name) || references.size() > 1){
+                            throw new RuntimeException(
+                                    name.getIdentifier() +
+                                            " cannot be deleted. It is referenced" +
+                                            " within the current scope!"
+                            );
+                        } else {
+                            rewrite.remove(declaration, null);
+                        }
+
                     }
+                }
+            } else {
+                final VariableDeclarationFragment   fragment    = AstUtil.parent(VariableDeclarationFragment.class, affected);
+                final SimpleName                    name        = fragment.getName();
+                final List<SimpleName>              references  = AstUtil.findByNode(root, name);
 
+                if(AstUtil.isSideEffectFound(name) || references.size() > 1){
+                    throw new RuntimeException(
+                            name.getIdentifier() +
+                                    " cannot be deleted. It is referenced" +
+                                    " within the current scope!"
+                    );
+                } else {
+                    rewrite.remove(fragment, null);
                 }
             }
+
         }
 
 

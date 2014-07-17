@@ -656,6 +656,35 @@ public class ChangersTest {
         }
     }
 
+    @Test public void testRemoveShortNameParameter(){
+        final Source src = InternalUtil.createSourceWithShortNameMembers3();
+
+        final Context context = new Context(src);
+        parser.parseJava(context);
+
+        final SourceSelection   selection = new SourceSelection(SourceLocation.createLocation(src, src.getContents(), 170, 173));
+
+
+        final ProgramUnitLocator    locator    = new ProgramUnitLocator(context);
+        final List<NamedLocation>   locations  = locator.locate(new SelectedUnit(selection));
+
+
+        final SingleEdit       edit   = SingleEdit.deleteRegion(selection);
+        assertThat(locations.isEmpty(), is(false));
+
+        for(NamedLocation eachLocation : locations){
+            final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
+            edit.addNode(target.getNode());
+        }
+
+
+        final RemoveUnusedLocalVariable   remove      = new RemoveUnusedLocalVariable();
+        final SingleEdit                  resolved    = Edits.resolve(edit);
+
+
+        final Change            change      = remove.createChange(resolved, Maps.<String, Parameter>newHashMap());
+        assertThat(change.isValid(), is(false));
+    }
 
     @Test public void testRenameLocalVariableAndAllItsUsages(){
         final Source src = InternalUtil.createScratchedSourceWithOneMethod();

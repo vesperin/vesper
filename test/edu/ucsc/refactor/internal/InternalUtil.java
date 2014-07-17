@@ -537,6 +537,32 @@ public class InternalUtil {
     }
 
 
+    public static Source createSourceWithShortNameMembers3(){
+        String content = "class ScratchedCodeSnippet {\n" +
+                "  public static void main(String[] args) {\n" +
+                "    int[] arr = {12, 23, 43, 34, 3, 6, 7, 1, 9, 6};\n" +
+                "    {\n" +
+                "      int temp;\n" +
+                "      for (int idx = 0; idx < arr.length; idx++) {\n" +
+                "        for (int j = 0; j < arr.length - idx; j++) {\n" +
+                "          if (arr[j] > arr[j + 1]) {\n" +
+                "            temp = arr[j];\n" +
+                "            arr[j + 1] = arr[j];\n" +
+                "            arr[j + 1] = temp;\n" +
+                "          }\n" +
+                "        }\n" +
+                "      }\n" +
+                "    }\n" +
+                "    for (int idx = 0; idx < arr.length; idx++) {\n" +
+                "      System.out.print(arr[idx] + \" \");\n" +
+                "    }\n" +
+                "  }\n" +
+                "}\n";
+
+        return createSource("ScratchedCodeSnippet.java", new StringBuilder(content));
+    }
+
+
     public static Source createSourceWithShortNameMembers2(){
         String content = "class Bubblesort {\n" +
                 "  public static void sort(String[] args) {\n" +
