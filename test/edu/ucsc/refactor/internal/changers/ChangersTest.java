@@ -575,6 +575,88 @@ public class ChangersTest {
     }
 
 
+    @Test public void testRenameShortNameParameter(){
+        final Source src = InternalUtil.createSourceWithShortNameMembers();
+
+        final Context context = new Context(src);
+        parser.parseJava(context);
+
+        final List<Location>    spots     = Locations.locateWord(context.getSource(), "Quicksort");
+          final SourceSelection   selection = new SourceSelection(SourceLocation.createLocation(src, src.getContents(), 72, 74));
+//        final SourceSelection   selection = new SourceSelection(SourceLocation.createLocation(src, src.getContents(), 6, 15));
+
+
+        final ProgramUnitLocator    locator    = new ProgramUnitLocator(context);
+        final List<NamedLocation>   locations  = locator.locate(new SelectedUnit(selection));
+
+
+        final SingleEdit       edit   = SingleEdit.renameSelectedMember(selection);
+        assertThat(locations.isEmpty(), is(false));
+
+        for(NamedLocation eachLocation : locations){
+            final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
+            edit.addNode(target.getNode());
+        }
+
+
+        final RenameParam   rename      = new RenameParam();
+        final SingleEdit    resolved    = Edits.resolve(edit);
+
+
+        final Change  change  = rename.createChange(resolved, Parameters.newMemberName("start"));
+        assertThat(change.isValid(), is(true));
+
+        final Commit commit = change.perform().commit();
+
+        assertThat(commit != null, is(true));
+
+        if(commit != null){
+            assertThat(commit.isValidCommit(), is(true));
+        }
+    }
+
+
+    @Test public void testRenameShortNameParameter2(){
+        final Source src = InternalUtil.createSourceWithShortNameMembers2();
+
+        final Context context = new Context(src);
+        parser.parseJava(context);
+
+//            final SourceSelection   selection = new SourceSelection(SourceLocation.createLocation(src, src.getContents(), 72, 74));
+//            final SourceSelection   selection = new SourceSelection(SourceLocation.createLocation(src, src.getContents(), 7, 16));
+        final SourceSelection   selection = new SourceSelection(SourceLocation.createLocation(src, src.getContents(), 166, 167));
+
+
+        final ProgramUnitLocator    locator    = new ProgramUnitLocator(context);
+        final List<NamedLocation>   locations  = locator.locate(new SelectedUnit(selection));
+
+
+        final SingleEdit       edit   = SingleEdit.renameSelectedMember(selection);
+        assertThat(locations.isEmpty(), is(false));
+
+        for(NamedLocation eachLocation : locations){
+            final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
+            edit.addNode(target.getNode());
+        }
+
+
+        final RenameLocalVariable   rename      = new RenameLocalVariable();
+        final SingleEdit            resolved    = Edits.resolve(edit);
+
+
+        final Change  change  = rename.createChange(resolved, Parameters.newMemberName("start"));
+        assertThat(change.isValid(), is(true));
+
+        final Commit commit = change.perform().commit();
+
+        assertThat(commit != null, is(true));
+
+        if(commit != null){
+            assertThat(commit.isValidCommit(), is(true));
+        }
+    }
+
+
     @Test public void testRenameLocalVariableAndAllItsUsages(){
         final Source src = InternalUtil.createScratchedSourceWithOneMethod();
 

@@ -33,7 +33,12 @@ public class RenameLocalVariable extends SourceChanger {
             for(ASTNode each : cause.getAffectedNodes()){
                 if(unit == null) { unit = AstUtil.parent(MethodDeclaration.class, each); }
                 final VariableDeclarationStatement variable = AstUtil.parent(VariableDeclarationStatement.class, each);
-                change.getDeltas().add(renameVariable(variable, unit, newName, Refactoring.from(cause.getName().getKey())));
+                if(variable != null){
+                    change.getDeltas().add(renameVariable(variable, null, unit, newName, Refactoring.from(cause.getName().getKey())));
+                } else {
+                    final VariableDeclarationFragment fragment = AstUtil.parent(VariableDeclarationFragment.class, each);
+                    change.getDeltas().add(renameVariable(null, fragment, unit, newName, Refactoring.from(cause.getName().getKey())));
+                }
             }
         } catch (Throwable ex){
             change.getErrors().add(ex.getMessage());
@@ -42,7 +47,7 @@ public class RenameLocalVariable extends SourceChanger {
         return change;
     }
 
-    private Delta renameVariable(VariableDeclarationStatement variable, MethodDeclaration method, String newName, Refactoring refactoring){
+    private Delta renameVariable(VariableDeclarationStatement variable, VariableDeclarationFragment fragment, MethodDeclaration method, String newName, Refactoring refactoring){
         if(!Refactoring.RENAME_VARIABLE.isSame(refactoring)){
             throw new IllegalStateException(
                     "wrong refactoring strategy: expected RenameVariable, but got " + refactoring
@@ -54,7 +59,7 @@ public class RenameLocalVariable extends SourceChanger {
 
         final AST           ast     = method.getAST();
         final ASTRewrite    rewrite = AstUtil.createAstRewrite(ast);
-        final String        oldName = AstUtil.getSimpleName(variable);
+        final String        oldName = fragment != null ? fragment.getName().getIdentifier(): AstUtil.getSimpleName(variable);
         final Source        src     = Source.from(method);
 
 
@@ -76,7 +81,7 @@ public class RenameLocalVariable extends SourceChanger {
 
         rewrite.replace(method, copy, null);
 
-        return createDelta(variable, rewrite);
+        return createDelta((fragment == null && variable != null ? variable : fragment), rewrite);
     }
 
     private static void checkNameIsNotTaken(MethodDeclaration methodDeclaration, List declaredVariables, String newName) {

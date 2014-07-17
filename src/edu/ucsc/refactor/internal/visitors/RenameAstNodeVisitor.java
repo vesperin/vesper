@@ -84,7 +84,7 @@ public class RenameAstNodeVisitor extends ASTVisitor {
             if(!(node.getParent() instanceof FieldAccess)){ // local variables
                 if(node.getParent() instanceof ArrayAccess){
                     final ArrayAccess arrayAccess = AstUtil.parent(ArrayAccess.class, node);
-                    if(arrayAccess.getArray() == node){
+                    if(arrayAccess.getArray() == node || arrayAccess.getIndex() == node){
                         node.setIdentifier(newName);
                     }
                 } else {
@@ -116,7 +116,7 @@ public class RenameAstNodeVisitor extends ASTVisitor {
                 }
             } else if(node.getParent() instanceof ArrayAccess){
                 final ArrayAccess arrayAccess = AstUtil.parent(ArrayAccess.class, node);
-                if(arrayAccess.getArray() == node){
+                if(arrayAccess.getArray() == node || arrayAccess.getIndex() == node){
                     node.setIdentifier(newName);
                 }
             }
@@ -139,12 +139,22 @@ public class RenameAstNodeVisitor extends ASTVisitor {
                 }
             } else if(node.getParent() instanceof ArrayAccess){
                 final ArrayAccess arrayAccess = AstUtil.parent(ArrayAccess.class, node);
-                if(arrayAccess.getArray() == node){
+                if(arrayAccess.getArray() == node || arrayAccess.getIndex() == node){
+                    node.setIdentifier(newName);
+                }
+            } else if(node.getParent() instanceof InfixExpression){
+                final InfixExpression infix = AstUtil.parent(InfixExpression.class, node);
+                if(infix.getLeftOperand() == node || infix.getRightOperand() == node){
+                    node.setIdentifier(newName);
+                }
+            } else if(node.getParent() instanceof PostfixExpression){
+                final PostfixExpression postfix = AstUtil.parent(PostfixExpression.class, node);
+                if(postfix.getOperand() == node){
                     node.setIdentifier(newName);
                 }
             }
         } else {
-            if(declaration.getParent() instanceof VariableDeclarationStatement){
+            if(declaration.getParent() instanceof VariableDeclarationStatement || AstUtil.isOfType(VariableDeclarationFragment.class, declaration)){
                 node.setIdentifier(newName);
             }
         }
