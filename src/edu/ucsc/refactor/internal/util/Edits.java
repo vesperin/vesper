@@ -57,9 +57,19 @@ public class Edits {
             } else if(AstUtil.isLocalVariable(node)){
                 final VariableDeclaration           variableDeclaration = AstUtil.getVariableDeclaration(node);
                 final VariableDeclarationStatement  declaration         = AstUtil.parent(VariableDeclarationStatement.class, variableDeclaration);
-                final Location                      location            = Locations.locate(declaration);
-                resolved = SingleEdit.renameLocalVariable(new SourceSelection(location));
-                resolved.addNode(declaration);
+
+                final Location location;
+                if(declaration == null){
+                    final VariableDeclarationFragment  fragment         = AstUtil.parent(VariableDeclarationFragment.class, variableDeclaration);
+                    location            = Locations.locate(fragment);
+                    resolved = SingleEdit.renameLocalVariable(new SourceSelection(location));
+                    resolved.addNode(fragment);
+                } else {
+                    location            = Locations.locate(declaration);
+                    resolved = SingleEdit.renameLocalVariable(new SourceSelection(location));
+                    resolved.addNode(declaration);
+                }
+
             } else {
                 throw new RuntimeException("invalid selection");
             }

@@ -509,6 +509,59 @@ public class InternalUtil {
 
     }
 
+
+    public static Source createSourceWithShortNameMembers(){
+        final String content = "class Quicksort {\n" +
+                "  public static void qsort(int[] arrayOfIntegers, int si, int ei) {\n" +
+                "    if (ei <= si || si >= ei) {\n" +
+                "    } else {\n" +
+                "      int pivot = arrayOfIntegers[si];\n" +
+                "      int i = si + 1;\n" +
+                "      int tmp;\n" +
+                "      for (int j = si + 1; j <= ei; j++) {\n" +
+                "        if (pivot > arrayOfIntegers[j]) {\n" +
+                "          tmp = arrayOfIntegers[j];\n" +
+                "          arrayOfIntegers[j] = arrayOfIntegers[i];\n" +
+                "          arrayOfIntegers[i] = tmp;\n" +
+                "          i++;\n" +
+                "        }\n" +
+                "      }\n" +
+                "      arrayOfIntegers[si] = arrayOfIntegers[i - 1];\n" +
+                "      arrayOfIntegers[i - 1] = pivot;\n" +
+                "      qsort(arrayOfIntegers, si, i - 2);\n" +
+                "      qsort(arrayOfIntegers, i, ei);\n" +
+                "    }\n" +
+                "  }\n" +
+                "}\n";
+        return createSource("Quicksort.java", new StringBuilder(content));
+    }
+
+
+    public static Source createSourceWithShortNameMembers2(){
+        String content = "class Bubblesort {\n" +
+                "  public static void sort(String[] args) {\n" +
+                "    int[] arrayOfIntegers = {12, 23, 43, 34, 3, 6, 7, 1, 9, 6};\n" +
+                "    {\n" +
+                "      int tempVar;\n" +
+                "      for (int i = 0; i < arrayOfIntegers.length; i++) {\n" +
+                "        for (int j = 0; j < arrayOfIntegers.length - i; j++) {\n" +
+                "          if (arrayOfIntegers[j] > arrayOfIntegers[j + 1]) {\n" +
+                "            tempVar = arrayOfIntegers[j];\n" +
+                "            arrayOfIntegers[j + 1] = arrayOfIntegers[j];\n" +
+                "            arrayOfIntegers[j + 1] = tempVar;\n" +
+                "          }\n" +
+                "        }\n" +
+                "      }\n" +
+                "    }\n" +
+                "    for (int i = 0; i < arrayOfIntegers.length; i++) {\n" +
+                "      System.out.print(arrayOfIntegers[i] + \" \");\n" +
+                "    }\n" +
+                "  }\n" +
+                "}\n";
+
+        return createSource("BubbleSort.java", new StringBuilder(content));
+    }
+
     public static Source createSource(String name, StringBuilder builder){
         return new Source(name, builder.toString());
     }
