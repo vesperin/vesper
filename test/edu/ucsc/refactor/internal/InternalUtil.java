@@ -588,6 +588,35 @@ public class InternalUtil {
         return createSource("BubbleSort.java", new StringBuilder(content));
     }
 
+    public static Source createSortingFromLowestToHighest(){
+        String content = "import java.util.*;\n" +
+                "import java.lang.*;\n" +
+                "\n" +
+                "class Sorting {\n" +
+                "  private Sorting() {\n" +
+                "    throw new Error(\"This class cannot be instantiated; it is a util class!\");\n" +
+                "  }\n" +
+                "\n" +
+                "  static void sort(Integer[] arr) {\n" +
+                "    Arrays.sort(arr, new Comparator<Integer>() {\n" +
+                "      @Override\n" +
+                "      public int compare(Integer x, Integer y) {\n" +
+                "        return x - y;\n" +
+                "      }\n" +
+                "    });\n" +
+                "  }\n" +
+                "\n" +
+                "  public static void main(String... args) {\n" +
+                "    Integer[] arr = {12, 67, 1, 34, 9, 78, 6, 31};\n" +
+                "    Sorting.sort(arr);\n" +
+                "    System.out.println(\"low to high:\" + Arrays.toString(arr));\n" +
+                "  }\n" +
+                "\n" +
+                "}\n";
+
+        return createSource("Sorting.java", new StringBuilder(content));
+    }
+
     public static Source createSource(String name, StringBuilder builder){
         return new Source(name, builder.toString());
     }

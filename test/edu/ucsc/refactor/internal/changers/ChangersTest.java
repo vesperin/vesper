@@ -730,6 +730,45 @@ public class ChangersTest {
     }
 
 
+    @Test public void testRenameClassAndAllItsUsages(){
+        final Source src = InternalUtil.createSortingFromLowestToHighest();
+
+        final Context context = new Context(src);
+        parser.parseJava(context);
+
+        final SourceSelection     selection = new SourceSelection(SourceLocation.createLocation(src, src.getContents(), 47, 54));
+
+
+        final ProgramUnitLocator    locator    = new ProgramUnitLocator(context);
+        final List<NamedLocation>   locations  = locator.locate(new SelectedUnit(selection));
+
+
+        final SingleEdit       edit   = SingleEdit.renameSelectedMember(selection);
+        assertThat(locations.isEmpty(), is(false));
+
+        for(NamedLocation eachLocation : locations){
+            final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
+            edit.addNode(target.getNode());
+        }
+
+
+        final RenameClassOrInterface    rename      = new RenameClassOrInterface();
+        final SingleEdit                resolved    = Edits.resolve(edit);
+
+
+        final Change  change  = rename.createChange(resolved, Parameters.newMemberName("SortingFromLowestToHighest"));
+        assertThat(change.isValid(), is(true));
+
+        final Commit commit = change.perform().commit();
+
+        assertThat(commit != null, is(true));
+
+        if(commit != null){
+            assertThat(commit.isValidCommit(), is(true));
+        }
+    }
+
+
 
     @Test public void testRenameFieldAndAllItsUsages(){
         final Source src = InternalUtil.createScratchedSourceWithOneFieldAccessedInMethod();
