@@ -614,8 +614,14 @@ public class ChangersTest {
         assertThat(change.isValid(), is(true));
 
         final Commit commit = change.perform().commit();
-
         assertThat(commit != null, is(true));
+
+        final Introspector i = Vesper.createRefactorer().getIntrospector();
+        assert commit != null;
+        final Set<Issue> issues = i.detectIssues(commit.getSourceAfterChange());
+
+        assertThat(issues.isEmpty(), is(false));
+
     }
 
 
