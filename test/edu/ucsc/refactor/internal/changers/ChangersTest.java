@@ -612,6 +612,10 @@ public class ChangersTest {
         edit.addNode(context.getCompilationUnit());
         final Change              change = remove.createChange(edit, Maps.<String, Parameter>newHashMap());
         assertThat(change.isValid(), is(true));
+
+        final Commit commit = change.perform().commit();
+
+        assertThat(commit != null, is(true));
     }
 
 
