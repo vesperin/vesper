@@ -575,6 +575,46 @@ public class ChangersTest {
     }
 
 
+    @Test public void testBasicAdv5ClipSelection() throws Exception {
+        final Source src = InternalUtil.createSourceWithStaticNestedClass_ClippingEntireInnerClass();
+
+        final Context context = new Context(src);
+        parser.parseJava(context);
+
+        final ProgramUnitLocator locator   = new ProgramUnitLocator(context);
+        final SourceSelection    selection = new SourceSelection(context.getSource(), 1169, 1430);
+        final List<NamedLocation>     locations = locator.locate(new SelectedUnit(selection));
+
+        final SingleEdit       edit   = SingleEdit.clipSelection(selection);
+        assertThat(locations.isEmpty(), is(false));
+
+        for(NamedLocation eachLocation : locations){
+            final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
+            edit.addNode(target.getNode());
+        }
+
+
+        final ClipSelection  remove     = new ClipSelection();
+        final SingleEdit     resolved   = Edits.resolve(edit);
+
+        checkChangeCreation(remove, resolved);
+    }
+
+
+    @Test public void testUnusedImportsRemoval(){
+        final Source src = InternalUtil.createToSortSource();
+
+        final Context context = new Context(src);
+        parser.parseJava(context);
+
+        final RemoveUnusedImports remove = new RemoveUnusedImports();
+        final SingleEdit          edit   = SingleEdit.optimizeImports(src);
+        edit.addNode(context.getCompilationUnit());
+        final Change              change = remove.createChange(edit, Maps.<String, Parameter>newHashMap());
+        assertThat(change.isValid(), is(true));
+    }
+
+
     @Test public void testRenameShortNameParameter(){
         final Source src = InternalUtil.createSourceWithShortNameMembers();
 

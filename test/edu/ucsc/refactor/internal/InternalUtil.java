@@ -617,6 +617,119 @@ public class InternalUtil {
         return createSource("Sorting.java", new StringBuilder(content));
     }
 
+    public static Source createSourceWithStaticNestedClass_ClippingEntireInnerClass(){
+       String content = "import java.util.ArrayList;\n" +
+               "import java.util.Collections;\n" +
+               "import java.util.List;\n" +
+               "\n" +
+               "public class Runme {\n" +
+               "\n" +
+               "  public static void main(String args[]) {\n" +
+               "\n" +
+               "    ToSort toSort1 = new ToSort(new Float(3), \"3\");\n" +
+               "    ToSort toSort2 = new ToSort(new Float(6), \"6\");\n" +
+               "    ToSort toSort3 = new ToSort(new Float(9), \"9\");\n" +
+               "    ToSort toSort4 = new ToSort(new Float(1), \"1\");\n" +
+               "    ToSort toSort5 = new ToSort(new Float(5), \"5\");\n" +
+               "    ToSort toSort6 = new ToSort(new Float(0), \"0\");\n" +
+               "    ToSort toSort7 = new ToSort(new Float(3), \"3\");\n" +
+               "    ToSort toSort8 = new ToSort(new Float(-3), \"-3\");\n" +
+               "\n" +
+               "    List<ToSort> sortList = new ArrayList<ToSort>();\n" +
+               "    sortList.add(toSort1);\n" +
+               "    sortList.add(toSort2);\n" +
+               "    sortList.add(toSort3);\n" +
+               "    sortList.add(toSort4);\n" +
+               "    sortList.add(toSort5);\n" +
+               "    sortList.add(toSort6);\n" +
+               "    sortList.add(toSort7);\n" +
+               "    sortList.add(toSort8);\n" +
+               "\n" +
+               "    Collections.sort(sortList);\n" +
+               "\n" +
+               "    for (ToSort toSort : sortList) {\n" +
+               "      System.out.println(toSort.toString());\n" +
+               "    }\n" +
+               "  }\n" +
+               "\n" +
+               "  public static class ToSort implements Comparable {\n" +
+               "\n" +
+               "    private Float val;\n" +
+               "    private String id;\n" +
+               "\n" +
+               "    public ToSort(Float val, String id) {\n" +
+               "      this.val = val;\n" +
+               "      this.id = id;\n" +
+               "    }\n" +
+               "\n" +
+               "    @Override\n" +
+               "    public int compareTo(Object o) {\n" +
+               "\n" +
+               "      ToSort f = (ToSort) o;\n" +
+               "\n" +
+               "      if (val.floatValue() > f.val.floatValue()) {\n" +
+               "        return 1;\n" +
+               "      } else if (val.floatValue() < f.val.floatValue()) {\n" +
+               "        return -1;\n" +
+               "      } else {\n" +
+               "        return 0;\n" +
+               "      }\n" +
+               "\n" +
+               "    }\n" +
+               "\n" +
+               "    @Override\n" +
+               "    public String toString() {\n" +
+               "      return this.id;\n" +
+               "    }\n" +
+               "  }\n" +
+               "\n" +
+               "}\n";
+
+        return createSource("Runme.java", new StringBuilder(content));
+    }
+
+    public static Source createToSortSource(){
+        String content = "import java.util.ArrayList;\n" +
+                "import java.util.Collections;\n" +
+                "import java.util.List;\n" +
+                "import java.util.*;\n" +
+                "\n" +
+                "public class ToSort implements Comparable {\n" +
+                "\n" +
+                "    private Float val;\n" +
+                "    private String id;\n" +
+                "\n" +
+                "    public ToSort(Float val, String id) {\n" +
+                "      this.val = val;\n" +
+                "      this.id = id;\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    public int compareTo(Object o) {\n" +
+                "\n" +
+                "      ToSort f = (ToSort) o;\n" +
+                "\n" +
+                "      if (val.floatValue() > f.val.floatValue()) {\n" +
+                "        return 1;\n" +
+                "      } else if (val.floatValue() < f.val.floatValue()) {\n" +
+                "        return -1;\n" +
+                "      } else {\n" +
+                "        return 0;\n" +
+                "      }\n" +
+                "\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    public String toString() {\n" +
+                "      return this.id;\n" +
+                "    }\n" +
+                "  }";
+
+        return createSource("ToSort.java", new StringBuilder(content));
+    }
+
+
+
     public static Source createSource(String name, StringBuilder builder){
         return new Source(name, builder.toString());
     }
