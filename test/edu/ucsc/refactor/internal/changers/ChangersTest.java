@@ -315,6 +315,20 @@ public class ChangersTest {
     }
 
 
+    @Test public void testChangerForOptimizeImports2() throws Exception {
+        final Source  code    = InternalUtil.createSourceWithOptimizationBug();
+        final Context context = new Context(code);
+
+        parser.parseJava(context);
+
+        final RemoveUnusedImports remove = new RemoveUnusedImports();
+        final SingleEdit          edit   = SingleEdit.optimizeImports(code);
+        edit.addNode(context.getCompilationUnit());
+        final Change              change = remove.createChange(edit, Maps.<String, Parameter>newHashMap());
+        assertThat(change.isValid(), is(true));
+    }
+
+
     @Test public void testRemoveDetectedUnusedField(){
         final Context context = new Context(
                 InternalUtil.createSourceWithUnusedField()

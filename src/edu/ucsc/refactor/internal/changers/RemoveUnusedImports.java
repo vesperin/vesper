@@ -70,7 +70,7 @@ public class RemoveUnusedImports extends SourceChanger {
         } else {
             final Set<ASTNode> unusedImports = AstUtil.getUnusedImports(root);
             if(unusedImports.isEmpty()){
-                throw new RuntimeException("there is nothing to optimize");
+              System.out.println("There is nothing to optimize!");
             }
 
             for(ASTNode eachUsed : unusedImports){

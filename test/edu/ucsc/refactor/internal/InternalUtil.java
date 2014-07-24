@@ -729,6 +729,107 @@ public class InternalUtil {
     }
 
 
+    public static Source createSourceWithOptimizationBug(){
+        String content = "import java.util.*;\n" +
+                "import java.lang.*;\n" +
+                "import java.util.regex.*;\n" +
+                "import java.text.*; \n" +
+                "class Tunein {\n" +
+                "  public static void main(String[] args) throws Exception {\n" +
+                "    List<String> values = new ArrayList<String>();\n" +
+                "    values.add(\"AB\");\n" +
+                "    values.add(\"A012B\");\n" +
+                "    values.add(\"CD\");\n" +
+                "    values.add(\"1\");\n" +
+                "    values.add(\"10\");\n" +
+                "    values.add(\"01\");\n" +
+                "    values.add(\"9\");\n" +
+                "\n" +
+                "    int maxLen = 0;\n" +
+                "    for (String string : values) {\n" +
+                "        if (string.length() > maxLen) {\n" +
+                "            maxLen = string.length();\n" +
+                "        }\n" +
+                "    }\n" +
+                "\n" +
+                "    Collections.sort(values, new MyComparator(maxLen));\n" +
+                "\n" +
+                "    System.out.println(values);\n" +
+                "}\n" +
+                "  \n" +
+                "  public static String leftPad(String stringToPad, String padder, Integer size) {\n" +
+                "\n" +
+                "    final StringBuilder strb = new StringBuilder(size.intValue());\n" +
+                "    final StringCharacterIterator sci = new StringCharacterIterator(padder);\n" +
+                "\n" +
+                "    while (strb.length() < (size.intValue() - stringToPad.length())) {\n" +
+                "        for (char ch = sci.first(); ch != CharacterIterator.DONE; ch = sci.next()) {\n" +
+                "            if (strb.length() < (size.intValue() - stringToPad.length())) {\n" +
+                "                strb.insert(strb.length(), String.valueOf(ch));\n" +
+                "            }\n" +
+                "        }\n" +
+                "    }\n" +
+                "\n" +
+                "    return strb.append(stringToPad).toString();\n" +
+                "}\n" +
+                "  \n" +
+                "  public static class MyComparator implements Comparator<String> {\n" +
+                "    private int maxLen;\n" +
+                "    private static final String REGEX = \"[0-9]+\";\n" +
+                "\n" +
+                "    public MyComparator(int maxLen) {\n" +
+                "        this.maxLen = maxLen;\n" +
+                "\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    public int compare(String obj1, String obj2) {\n" +
+                "        String o1 = obj1;\n" +
+                "        String o2 = obj2;\n" +
+                "        // both numbers\n" +
+                "        if (o1.matches(\"[1-9]+\") && o2.matches(\"[1-9]+\")) {\n" +
+                "            Integer integer1 = Integer.valueOf(o1);\n" +
+                "            Integer integer2 = Integer.valueOf(o2);\n" +
+                "            return integer1.compareTo(integer2);\n" +
+                "        }\n" +
+                "\n" +
+                "        // both string\n" +
+                "        if (o1.matches(\"[a-zA-Z]+\") && o2.matches(\"[a-zA-Z]+\")) {\n" +
+                "            return o1.compareTo(o2);\n" +
+                "        }\n" +
+                "\n" +
+                "        Pattern p = Pattern.compile(REGEX);\n" +
+                "        Matcher m1 = p.matcher(o1);\n" +
+                "        Matcher m2 = p.matcher(o2);\n" +
+                "\n" +
+                "        List<String> list = new ArrayList<String>();\n" +
+                "        while (m1.find()) {\n" +
+                "            list.add(m1.group());\n" +
+                "        }\n" +
+                "        for (String string : list) {\n" +
+                "            o1.replaceFirst(string, leftPad(string, \"0\", maxLen));\n" +
+                "        }\n" +
+                "\n" +
+                "        list.clear();\n" +
+                "\n" +
+                "        while (m2.find()) {\n" +
+                "            list.add(m2.group());\n" +
+                "        }\n" +
+                "        for (String string : list) {\n" +
+                "            o2.replaceFirst(string, leftPad(string, \"0\", maxLen));\n" +
+                "        }\n" +
+                "        return o1.compareTo(o2);\n" +
+                "\n" +
+                "    }\n" +
+                "}\n" +
+                "\n" +
+                "\n" +
+                "}";
+
+        return createSource("Tunein.java", new StringBuilder(content));
+    }
+
+
 
     public static Source createSource(String name, StringBuilder builder){
         return new Source(name, builder.toString());
