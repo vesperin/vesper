@@ -636,6 +636,33 @@ public class ChangersTest {
     }
 
 
+    @Test public void testAdv6ClipSelection(){
+        final Source  code    = InternalUtil.createSourceForClippingAtClassLevel();
+        final Context context = new Context(code);
+
+        parser.parseJava(context);
+
+        final ProgramUnitLocator  locator   = new ProgramUnitLocator(context);
+        final SourceSelection     selection = new SourceSelection(SourceLocation.createLocation(code, code.getContents(), 41, 723));
+        final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
+
+        final SingleEdit       edit = SingleEdit.clipSelection(selection);
+
+
+        assertThat(locations.isEmpty(), is(false));
+
+        for(NamedLocation eachLocation : locations){
+            final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
+            edit.addNode(target.getNode());
+        }
+
+        final ClipSelection  remove     = new ClipSelection();
+        final SingleEdit     resolved   = Edits.resolve(edit);
+
+        checkChangeCreation(remove, resolved, false);
+    }
+
+
     @Test public void testUnusedImportsRemoval(){
         final Source src = InternalUtil.createToSortSource();
 
@@ -1538,16 +1565,20 @@ public class ChangersTest {
         checkChangeCreation(rename, resolved);
     }
 
-    private static void checkChangeCreation(SourceChanger changer, SingleEdit resolved){
+    private static void  checkChangeCreation(SourceChanger changer, SingleEdit resolved){
+       checkChangeCreation(changer, resolved, true);
+    }
+
+    private static void checkChangeCreation(SourceChanger changer, SingleEdit resolved, boolean target){
         final Change  change  = changer.createChange(resolved, Parameters.newMemberName("hey"));
-        assertThat(change.isValid(), is(true));
+        assertThat(change.isValid(), is(target));
 
         final Commit commit = change.perform().commit();
 
         assertThat(commit != null, is(true));
 
         if(commit != null){
-            assertThat(commit.isValidCommit(), is(true));
+            assertThat(commit.isValidCommit(), is(target));
         }
     }
 

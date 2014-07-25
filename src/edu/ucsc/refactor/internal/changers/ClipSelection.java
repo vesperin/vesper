@@ -70,7 +70,18 @@ public class ClipSelection extends SourceChanger {
 
 
     private Delta cropCodeRegionNotInClippedRegion(TypeDeclaration unit, ASTRewrite rewrite, CauseOfChange cause){
-       return cropCodeRegionNotInClippedRegion(unit, rewrite, cause.getAffectedNodes());
+        final List<ASTNode> affectedNodes = cause.getAffectedNodes();
+        ensureNoWholeClassSelection(affectedNodes);
+        return cropCodeRegionNotInClippedRegion(unit, rewrite, affectedNodes);
+    }
+
+
+    private static void ensureNoWholeClassSelection(List<ASTNode> affectedNodes){
+        for(ASTNode each : affectedNodes){
+            if(AstUtil.isClass(each)) {
+                throw new RuntimeException("Classes are not clipable. Only methods are.");
+            }
+        }
     }
 
     private Set<IBinding> collectMethodDeclarations(List<ASTNode> affectedNodes) {

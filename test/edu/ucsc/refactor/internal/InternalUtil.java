@@ -319,6 +319,35 @@ public class InternalUtil {
     }
 
 
+    public static Source createSourceForClippingAtClassLevel(){
+        String content = "import java.util.*;\n" +
+                "import java.lang.*;\n" +
+                "\n" +
+                "class ComparatorSorter {\n" +
+                "  private static <K, V extends Comparable<V>> Map<K, V> sortByComparator(Map<K, V> unsortMap) {\n" +
+                "    List<Map.Entry<K, V>> list = new LinkedList<Map.Entry<K, V>>(unsortMap.entrySet());\n" +
+                "    Collections.sort(list, new Comparator<Map.Entry<K, V>>() {\n" +
+                "      @Override\n" +
+                "      public int compare(Map.Entry<K, V> o1, Map.Entry<K, V> o2) {\n" +
+                "        return o1.getValue().compareTo(o2.getValue());\n" +
+                "      }\n" +
+                "    });\n" +
+                "    Map<K, V> sortedMap = new LinkedHashMap<K, V>();\n" +
+                "    for (Iterator<Map.Entry<K, V>> it = list.iterator(); it.hasNext();) {\n" +
+                "      Map.Entry<K, V> entry = it.next();\n" +
+                "      sortedMap.put(entry.getKey(), entry.getValue());\n" +
+                "    }\n" +
+                "    return sortedMap;\n" +
+                "  }\n" +
+                "}";
+
+        return createSource(
+                "ComparatorSorter.java",
+                new StringBuilder(content)
+        );
+    }
+
+
     public static Source createSourceWithJavaDocs(){
         return createSource(
                 "Name.java",
