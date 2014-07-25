@@ -64,37 +64,42 @@ public class DeduplicateCode extends SourceChanger {
         if (cloneNumber == 0) {
             throw new RuntimeException("calling deduplicate() when there are no detected clones");
         } else if (cloneNumber >= 1) {
+            // NOTE: THIS WORKS ONLY AT METHOD LEVEL, other forms of duplication will
+            // will be ignored.
+
             // The strategy this code follows to perform deduplication is the following:
             // per duplicated method declaration, find all of its invocations. Then
             // rename each found invocation using the name of the original method declaration.
             // After that, remove the duplicated method declaration.
-            final MethodDeclaration original    = AstUtil.exactCast(MethodDeclaration.class, nodes.get(0));
-            final Iterable<ASTNode> rest        = Iterables.skip(nodes, 1);
-            for(ASTNode eachClone : rest) {
-                final MethodDeclaration duplicate  = AstUtil.exactCast(MethodDeclaration.class, eachClone);
-                final MethodDeclaration copied     = AstUtil.copySubtree(MethodDeclaration.class, root.getAST(), duplicate);
-                final boolean           sameReturn = sameReturnType(original, copied);
+            if(AstUtil.isOfType(MethodDeclaration.class, nodes.get(0))){
+                final MethodDeclaration original    = AstUtil.exactCast(MethodDeclaration.class, nodes.get(0));
+                final Iterable<ASTNode> rest        = Iterables.skip(nodes, 1);
+                for(ASTNode eachClone : rest) {
+                    final MethodDeclaration duplicate  = AstUtil.exactCast(MethodDeclaration.class, eachClone);
+                    final MethodDeclaration copied     = AstUtil.copySubtree(MethodDeclaration.class, root.getAST(), duplicate);
+                    final boolean           sameReturn = sameReturnType(original, copied);
 
-                if(!sameReturn) { // all or none. We don't do partial deduplication
-                    throw new RuntimeException("automatic deduplication cannot be done on methods "
-                            + "with different return types; please consider "
-                            + "manual deduplication."
-                    );
+                    if(!sameReturn) { // all or none. We don't do partial deduplication
+                        throw new RuntimeException("automatic deduplication cannot be done on methods "
+                                + "with different return types; please consider "
+                                + "manual deduplication."
+                        );
+                    }
+
+
+                    final MethodInvocationVisitor invokesOfDuplication = new MethodInvocationVisitor(copied.getName());
+                    root.accept(invokesOfDuplication);
+                    final Set<MethodInvocation>   invokes              = invokesOfDuplication.getMethodInvocations();
+
+                    for(MethodInvocation each : invokes){
+                        final MethodInvocation copiedInvoke = AstUtil.copySubtree(MethodInvocation.class, root.getAST(), each);
+                        copiedInvoke.setName(root.getAST().newSimpleName(original.getName().getIdentifier()));
+                        rewrite.replace(each, copiedInvoke, null);
+                    }
+
+
+                    rewrite.remove(duplicate, null);
                 }
-
-
-                final MethodInvocationVisitor invokesOfDuplication = new MethodInvocationVisitor(copied.getName());
-                root.accept(invokesOfDuplication);
-                final Set<MethodInvocation>   invokes              = invokesOfDuplication.getMethodInvocations();
-
-                for(MethodInvocation each : invokes){
-                    final MethodInvocation copiedInvoke = AstUtil.copySubtree(MethodInvocation.class, root.getAST(), each);
-                    copiedInvoke.setName(root.getAST().newSimpleName(original.getName().getIdentifier()));
-                    rewrite.replace(each, copiedInvoke, null);
-                }
-
-
-                rewrite.remove(duplicate, null);
             }
         }
 

@@ -329,6 +329,27 @@ public class ChangersTest {
     }
 
 
+    @Test public void testChangerForDeduplicationError() throws Exception {
+        final Source  code    = InternalUtil.createSourceWithOptimizationBug();
+        final Context context = new Context(code);
+
+        parser.parseJava(context);
+
+        final DuplicatedCode detector = new DuplicatedCode();
+        final Set<Issue>        issues   = detector.detectIssues(context);
+
+        assertThat(issues.size() > 0, is(true));
+
+
+        final DeduplicateCode remove = new DeduplicateCode();
+        for(Issue each : issues){
+            Change change = remove.createChange(each, Maps.<String, Parameter>newHashMap());
+            assertNotNull(change);
+            assertThat(change.isValid(), is(true));
+        }
+    }
+
+
     @Test public void testRemoveDetectedUnusedField(){
         final Context context = new Context(
                 InternalUtil.createSourceWithUnusedField()
