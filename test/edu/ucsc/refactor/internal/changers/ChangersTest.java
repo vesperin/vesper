@@ -7,6 +7,7 @@ import edu.ucsc.refactor.internal.*;
 import edu.ucsc.refactor.internal.detectors.*;
 import edu.ucsc.refactor.internal.util.AstUtil;
 import edu.ucsc.refactor.internal.util.Edits;
+import edu.ucsc.refactor.internal.visitors.SimpleNameVisitor;
 import edu.ucsc.refactor.spi.JavaParser;
 import edu.ucsc.refactor.spi.SourceChanger;
 import edu.ucsc.refactor.util.Commit;
@@ -17,6 +18,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -1563,6 +1565,54 @@ public class ChangersTest {
         final SingleEdit     resolved    = Edits.resolve(edit);
 
         checkChangeCreation(rename, resolved);
+    }
+
+    @Test public void testRecoveryOfStatementsFromBrokenCodeSnippet() throws Exception {
+        final Source  code    = InternalUtil.createSourceWithMissingImports();
+        final Context context = new Context(code);
+
+        parser.parseJava(context);
+
+        final CompilationUnit unit = context.getCompilationUnit();
+
+
+        final SimpleNameVisitor visitor = new SimpleNameVisitor(Locations.locate(unit));
+        context.accept(visitor);
+
+        final Set<String> BINDINGS = new HashSet<String>();
+        for(SimpleName name : visitor.getNames()){
+            final IBinding binding = AstUtil.getDeclaration(name.resolveBinding());
+            if(binding != null && IBinding.TYPE == binding.getKind()){
+                BINDINGS.add(binding.getName());
+            }
+        }
+
+        assertThat(BINDINGS.isEmpty(), is(false));
+
+        final Introspector introspector = Vesper.createRefactorer().getIntrospector(code);
+        final Set<String>  required     = introspector.findMissingImports(context);
+        assertThat(required.size(), is(1));
+
+    }
+
+
+    @Test public void testRecoveryOfStatementsFromOnlyStatementsCodeSnippet() throws Exception {
+        final Source  code    = InternalUtil.createSourceWithOnlyStatements();
+        final Context context = new Context(code);
+
+        parser.parseJava(context, EclipseJavaParser.PARSE_STATEMENTS);
+
+        final CompilationUnit compilationUnit = context.getCompilationUnit();
+
+        final Set<String> imports  = AstUtil.getUsedTypesInCode(compilationUnit);
+        assertThat(imports.size(), is(9));
+
+        final Introspector introspector = Vesper.createRefactorer().getIntrospector(code);
+        final Set<String>  required     = introspector.findMissingImports(context);
+        assertThat(required.isEmpty(), is(false));
+
+        final Set<String> staticImports  = AstUtil.getUsedStaticTypesInCode(compilationUnit);
+        assertThat(staticImports.size(), is(0));
     }
 
     private static void  checkChangeCreation(SourceChanger changer, SingleEdit resolved){

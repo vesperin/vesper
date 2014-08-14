@@ -204,9 +204,7 @@ public class AstUtil {
     }
 
     public static Set<ASTNode> getUnusedImports(CompilationUnit unit){
-        final boolean visitJavaDocTags  = AstUtil.processJavadocComments(unit);
-        final ImportsReferencesVisitor visitor = new ImportsReferencesVisitor(visitJavaDocTags);
-        unit.accept(visitor);
+        final ImportsReferencesVisitor visitor = createImportsReferencesVisitor(unit);
 
         final Set<String> importNames   = visitor.getImportNames();
         final Set<String> staticNames   = visitor.getStaticImportNames();
@@ -408,6 +406,27 @@ public class AstUtil {
                 ||  AstUtil.getTypeDeclaration(node) != null;
     }
 
+
+    private static ImportsReferencesVisitor createImportsReferencesVisitor(CompilationUnit unit){
+        final boolean visitJavaDocTags  = AstUtil.processJavadocComments(unit);
+        final ImportsReferencesVisitor visitor = new ImportsReferencesVisitor(visitJavaDocTags);
+        unit.accept(visitor);
+
+        return visitor;
+    }
+
+
+    public static Set<String> getUsedTypesInCode(CompilationUnit unit){
+        final ImportsReferencesVisitor visitor = createImportsReferencesVisitor(unit);
+
+        return visitor.getImportNames();
+    }
+
+
+    public static Set<String> getUsedStaticTypesInCode(CompilationUnit unit){
+        final ImportsReferencesVisitor visitor = createImportsReferencesVisitor(unit);
+        return visitor.getStaticImportNames();
+    }
 
     public static List<ASTNode> getChildren(ASTNode node) {
         final List<ASTNode> result = Lists.newArrayList();

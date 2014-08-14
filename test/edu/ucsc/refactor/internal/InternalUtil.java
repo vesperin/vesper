@@ -283,6 +283,33 @@ public class InternalUtil {
         );
     }
 
+    public static Source createSourceWithMissingImports(){
+        return createSource(
+                "Name.java",
+                new StringBuilder("class Name implements Comparator {\n")
+                        .append("\tint a = 0;")
+//                        .append("\tint compare(Object a, Object c){ return 0; }")
+                        .append("\tvoid boom(String msg){ a = 1; if(msg.length() > 1) {}}\n")
+                        .append("}")
+        );
+    }
+
+
+    public static Source createSourceWithOnlyStatements(){
+        return createSource(
+                "Name.java",
+                new StringBuilder("\n")
+                        .append("\tList<String> list = new ArrayList<String>();\n")
+                        .append("\tSet<String> list = new HashSet<String>();\n")
+                        .append("\tMap<String,String> map = new HashMap<String, String>();\n")
+                        .append("\tTreeSet<String> list = new TreeSet<String>();\n")
+                        .append("\tString toString = toString(list);\n")
+                        .append("\tpublic int compare(Object a, String c){ return 0; }")
+//                        .append("\tvoid boom(String msg){ a = 1; if(msg.length() > 1) {}}\n")
+                        .append("")
+        );
+    }
+
 
     public static Source createSourceWithSomeUsedFieldAndLocalVariable(){
         return createSource(

@@ -73,10 +73,18 @@ public interface Introspector {
      * Let all the {@link IssueDetector}s scan the {@link CompilationUnit}s and
      * find the {@link Issue}s.
      *
-     * @param context The context (and its compilation units) to scan trough for issues.
+     * @param context The context (and its compilation units) to scan through for issues.
      * @return The detected issues.
      */
     Set<Issue> detectIssues(Context context);
+
+    /**
+     * Find the required import directives for context to be syntactically correct.
+     *
+     * @param context The context (and its compilation units) to scan through for needed imports.
+     * @return the required import directives.
+     */
+    Set<String> findMissingImports(Context context);
 
     /**
      * Verifies whether this {@code Source} is valid; purely a syntax checking.
