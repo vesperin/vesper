@@ -9,10 +9,8 @@ import edu.ucsc.refactor.spi.SourceChanger;
 import edu.ucsc.refactor.spi.UnitLocator;
 import edu.ucsc.refactor.util.Commit;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -139,17 +137,6 @@ public class JavaRefactorer implements Refactorer {
         Preconditions.checkNotNull(context);
         Preconditions.checkArgument(!context.isMalformedContext());
         return new ProgramUnitLocator(context);
-    }
-
-
-    @Override public List<Change> recommendChanges(Source code, Set<Issue> issues) {
-        final List<Change> recommendations = new ArrayList<Change>();
-
-        for(Issue issue : issues){
-            recommendations.add(createChange(ChangeRequest.forIssue(issue, code)));
-        }
-
-        return recommendations;
     }
 
 

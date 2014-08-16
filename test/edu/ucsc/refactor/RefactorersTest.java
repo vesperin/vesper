@@ -2,6 +2,7 @@ package edu.ucsc.refactor;
 
 import edu.ucsc.refactor.internal.*;
 import edu.ucsc.refactor.spi.UnitLocator;
+import edu.ucsc.refactor.util.Recommender;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -85,7 +86,7 @@ public class RefactorersTest {
         // for any issues found on the SRC
         final Refactorer refactorer = Vesper.createRefactorer();
         final Introspector introspector = refactorer.getIntrospector(SRC);
-        final List<Change> changes = refactorer.recommendChanges(SRC, introspector.detectIssues(SRC));
+        final List<Change> changes = Recommender.recommendChanges(refactorer, SRC, introspector.detectIssues(SRC));
 
         assertThat(changes.isEmpty(), is(false));
         assertThat(changes.size(), is(3));

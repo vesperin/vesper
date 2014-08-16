@@ -167,11 +167,6 @@ public class NavigableJavaRefactorer implements NavigableRefactorer {
     }
 
 
-
-    @Override public List<Change> recommendChanges(Source code, Set<Issue> issues) {
-        return refactorer.recommendChanges(code, issues);
-    }
-
     @Override public Source rewriteHistory(Source source) {
 
         final Source        from   = Preconditions.checkNotNull(source);

@@ -1589,8 +1589,8 @@ public class ChangersTest {
 
         assertThat(BINDINGS.isEmpty(), is(false));
 
-        final Introspector introspector = Vesper.createRefactorer().getIntrospector(code);
-        final Set<String>  required     = introspector.findMissingImports(context);
+        final Introspector introspector = Vesper.createRefactorer().getIntrospector();
+        final Set<String>  required     = introspector.detectMissingImports(code);
         assertThat(required.size(), is(1));
 
     }
@@ -1607,8 +1607,8 @@ public class ChangersTest {
         final Set<String> imports  = AstUtil.getUsedTypesInCode(compilationUnit);
         assertThat(imports.size(), is(9));
 
-        final Introspector introspector = Vesper.createRefactorer().getIntrospector(code);
-        final Set<String>  required     = introspector.findMissingImports(context);
+        final Introspector introspector = Vesper.createRefactorer().getIntrospector();
+        final Set<String>  required     = introspector.detectMissingImports(code);
         assertThat(required.isEmpty(), is(false));
 
         final Set<String> staticImports  = AstUtil.getUsedStaticTypesInCode(compilationUnit);

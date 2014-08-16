@@ -1,6 +1,7 @@
 package edu.ucsc.refactor;
 
 import edu.ucsc.refactor.util.Commit;
+import edu.ucsc.refactor.util.Recommender;
 import org.junit.Test;
 
 import java.util.List;
@@ -32,7 +33,7 @@ public class VesperTest {
         final Set<Issue> issues = introspector.detectIssues(CODE);
         assertThat(!issues.isEmpty(), is(true));
 
-        final List<Change> suggestedChanges = refactorer.recommendChanges(CODE, issues);
+        final List<Change> suggestedChanges = Recommender.recommendChanges(refactorer, CODE, issues);
         assertThat(suggestedChanges.isEmpty(), is(false));
 
         final Change first = suggestedChanges.get(0);

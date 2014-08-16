@@ -79,12 +79,12 @@ public interface Introspector {
     Set<Issue> detectIssues(Context context);
 
     /**
-     * Find the required import directives for context to be syntactically correct.
+     * Scans a {@link Source} tracked by the {@code Refactorer}, looking for any missing imports.
      *
-     * @param context The context (and its compilation units) to scan through for needed imports.
-     * @return the required import directives.
+     * @param code The code to be scanned.
+     * @return a set of required imports.
      */
-    Set<String> findMissingImports(Context context);
+    Set<String> detectMissingImports(Source code);
 
     /**
      * Verifies whether this {@code Source} is valid; purely a syntax checking.
