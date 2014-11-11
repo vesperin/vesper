@@ -2,6 +2,7 @@ package edu.ucsc.refactor.spi;
 
 import edu.ucsc.refactor.Context;
 import edu.ucsc.refactor.Source;
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
 /**
@@ -24,11 +25,11 @@ public interface JavaParser {
      * given mode (e.g., PARSE_COMPILATION_UNIT or PARSE_STATEMENTS).
      *
      * @param context the context pointing to the file to be parsed, typically
-     *        via {@link Context#getContents()} but the file handle (
-     *        {@link Context#getSource()} can also be used to map to an existing
+     *        via {@link edu.ucsc.refactor.Context#getContents()} but the file handle (
+     *        {@link edu.ucsc.refactor.Context#getSource()} can also be used to map to an existing
      *        editor buffer in the surrounding tool, etc)
      * @param mode the parsing mode: PARSE_COMPILATION_UNIT or PARSE_STATEMENTS
-     * @return the compilation unit node for the file; useful for post processing.
+     * @return the ASTNode object for the context; useful for post processing.
      */
-    CompilationUnit parseJava(Context context, int mode);
+    ASTNode parseJava(Context context, int mode);
 }

@@ -15,10 +15,7 @@ import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Queue;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -33,6 +30,30 @@ public class AstUtil {
 
 
     private AstUtil() {}
+
+
+    public static List<Statement> getStatements(ASTNode block) {
+
+        if(AstUtil.isOfType(CompilationUnit.class, block)){
+            throw new RuntimeException(Arrays.toString(((CompilationUnit) block).getProblems()));
+        }
+
+        final Block             bl  = AstUtil.exactCast(Block.class, block);
+        final List<Statement>   sts = Lists.newArrayList();
+
+        for (Object eachObject : bl.statements()) {
+            final Statement eachStatement = (Statement)eachObject;
+            sts.add((Statement) ASTNode.copySubtree(eachStatement.getAST(), eachStatement));
+        }
+
+        return sts;
+
+    }
+
+
+    public static CompilationUnit getCompilationUnit(ASTNode node){
+        return AstUtil.parent(CompilationUnit.class, node);
+    }
 
     public static boolean isAnnotated(MethodDeclaration methodDeclaration) {
         final List modifiers = methodDeclaration.modifiers();

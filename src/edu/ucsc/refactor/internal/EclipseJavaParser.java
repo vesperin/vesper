@@ -22,6 +22,7 @@ public class EclipseJavaParser implements JavaParser {
 
     public static final int                PARSE_COMPILATION_UNIT    = ASTParser.K_COMPILATION_UNIT;
     public static final int                PARSE_STATEMENTS          = ASTParser.K_STATEMENTS;
+    public static final int                PARSE_BODY                = ASTParser.K_CLASS_BODY_DECLARATIONS;
 
     private ASTParser astParser;
 
@@ -41,16 +42,17 @@ public class EclipseJavaParser implements JavaParser {
     }
 
     @Override public CompilationUnit parseJava(Context context) {
-        return parseJava(context, PARSE_COMPILATION_UNIT);
+        final CompilationUnit unit = AstUtil.exactCast(CompilationUnit.class, parseJava(context,
+                PARSE_COMPILATION_UNIT));
+        context.setCompilationUnit(unit);
+        return unit;
     }
 
-    @Override public CompilationUnit parseJava(Context context, int mode) {
+    @Override public ASTNode parseJava(Context context, int mode) {
         astParser.setKind(mode);
 
-        if(mode == PARSE_STATEMENTS){
-            astParser.setStatementsRecovery(true);
-            astParser.setBindingsRecovery(true);
-        }
+        astParser.setStatementsRecovery(true);
+        astParser.setBindingsRecovery(true);
 
         astParser.setUnitName(context.getSource().getName());
 
@@ -68,13 +70,7 @@ public class EclipseJavaParser implements JavaParser {
                 return NOTHING;
             }
 
-            final CompilationUnit compilationUnit =  (mode == PARSE_STATEMENTS
-                    ? AstUtil.parent(CompilationUnit.class, unit)
-                    : AstUtil.exactCast(CompilationUnit.class, unit)
-            );
-
-            context.setCompilationUnit(compilationUnit);
-            return compilationUnit;
+            return unit;
         } catch (RuntimeException error){
             throw logAndThrowRuntimeException(context, error);
         }

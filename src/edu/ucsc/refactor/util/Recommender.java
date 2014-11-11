@@ -7,6 +7,7 @@ import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.EclipseJavaParser;
 import edu.ucsc.refactor.internal.util.AstUtil;
 import edu.ucsc.refactor.spi.JavaParser;
+import org.eclipse.jdt.core.dom.ASTNode;
 
 import java.util.*;
 
@@ -99,9 +100,13 @@ public class Recommender {
 
         final Context context = new Context(code);
 
-        if(parser.parseJava(context, EclipseJavaParser.PARSE_STATEMENTS) == null){
+        ASTNode unit = parser.parseJava(context, EclipseJavaParser.PARSE_STATEMENTS);
+        if(unit == null){
             throw new IllegalStateException("Unable to parse source file");
+        } else {
+            context.setCompilationUnit(AstUtil.getCompilationUnit(unit));
         }
+
 
         final Set<String>           types     = AstUtil.getUsedTypesInCode(context.getCompilationUnit());
         final Set<String>           packages  = getJdkPackages();

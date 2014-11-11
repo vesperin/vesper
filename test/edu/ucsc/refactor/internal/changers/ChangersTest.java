@@ -1,6 +1,7 @@
 package edu.ucsc.refactor.internal.changers;
 
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.*;
@@ -8,6 +9,7 @@ import edu.ucsc.refactor.internal.detectors.*;
 import edu.ucsc.refactor.internal.util.AstUtil;
 import edu.ucsc.refactor.internal.util.Edits;
 import edu.ucsc.refactor.internal.visitors.SimpleNameVisitor;
+import edu.ucsc.refactor.spi.IncrementalParser;
 import edu.ucsc.refactor.spi.JavaParser;
 import edu.ucsc.refactor.spi.SourceChanger;
 import edu.ucsc.refactor.util.Commit;
@@ -20,6 +22,7 @@ import org.junit.Test;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -1600,9 +1603,13 @@ public class ChangersTest {
         final Source  code    = InternalUtil.createSourceWithOnlyStatements();
         final Context context = new Context(code);
 
-        parser.parseJava(context, EclipseJavaParser.PARSE_STATEMENTS);
+        final CompilationUnit compilationUnit = AstUtil.getCompilationUnit(
+                parser.parseJava(
+                        context,
+                        EclipseJavaParser.PARSE_STATEMENTS
+                )
+        );
 
-        final CompilationUnit compilationUnit = context.getCompilationUnit();
 
         final Set<String> imports  = AstUtil.getUsedTypesInCode(compilationUnit);
         assertThat(imports.size(), is(9));
@@ -1613,6 +1620,39 @@ public class ChangersTest {
 
         final Set<String> staticImports  = AstUtil.getUsedStaticTypesInCode(compilationUnit);
         assertThat(staticImports.size(), is(0));
+
+    }
+
+    @Test public void testCodeSnippetIncrementally() throws Exception {
+        final Source  code    = InternalUtil.createSourceWithOnlyStatements();
+        final Context context = new Context(code);
+
+        final IncrementalParser p = new IncrementalEclipseJavaParser();
+        final Map<Class<? extends ASTNode>, ASTNode> result = p.offer(context);
+
+        assertThat(result.isEmpty(), is(false));
+
+        assertThat(Lists.newArrayList(result.keySet()).get(0) == TypeDeclaration.class, is(true));
+
+        final List<ASTNode> children = AstUtil.getChildren(result.get(TypeDeclaration.class));
+        for(ASTNode child : children){
+            if(AstUtil.isOfType(Block.class, child)){
+                final List<Statement> statements = AstUtil.getStatements(child);
+                assertThat(statements.isEmpty(), is(false));
+            }
+        }
+
+
+
+
+        final Source code1 = InternalUtil.createSourceWithMissingImports();
+        final Context context1 = new Context(code1);
+
+
+        final Map<Class<? extends ASTNode>, ASTNode> result1 = p.offer(context1);
+        assertThat(Lists.newArrayList(result1.keySet()).get(0) == CompilationUnit.class, is(true));
+
+
     }
 
     private static void  checkChangeCreation(SourceChanger changer, SingleEdit resolved){
