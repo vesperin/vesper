@@ -317,12 +317,20 @@ public class AstUtil {
                final TypeDeclaration unit = AstUtil.parent(TypeDeclaration.class, each);
                final MethodInvocation inv = AstUtil.exactCast(MethodInvocation.class, each);
                final ASTNode dec = AstUtil.findDeclaration(inv.getName().resolveBinding(), unit);
-               result.add(dec);
+               if(dec != null){
+                   result.add(dec);
+               } else {
+                   result.addAll(unwindBindings(inv));
+               }
            } else if(AstUtil.isOfType(InfixExpression.class, each)) {
                result.addAll(unwindBindings(each));
            } else if(AstUtil.isOfType(ExpressionStatement.class, each)) {
                result.addAll(unwindBindings(each));
            } else if(AstUtil.isOfType(VariableDeclarationExpression.class, each)) {
+               result.addAll(unwindBindings(each));
+           } else if(AstUtil.isOfType(VariableDeclarationStatement.class, each)){
+               result.addAll(unwindBindings(each));
+           } else if(AstUtil.isOfType(VariableDeclarationFragment.class, each)){
                result.addAll(unwindBindings(each));
            } else {
                result.add(each);
