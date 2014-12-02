@@ -1,7 +1,6 @@
 package edu.ucsc.refactor.internal.changers;
 
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.*;
@@ -9,7 +8,7 @@ import edu.ucsc.refactor.internal.detectors.*;
 import edu.ucsc.refactor.internal.util.AstUtil;
 import edu.ucsc.refactor.internal.util.Edits;
 import edu.ucsc.refactor.internal.visitors.SimpleNameVisitor;
-import edu.ucsc.refactor.spi.IncrementalParser;
+import edu.ucsc.refactor.spi.JavaSnippetParser;
 import edu.ucsc.refactor.spi.JavaParser;
 import edu.ucsc.refactor.spi.SourceChanger;
 import edu.ucsc.refactor.util.Commit;
@@ -22,7 +21,6 @@ import org.junit.Test;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -1623,18 +1621,16 @@ public class ChangersTest {
 
     }
 
-    @Test public void testCodeSnippetIncrementally() throws Exception {
+    @Test public void testCodeSnippetParsing() throws Exception {
         final Source  code    = InternalUtil.createSourceWithOnlyStatements();
         final Context context = new Context(code);
 
-        final IncrementalParser p = new IncrementalEclipseJavaParser();
-        final Map<Class<? extends ASTNode>, ASTNode> result = p.offer(context);
+        final JavaSnippetParser p = new EclipseJavaSnippetParser();
+        final ResultPackage result = p.offer(context);
 
-        assertThat(result.isEmpty(), is(false));
+        assertThat(result.getParsedNode().getClass() == TypeDeclaration.class, is(true));
 
-        assertThat(Lists.newArrayList(result.keySet()).get(0) == TypeDeclaration.class, is(true));
-
-        final List<ASTNode> children = AstUtil.getChildren(result.get(TypeDeclaration.class));
+        final List<ASTNode> children = AstUtil.getChildren(result.getParsedNode());
         for(ASTNode child : children){
             if(AstUtil.isOfType(Block.class, child)){
                 final List<Statement> statements = AstUtil.getStatements(child);
@@ -1642,16 +1638,22 @@ public class ChangersTest {
             }
         }
 
-
-
-
         final Source code1 = InternalUtil.createSourceWithMissingImports();
         final Context context1 = new Context(code1);
 
 
-        final Map<Class<? extends ASTNode>, ASTNode> result1 = p.offer(context1);
-        assertThat(Lists.newArrayList(result1.keySet()).get(0) == CompilationUnit.class, is(true));
+        final ResultPackage result1 = p.offer(context1);
+        assertThat(result1.getParsedNode().getClass() == CompilationUnit.class, is(true));
+    }
 
+    @Test public void testMalformedCodeSnippetParsing() throws Exception {
+        final Source  code    = InternalUtil.createSourceWithCommentsAndStatements();
+        final Context context = new Context(code);
+
+        final JavaSnippetParser p = new EclipseJavaSnippetParser();
+        final ResultPackage result = p.offer(context);
+
+        assertThat(result.getParsedNode().getClass() == TypeDeclaration.class, is(true));
 
     }
 

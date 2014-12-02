@@ -311,6 +311,21 @@ public class InternalUtil {
     }
 
 
+    public static Source createSourceWithCommentsAndStatements(){
+        return createSource(
+                "Sample.java",
+                new StringBuilder("\n")
+                        .append("\tList<String> list = new ArrayList<String>();\n")
+                        .append("\tSet<String> list = new HashSet<String>();\n")
+                        .append("\tMap<String,String> map = new HashMap<String, String>();\n")
+                        .append("\tTreeSet<String> list = new TreeSet<String>();\n")
+                        .append("\n\tthis is a simple program\n\n")
+                        .append("\tpublic int compare(Object a, String c){ return 0; }")
+                        .append("")
+        );
+    }
+
+
     public static Source createSourceWithSomeUsedFieldAndLocalVariable(){
         return createSource(
                 "Name.java",

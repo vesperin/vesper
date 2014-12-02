@@ -5,6 +5,7 @@ import edu.ucsc.refactor.Context;
 import edu.ucsc.refactor.Host;
 import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.internal.EclipseJavaParser;
+import edu.ucsc.refactor.internal.EclipseJavaSnippetParser;
 import edu.ucsc.refactor.internal.HostImpl;
 import edu.ucsc.refactor.internal.visitors.MethodDeclarationVisitor;
 import edu.ucsc.refactor.spi.JavaParser;
@@ -37,7 +38,7 @@ public class ASTUtilTest {
         host.install(new AbstractConfiguration() {
             @Override
             protected void configure() {
-                addJavaParser(new EclipseJavaParser());
+                addJavaParser(new EclipseJavaSnippetParser());
             }
         });
 
