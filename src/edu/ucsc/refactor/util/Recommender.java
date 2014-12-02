@@ -15,7 +15,7 @@ import java.util.*;
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public class Recommender {
-    private static Map<String, Set<String>> PKGS_OF_INTEREST;
+    private static Map<String, Set<String>> PACKAGES_OF_INTEREST;
     static {
         final Map<String, Set<String>> container = Maps.newHashMap();
         container.put("java.util.zip",          ImmutableSet.of("Adler32", "CheckedInputStream", "CheckedOutputStream", "CRC32", "Deflater", "DeflaterInputStream", "DeflaterOutputStream", "GZIPInputStream", "GZIPOutputStream", "Inflater", "InflaterInputStream", "InflaterOutputStream", "ZipEntry", "ZipFile", "ZipInputStream", "ZipOutputStream", "DataFormatException", "ZipException", "ZipError"));
@@ -44,7 +44,7 @@ public class Recommender {
         container.put("java.lang.annotation",   ImmutableSet.of("Annotation", "ElementType", "RetentionPolicy", "AnnotationTypeMismatchException", "IncompleteAnnotationException", "AnnotationFormatError", "Documented", "Inherited", "Retention", "Target"));
         container.put("java.io",                ImmutableSet.of("Closeable", "DataInput", "DataOutput", "Externalizable", "FileFilter", "FilenameFilter", "Flushable", "ObjectInput", "ObjectInputValidation", "ObjectOutput", "ObjectStreamConstants", "Serializable", "BufferedInputStream", "BufferedOutputStream", "BufferedReader", "BufferedWriter", "ByteArrayInputStream", "ByteArrayOutputStream", "CharArrayReader", "CharArrayWriter", "Console", "DataInputStream", "DataOutputStream", "File", "FileDescriptor", "FileInputStream", "FileOutputStream", "FilePermission", "FileReader", "FileWriter", "FilterInputStream", "FilterOutputStream", "FilterReader", "FilterWriter", "InputStream", "InputStreamReader", "LineNumberInputStream", "LineNumberReader", "ObjectInputStream", "ObjectInputStream.GetField", "ObjectOutputStream", "ObjectOutputStream.PutField", "ObjectStreamClass", "ObjectStreamField", "OutputStream", "OutputStreamWriter", "PipedInputStream", "PipedOutputStream", "PipedReader", "PipedWriter", "PrintStream", "PrintWriter", "PushbackInputStream", "PushbackReader", "RandomAccessFile", "Reader", "SequenceInputStream", "SerializablePermission", "StreamTokenizer", "StringBufferInputStream", "StringReader", "StringWriter", "Writer", "CharConversionException", "EOFException", "FileNotFoundException", "InterruptedIOException", "InvalidClassException", "InvalidObjectException", "IOException", "NotActiveException", "NotSerializableException", "ObjectStreamException", "OptionalDataException", "StreamCorruptedException", "SyncFailedException", "UnsupportedEncodingException", "UTFDataFormatException", "WriteAbortedException", "IOError"));
 
-        PKGS_OF_INTEREST = Collections.unmodifiableMap(container);
+        PACKAGES_OF_INTEREST = Collections.unmodifiableMap(container);
     }
 
     private Recommender(){}
@@ -115,10 +115,10 @@ public class Recommender {
         final Set<String> result = Sets.newHashSet();
 
         for(String each : packages){
-            final Set<String> knownTypes = PKGS_OF_INTEREST.get(each);
+            final Set<String> knownTypes = PACKAGES_OF_INTEREST.get(each);
             if(knownTypes != null){
                 final Set<String> intersect = Sets.intersection(knownTypes, types);
-                final boolean valid = (intersect != null && !intersect.isEmpty());
+                final boolean valid = (!intersect.isEmpty());
                 if(!valid) continue;
 
                 if(!hits.containsKey(each)) { hits.put(each, intersect.size()); } else {

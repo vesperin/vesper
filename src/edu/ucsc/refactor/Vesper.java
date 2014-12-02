@@ -33,7 +33,8 @@ import java.util.List;
  *
  *     // print the reason for the change
  *
- *     final List<Change> changes = refactorer.recommendChanges(code);
+ *     final Set<Issue> issues = refactorer.getIntrospector().detectIssues(code);
+ *     final List<Change> changes = Recommender.recommendChanges(refactorer, code, issues);
  *     for(Change each : changes){
  *        System.out.println(each.getCause().getName());
  *     }
@@ -45,11 +46,12 @@ import java.util.List;
  *
  *     // or handle All recommended changes
  *
- *     List<Change> recommended = refactorer.recommendChanges(code);
+ *     List<Change> recommended = Recommender.recommendChanges(refactorer, code, issues);
  *     while(!recommended.isEmpty()){
  *         final Commit applied = refactor.apply(recommended.get(0));
  *         System.out.println(applied.more());
- *         recommended = refactorer.recommendChanges(code); // get an updated list of changes
+ *         final Set<Issue> badStuff = refactorer.getIntrospector().detectIssues(code);
+ *         recommended = Recommender.recommendChanges(refactorer, code, badStuff); // get an updated list of changes
  *     }
  *
  *
