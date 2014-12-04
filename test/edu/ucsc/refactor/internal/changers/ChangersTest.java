@@ -14,6 +14,7 @@ import edu.ucsc.refactor.spi.SourceChanger;
 import edu.ucsc.refactor.util.Commit;
 import edu.ucsc.refactor.util.Locations;
 import edu.ucsc.refactor.util.Parameters;
+import edu.ucsc.refactor.util.Recommender;
 import org.eclipse.jdt.core.dom.*;
 import org.junit.After;
 import org.junit.Before;
@@ -1680,6 +1681,19 @@ public class ChangersTest {
         final SingleEdit     resolved   = Edits.resolve(edit);
 
         checkChangeCreation(remove, resolved);
+    }
+
+
+    @Test public void testClipSpaceGeneration() throws Exception {
+        final Source src = InternalUtil.createQuickSortSource();
+
+        final List<Clip> clips = Recommender.generateClips(
+                "randomized partition",
+                src
+        );
+
+        assertThat(clips.isEmpty(), is(false));
+
     }
 
 

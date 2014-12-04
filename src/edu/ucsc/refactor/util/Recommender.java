@@ -1,13 +1,20 @@
 package edu.ucsc.refactor.util;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
+import com.google.common.collect.*;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.EclipseJavaParser;
+import edu.ucsc.refactor.internal.EclipseJavaSnippetParser;
 import edu.ucsc.refactor.internal.util.AstUtil;
+import edu.ucsc.refactor.internal.visitors.MethodDeclarationVisitor;
 import edu.ucsc.refactor.spi.JavaParser;
+import edu.ucsc.refactor.spi.JavaSnippetParser;
+import edu.ucsc.refactor.spi.RankingStrategy;
+import edu.ucsc.refactor.spi.SpaceGeneration;
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
 
 import java.util.*;
 
@@ -137,5 +144,137 @@ public class Recommender {
         }
 
         return result;
+    }
+
+    public static List<Clip> generateClips(String text, Source code){
+
+        final ClipSpaceGeneration spaceGeneration = new ClipSpaceGeneration();
+        // The clip space represents a multi stage example; an example split into chunks
+        // where each chunk increases the complexity of the code example.
+        final Set<Clip> clipSpace = spaceGeneration.generateSpace(code);
+
+        // normalize line endings
+        text = text.replaceAll("\r\n", "\n");
+
+
+        // small enough space (< 5)? if yes, then dont rank it.
+        if(clipSpace.size() < 5){ // 5? on avg, ppl create 5 stages
+           return ImmutableList.copyOf(clipSpace).reverse();
+        } else { // otherwise, do the ranking and pick the  top 5 clips (may not be multi-stage
+            final ClipRankingStrategy   ranking     = new ClipRankingStrategy();
+            final List<Clip>            rankedSpace = ranking.rankSpace(clipSpace, text);
+            return rankedSpace.subList(0, Math.min(5, rankedSpace.size()));
+        }
+
+    }
+
+
+    private static Clip transform(Clip that, ChangeRequest request){
+        final Refactorer    refactorer  = Vesper.createRefactorer();
+        final Change        change      = refactorer.createChange(request);
+        final Commit        commit      = refactorer.apply(change);
+
+        if(commit != null && commit.isValidCommit()){
+            return Clip.makeClip(that.getLabel(), commit.getSourceAfterChange());
+        } else {
+            return that;
+        }
+    }
+
+
+    private static Clip cleanup(Clip that){
+        return transform(that, ChangeRequest.optimizeImports(that.getSource()));
+    }
+
+
+    private static Clip format(Clip that){
+        return transform(that, ChangeRequest.reformatSource(that.getSource()));
+    }
+
+    private static String capitalize(Iterable<String> words){
+        final StringBuilder builder = new StringBuilder();
+        for(String each : words){
+            builder.append(capitalize(each)).append(" ");
+        }
+
+        return builder.toString().trim();
+    }
+
+    private static String capitalize(String s) {
+        if (s.length() == 0) return s;
+        return s.substring(0, 1).toUpperCase() + s.substring(1).toLowerCase();
+    }
+
+
+    static class ClipSpaceGeneration implements SpaceGeneration {
+        @Override public Set<Clip> generateSpace(Source ofCode) {
+            final JavaSnippetParser parser  = new EclipseJavaSnippetParser();
+            final Context           context = new Context(ofCode);
+            final ResultPackage     parsed  = parser.offer(context);
+
+            final ASTNode node = parsed.getParsedNode();
+            if(node == null){
+                throw new IllegalStateException("Unable to parse source file");
+            } else {
+                context.setCompilationUnit(AstUtil.getCompilationUnit(node));
+            }
+
+            final MethodDeclarationVisitor visitor  = new MethodDeclarationVisitor();
+            final CompilationUnit          unit     = context.getCompilationUnit();
+
+            unit.accept(visitor);
+
+            final List<MethodDeclaration> methods = visitor.getMethodDeclarations();
+
+            final Set<Clip> space = Sets.newLinkedHashSet();
+            for(MethodDeclaration eachMethod : methods){
+               final Refactorer         refactorer  = Vesper.createRefactorer();
+               final Location           loc         = Locations.locate(eachMethod);
+               final int                startOffset = loc.getStart().getOffset();
+               final int                endOffset   = loc.getEnd().getOffset();
+
+               final SourceSelection    selection = new SourceSelection(
+                       context.getSource(),
+                       startOffset,
+                       endOffset
+               );
+
+
+               final ChangeRequest request = ChangeRequest.clipSelection(selection);
+               final Change        change  = refactorer.createChange(request);
+               final Commit        commit  = refactorer.apply(change);
+
+               if(commit != null && commit.isValidCommit()){
+
+                   final String label = Joiner.on(" ").join(
+                           Splitter.onPattern(
+                                   // thanks to http://stackoverflow
+                                   // .com/questions/7593969/regex-to-split-camelcase-or-titlecase-advanced
+                                   "(?<!(^|[A-Z]))(?=[A-Z])|(?<!^)" + "(?=[A-Z][a-z])")
+                                   .split(
+                                           eachMethod.getName().getIdentifier()
+                                   )
+                   );
+
+                   final String capitalized = capitalize(Splitter.on(' ').split(label));
+
+                   final Clip clip = format(cleanup(
+                           Clip.makeClip(capitalized, commit.getSourceAfterChange())
+                   ));
+
+                   space.add(clip);
+               }
+            }
+
+            return space;
+        }
+    }
+
+
+    static class ClipRankingStrategy implements RankingStrategy {
+        @Override public List<Clip> rankSpace(Set<Clip> space, String query) {
+            final List<Clip> reversed = ImmutableList.copyOf(space).reverse();
+            return ImmutableList.copyOf(reversed);
+        }
     }
 }

@@ -61,8 +61,17 @@ public class ClipSelection extends SourceChanger {
 
         for(IBinding binding: trash){
             final ASTNode declaringNode = AstUtil.findDeclaration(binding, unit);
+            if(AstUtil.isField(declaringNode)){
+                final FieldDeclaration parent = AstUtil.parent(
+                        FieldDeclaration.class,
+                        declaringNode
+                );
 
-            rewrite.remove(declaringNode, null);
+                rewrite.remove(parent, null);
+            } else {
+                rewrite.remove(declaringNode, null);
+            }
+
         }
 
         return createDelta(unit, rewrite);

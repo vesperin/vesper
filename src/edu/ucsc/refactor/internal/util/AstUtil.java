@@ -333,7 +333,12 @@ public class AstUtil {
            } else if(AstUtil.isOfType(VariableDeclarationFragment.class, each)){
                result.addAll(unwindBindings(each));
            } else {
-               result.add(each);
+               // handle the rest of statements
+               if(Statement.class.isInstance(each)){
+                   result.addAll(unwindBindings(each));
+               } else {
+                   result.add(each);
+               }
            }
         }
 
