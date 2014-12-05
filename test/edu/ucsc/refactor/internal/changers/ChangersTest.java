@@ -2,6 +2,8 @@ package edu.ucsc.refactor.internal.changers;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import difflib.Chunk;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.*;
 import edu.ucsc.refactor.internal.detectors.*;
@@ -1687,13 +1689,42 @@ public class ChangersTest {
     @Test public void testClipSpaceGeneration() throws Exception {
         final Source src = InternalUtil.createQuickSortSource();
 
-        final List<Clip> clips = Recommender.generateClips(
-                "randomized partition",
-                src
+        final Introspector introspector = Vesper.createRefactorer().getIntrospector();
+        final List<Clip> clipSpace = introspector.generateClipSpace(src);
+
+        final List<Clip> clips = Recommender.recommendClips(
+                clipSpace,
+                Sets.newHashSet("randomized partition")
         );
 
         assertThat(clips.isEmpty(), is(false));
 
+        Clip first = null;
+        for(Clip each : clips){
+           if(first == null) { first = each; continue; }
+
+           final Diff diff = introspector.differences(first.getSource(), each.getSource());
+
+           assertNotNull(diff);
+
+           final List<Chunk> changes = diff.getInsertsFromOriginal();
+
+           assertThat(changes.isEmpty(), is(false));
+
+           // we care only by insertions (multi stage)
+           assertThat(diff.getChangesFromOriginal().isEmpty(), is(true));
+           assertThat(diff.getDeletesFromOriginal().isEmpty(), is(true));
+
+
+           try {
+            final Source resolved = diff.resolve();
+            assertNotNull(resolved);
+            first = each;
+           } catch (RuntimeException ex){
+             fail("if we got this error, it means we were unable to resolve differences :(");
+           }
+
+        }
     }
 
 

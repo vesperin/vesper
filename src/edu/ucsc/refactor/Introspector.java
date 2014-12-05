@@ -87,6 +87,31 @@ public interface Introspector {
     Set<String> detectMissingImports(Source code);
 
     /**
+     * Compares two source and return their differences; i.e., insertions, changes, or deletions.
+     *
+     * Due to multi stage code examples goes from less to more complexity, we assume that
+     * `thisSource`'s length is less than `thatSource`'s length. Therefore, the implementation
+     * of this method is based on that assumption. If this assumption is violated, then we will
+     * flip the inputs to make sure they comply with this method's contract.
+     *
+     * @param thisSource The original {@link Source}.
+     * @param thatSource The revised {@link Source}.
+     * @return the differences between the two sources.
+     */
+    Diff differences(Source thisSource, Source thatSource);
+
+
+    /**
+     * Generates the clips space; i.e., the space containing all the different stages
+     * (functionality) covered in the code example.
+     *
+     * @param code The code example used to created the clip space.
+     * @return The clip space.
+     */
+    List<Clip> generateClipSpace(Source code);
+
+
+    /**
      * Verifies whether this {@code Source} is valid; purely a syntax checking.
      *
      * More specifically, this method checks for:
