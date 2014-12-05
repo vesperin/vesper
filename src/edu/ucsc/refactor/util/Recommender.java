@@ -49,6 +49,8 @@ public class Recommender {
         PACKAGES_OF_INTEREST = Collections.unmodifiableMap(container);
     }
 
+    private static final int BOUNDARY = 5;
+
     private Recommender(){}
 
     /**
@@ -98,6 +100,49 @@ public class Recommender {
      * @return the required import directives.
      */
     public static Set<String> recommendImports(Source code){
+        final Context context = makeContext(code);
+
+        final Set<String>           types     = AstUtil.getUsedTypesInCode(context.getCompilationUnit());
+        final Set<String>           packages  = getJdkPackages();
+        final Map<String, Tuple>  freq      = Maps.newHashMap();
+
+        final Set<String> result = Sets.newHashSet();
+
+        // detect used packages
+        for(String pkg : packages){
+           final Set<String> namespaces =  PACKAGES_OF_INTEREST.get(pkg);
+           if(namespaces == null) continue;
+
+           final Set<String> common     = Sets.intersection(namespaces, types);
+           if(common.isEmpty()) continue;
+
+           Tuple t;
+           if(freq.containsKey(pkg)){
+               t = freq.get(pkg).update(common);
+               freq.put(pkg, t);
+           } else {
+               t = new Tuple(common.size(), common);
+               freq.put(pkg, t);
+           }
+        }
+
+        // build package directive
+        for(String key : freq.keySet()){
+            final Tuple tuple = freq.get(key);
+            if(tuple.val >= 5){
+                final String wildcard = key + ".*;";
+                result.add(wildcard);
+            } else {
+                for(String typeName : tuple.elements){
+                    result.add(key + "." + typeName + ";");
+                }
+            }
+        }
+
+        return result;
+    }
+
+    private static Context makeContext(Source code){
         final JavaParser parser = new EclipseJavaParser();
 
         final Context context = new Context(code);
@@ -109,36 +154,7 @@ public class Recommender {
             context.setCompilationUnit(AstUtil.getCompilationUnit(unit));
         }
 
-
-        final Set<String>           types     = AstUtil.getUsedTypesInCode(context.getCompilationUnit());
-        final Set<String>           packages  = getJdkPackages();
-        final Map<String, Integer>  hits      = Maps.newHashMap();
-
-        final Set<String> result = Sets.newHashSet();
-
-        for(String each : packages){
-            final Set<String> knownTypes = PACKAGES_OF_INTEREST.get(each);
-            if(knownTypes != null){
-                final Set<String> intersect = Sets.intersection(knownTypes, types);
-                final boolean valid = (!intersect.isEmpty());
-                if(!valid) continue;
-
-                if(!hits.containsKey(each)) { hits.put(each, intersect.size()); } else {
-                    hits.put(each, hits.get(each) + intersect.size());
-                }
-
-                if(hits.get(each) >= 5){
-                    final String wildcard = each + ".*;";
-                    result.add(wildcard);
-                } else {
-                    for(String eachIntersect : intersect){
-                        result.add(each + "." + eachIntersect);
-                    }
-                }
-            }
-        }
-
-        return result;
+        return context;
     }
 
     private static Set<String> normalize(Set<String> docs){
@@ -162,12 +178,12 @@ public class Recommender {
         final Set<String> normalized = normalize(docs);
 
         // small enough space (< 5)? if yes, then dont rank it.
-        if(clipSpace.size() <= 5){ // 5? on avg, ppl create 5 stages
+        if(clipSpace.size() <= BOUNDARY){ // 5? on avg, ppl create 5 stages
             return clipSpace;
         } else { // otherwise, do the ranking and pick the  top 5 clips (may not be multi-stage
             final ClipRankingStrategy   ranking     = new ClipRankingStrategy();
             final List<Clip>            rankedSpace = ranking.rankSpace(clipSpace, normalized);
-            return rankedSpace.subList(0, Math.min(5, rankedSpace.size()));
+            return rankedSpace.subList(0, Math.min(BOUNDARY, rankedSpace.size()));
         }
     }
 
@@ -175,6 +191,24 @@ public class Recommender {
         @Override public List<Clip> rankSpace(List<Clip> space, Set<String> docs) {
             final List<Clip> reversed = ImmutableList.copyOf(space).reverse();
             return ImmutableList.copyOf(reversed);
+        }
+    }
+
+
+    private static class Tuple {
+        final int val;
+        final Set<String> elements;
+
+        Tuple(int val, Set<String> elements){
+            this.val      = val;
+            this.elements = elements;
+        }
+
+        Tuple update(Set<String> seed){
+            final Set<String> merged = Sets.union(this.elements, seed);
+            final int         freq   = merged.size();
+
+            return new Tuple(freq, merged);
         }
     }
 }
