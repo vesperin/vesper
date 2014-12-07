@@ -14,7 +14,7 @@ import edu.ucsc.refactor.spi.SourceChanger;
 import edu.ucsc.refactor.util.Commit;
 import edu.ucsc.refactor.util.Locations;
 import edu.ucsc.refactor.util.Parameters;
-import edu.ucsc.refactor.util.RollingPatch;
+import edu.ucsc.refactor.util.Syncer;
 import org.eclipse.jdt.core.dom.*;
 import org.junit.After;
 import org.junit.Before;
@@ -1751,7 +1751,7 @@ public class ChangersTest {
         final Introspector introspector = Vesper.createRefactorer().getIntrospector();
         final List<Clip> clipSpace = makeClipSpace(src, introspector);
 
-        final Source patched = RollingPatch.patch(
+        final Source patched = Syncer.patch(
                 introspector,
                 clipSpace.subList(1, clipSpace.size())
         );
@@ -1770,7 +1770,7 @@ public class ChangersTest {
         final List<Clip> clipSpace = makeClipSpace(src, introspector);
         final List<Clip> clipOneToBaseClip  = clipSpace.subList(0, 2);
 
-        final Source patched = RollingPatch.patch(introspector, clipOneToBaseClip);
+        final Source patched = Syncer.patch(introspector, clipOneToBaseClip);
 
         final String expected  = clipOneToBaseClip.get(clipOneToBaseClip.size() - 1).getSource().getContents();
         final String revised   = patched.getContents();

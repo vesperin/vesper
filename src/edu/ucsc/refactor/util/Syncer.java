@@ -9,10 +9,12 @@ import java.util.List;
 import java.util.logging.Logger;
 
 /**
+ * It propagates changes made to a single clip that belongs to a clip space.
+ *
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public class RollingPatch {
-    private static final Logger LOGGER = Logger.getLogger(RollingPatch.class.getName());
+public class Syncer {
+    private static final Logger LOGGER = Logger.getLogger(Syncer.class.getName());
     /**
      * Resolves the differences in code found in a code example
      * that has been multi-staged.
