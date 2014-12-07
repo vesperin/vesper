@@ -90,16 +90,15 @@ public interface Introspector {
      * Compares two source and return their differences; i.e., insertions, changes, or deletions.
      *
      * Due to multi stage code examples goes from less to more complexity, we assume that
-     * `thisSource`'s length is less than `thatSource`'s length. Therefore, the implementation
+     * `original`'s length is less than `revised`'s length. Therefore, the implementation
      * of this method is based on that assumption. If this assumption is violated, then we will
      * flip the inputs to make sure they comply with this method's contract.
      *
-     * @param thisSource The original {@link Source}.
-     * @param thatSource The revised {@link Source}.
+     * @param original The original {@link Source}.
+     * @param revised The revised {@link Source}.
      * @return the differences between the two sources.
      */
-    Diff differences(Source thisSource, Source thatSource);
-
+    Diff differences(Source original, Source revised);
 
     /**
      * Generates the clips space; i.e., the space containing all the different stages

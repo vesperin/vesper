@@ -2,21 +2,19 @@ package edu.ucsc.refactor.internal.changers;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import difflib.Chunk;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.*;
 import edu.ucsc.refactor.internal.detectors.*;
 import edu.ucsc.refactor.internal.util.AstUtil;
 import edu.ucsc.refactor.internal.util.Edits;
 import edu.ucsc.refactor.internal.visitors.SimpleNameVisitor;
-import edu.ucsc.refactor.spi.JavaSnippetParser;
 import edu.ucsc.refactor.spi.JavaParser;
+import edu.ucsc.refactor.spi.JavaSnippetParser;
 import edu.ucsc.refactor.spi.SourceChanger;
 import edu.ucsc.refactor.util.Commit;
 import edu.ucsc.refactor.util.Locations;
 import edu.ucsc.refactor.util.Parameters;
-import edu.ucsc.refactor.util.Recommender;
+import edu.ucsc.refactor.util.RollingPatch;
 import org.eclipse.jdt.core.dom.*;
 import org.junit.After;
 import org.junit.Before;
@@ -1689,44 +1687,100 @@ public class ChangersTest {
     @Test public void testClipSpaceGeneration() throws Exception {
         final Source src = InternalUtil.createQuickSortSource();
 
-        final Introspector introspector = Vesper.createRefactorer().getIntrospector();
-        final List<Clip> clipSpace = introspector.generateClipSpace(src);
+        final List<Clip> clipSpace = makeClipSpace(src, Vesper.createRefactorer().getIntrospector());
 
-        final List<Clip> clips = Recommender.recommendClips(
-                clipSpace,
-                Sets.newHashSet("randomized partition")
-        );
+        assertThat(clipSpace.isEmpty(), is(false));
 
-        assertThat(clips.isEmpty(), is(false));
-
-        Clip first = null;
-        for(Clip each : clips){
-           if(first == null) { first = each; continue; }
-
-           final Diff diff = introspector.differences(first.getSource(), each.getSource());
-
-           assertNotNull(diff);
-
-           final List<Chunk> changes = diff.getInsertsFromOriginal();
-
-           assertThat(changes.isEmpty(), is(false));
-
-           // we care only by insertions (multi stage)
-           assertThat(diff.getChangesFromOriginal().isEmpty(), is(true));
-           assertThat(diff.getDeletesFromOriginal().isEmpty(), is(true));
-
-
-           try {
-            final Source resolved = diff.resolve();
-            assertNotNull(resolved);
-            first = each;
-           } catch (RuntimeException ex){
-             fail("if we got this error, it means we were unable to resolve differences :(");
-           }
-
-        }
     }
 
+    @Test public void testDeleteDifferences() throws Exception {
+        final Source src = InternalUtil.createQuickSortSource();
+
+        final Introspector introspector = Vesper.createRefactorer().getIntrospector();
+        final List<Clip> clipSpace = makeClipSpace(src, introspector);
+        final List<Clip> clipOneToBaseClip  = clipSpace.subList(0, 2);
+
+        final Diff diff = introspector.differences(
+                clipOneToBaseClip.get(0).getSource(),
+                clipOneToBaseClip.get(1).getSource()
+        );
+
+        assertThat(diff.getChangesFromOriginal().isEmpty(), is(true));
+        assertThat(diff.getDeletesFromOriginal().isEmpty(), is(false));
+    }
+
+
+    @Test public void testInsertDifferences() throws Exception {
+        final Source src = InternalUtil.createQuickSortSource();
+
+        final Introspector introspector = Vesper.createRefactorer().getIntrospector();
+        final List<Clip> clipSpace = makeClipSpace(src, introspector);
+
+        final Diff diff = introspector.differences(
+                clipSpace.get(1).getSource(),
+                clipSpace.get(2).getSource()
+        );
+
+        assertThat(diff.getChangesFromOriginal().isEmpty(), is(true));
+        assertThat(diff.getInsertsFromOriginal().isEmpty(), is(false));
+    }
+
+    @Test public void testChangeDifferences() throws Exception {
+        final Source src = InternalUtil.createQuickSortSource();
+
+        final Introspector introspector = Vesper.createRefactorer().getIntrospector();
+        final List<Clip> clipSpace = makeClipSpace(src, introspector);
+
+        final Source a = clipSpace.get(1).getSource();
+        final Source b = clipSpace.get(2).getSource();
+
+        final Source c = Source.from(b, b.getContents().replaceAll("swap", "exchange"));
+
+        final Diff diff = introspector.differences(
+                a,
+                c
+        );
+
+        assertThat(diff.getChangesFromOriginal().isEmpty(), is(false));
+        assertThat(diff.getInsertsFromOriginal().isEmpty(), is(true));
+    }
+
+    @Test public void testClipSpaceForwardPatching() throws Exception {
+        final Source src = InternalUtil.createQuickSortSource();
+
+        final Introspector introspector = Vesper.createRefactorer().getIntrospector();
+        final List<Clip> clipSpace = makeClipSpace(src, introspector);
+
+        final Source patched = RollingPatch.patch(
+                introspector,
+                clipSpace.subList(1, clipSpace.size())
+        );
+
+        final String expected  = clipSpace.get(clipSpace.size() - 1).getSource().getContents();
+        final String revised   = patched.getContents();
+
+
+        assertThat(revised.equals(expected), is(true));
+    }
+
+    @Test public void testClipSpaceBackwardPatching() throws Exception {
+        final Source src = InternalUtil.createQuickSortSource();
+
+        final Introspector introspector = Vesper.createRefactorer().getIntrospector();
+        final List<Clip> clipSpace = makeClipSpace(src, introspector);
+        final List<Clip> clipOneToBaseClip  = clipSpace.subList(0, 2);
+
+        final Source patched = RollingPatch.patch(introspector, clipOneToBaseClip);
+
+        final String expected  = clipOneToBaseClip.get(clipOneToBaseClip.size() - 1).getSource().getContents();
+        final String revised   = patched.getContents();
+        assertThat(revised.equals(expected), is(true));
+    }
+
+
+    private static List<Clip> makeClipSpace(Source src, Introspector introspector){
+        return introspector.generateClipSpace(src);
+    }
 
     private static void  checkChangeCreation(SourceChanger changer, SingleEdit resolved){
        checkChangeCreation(changer, resolved, true);

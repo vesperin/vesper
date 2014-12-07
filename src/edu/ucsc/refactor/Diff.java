@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import difflib.*;
 import edu.ucsc.refactor.util.SourceFormatter;
 
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -44,6 +45,20 @@ public class Diff {
      */
     public List<Chunk> getDeletesFromOriginal() {
         return getChunksByType(/*difflib.Delta*/Delta.TYPE.DELETE);
+    }
+
+    /**
+     * @return the original {@link Source}.
+     */
+    public Source getOriginal(){
+        return this.original;
+    }
+
+    /**
+     * @return the revised {@link Source}.
+     */
+    public Source getRevised(){
+        return this.revised;
     }
 
     /**
@@ -90,12 +105,14 @@ public class Diff {
             if (!applied.equals(contentToLines(revised.getContents()))) return null;
 
             final StringBuilder stringList = new StringBuilder();
-            for (int i = 0; i < applied.size(); i++) {
-                String s = (String) applied.get(i);
-                if (i != applied.size() - 1)
+            final Iterator<?>   itr        = applied.iterator();
+            while(itr.hasNext()){
+                String s = (String) itr.next();
+                if(itr.hasNext()){
                     stringList.append(s).append("\n");
-                else
+                } else {
                     stringList.append(s);
+                }
             }
 
             return Source.from(revised, new SourceFormatter().format(stringList.toString()));

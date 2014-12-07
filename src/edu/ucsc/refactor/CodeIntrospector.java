@@ -19,6 +19,7 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -104,18 +105,7 @@ public class CodeIntrospector implements Introspector {
         return Recommender.recommendImports(code);
     }
 
-    @Override public Diff differences(Source thisSource, Source thatSource) {
-        final Source original;
-        final Source revised;
-
-        if(thisSource.getContents().length() < thatSource.getContents().length()){
-            original = thisSource;
-            revised  = thatSource;
-        } else {
-            original = thatSource;
-            revised  = thisSource;
-        }
-
+    @Override public Diff differences(Source original, Source revised) {
         return new Diff(original, revised);
     }
 
@@ -135,24 +125,24 @@ public class CodeIntrospector implements Introspector {
         );
     }
 
-    private static Clip transform(Clip that, ChangeRequest request){
+    private static Clip transform(Clip that, ChangeRequest request, boolean isBase){
         final Refactorer    refactorer  = Vesper.createRefactorer();
         final Change        change      = refactorer.createChange(request);
         final Commit        commit      = refactorer.apply(change);
 
         if(commit != null && commit.isValidCommit()){
-            return Clip.makeClip(that.getLabel(), commit.getSourceAfterChange());
+            return Clip.makeClip(that.getLabel(), commit.getSourceAfterChange(), isBase);
         } else {
             return that;
         }
     }
 
     private static Clip cleanup(Clip that){
-        return transform(that, ChangeRequest.optimizeImports(that.getSource()));
+        return transform(that, ChangeRequest.optimizeImports(that.getSource()), that.isBaseClip());
     }
 
     private static Clip format(Clip that){
-        return transform(that, ChangeRequest.reformatSource(that.getSource()));
+        return transform(that, ChangeRequest.reformatSource(that.getSource()), that.isBaseClip());
     }
 
     private static String capitalize(Iterable<String> words){
@@ -189,14 +179,17 @@ public class CodeIntrospector implements Introspector {
 
             final List<MethodDeclaration> methods = visitor.getMethodDeclarations();
 
-            final Set<Clip> space = Sets.newLinkedHashSet();
-            for(MethodDeclaration eachMethod : methods){
-                final Refactorer         refactorer  = Vesper.createRefactorer();
-                final Location           loc         = Locations.locate(eachMethod);
-                final int                startOffset = loc.getStart().getOffset();
-                final int                endOffset   = loc.getEnd().getOffset();
+            final Set<Clip>                     space   = Sets.newLinkedHashSet();
+            final Iterator<MethodDeclaration>   itr     = methods.iterator();
 
-                final SourceSelection    selection = new SourceSelection(
+            while(itr.hasNext()) {
+                final MethodDeclaration eachMethod = itr.next();
+                final Refactorer refactorer = Vesper.createRefactorer();
+                final Location loc = Locations.locate(eachMethod);
+                final int startOffset = loc.getStart().getOffset();
+                final int endOffset = loc.getEnd().getOffset();
+
+                final SourceSelection selection = new SourceSelection(
                         context.getSource(),
                         startOffset,
                         endOffset
@@ -204,10 +197,10 @@ public class CodeIntrospector implements Introspector {
 
 
                 final ChangeRequest request = ChangeRequest.clipSelection(selection);
-                final Change        change  = refactorer.createChange(request);
-                final Commit commit  = refactorer.apply(change);
+                final Change change = refactorer.createChange(request);
+                final Commit commit = refactorer.apply(change);
 
-                if(commit != null && commit.isValidCommit()){
+                if (commit != null && commit.isValidCommit()) {
 
                     final String label = Joiner.on(" ").join(
                             Splitter.onPattern(
@@ -222,7 +215,11 @@ public class CodeIntrospector implements Introspector {
                     final String capitalized = capitalize(Splitter.on(' ').split(label));
 
                     final Clip clip = format(cleanup(
-                            Clip.makeClip(capitalized, commit.getSourceAfterChange())
+                            Clip.makeClip(
+                                    capitalized,
+                                    commit.getSourceAfterChange(),
+                                    !itr.hasNext()
+                            )
                     ));
 
                     space.add(clip);
