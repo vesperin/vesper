@@ -34,6 +34,13 @@ public class Diff {
     }
 
     /**
+     * @return the list of code deltas that have changed.
+     */
+    public List<Delta> getChangeDeltasFromOriginal() {
+        return getDeltasByType(/*difflib.Delta*/Delta.TYPE.CHANGE);
+    }
+
+    /**
      * @return the list of code portions that have been inserted.
      */
     public List<Chunk> getInsertsFromOriginal() {
@@ -41,10 +48,24 @@ public class Diff {
     }
 
     /**
+     * @return the list of code deltas that have been inserted.
+     */
+    public List<Delta> getInsertDeltasFromOriginal() {
+        return getDeltasByType(/*difflib.Delta*/Delta.TYPE.INSERT);
+    }
+
+    /**
      * @return the list of code portions that have been deleted.
      */
     public List<Chunk> getDeletesFromOriginal() {
         return getChunksByType(/*difflib.Delta*/Delta.TYPE.DELETE);
+    }
+
+    /**
+     * @return the list of code deltas that have been deleted.
+     */
+    public List<Delta> getDeleteDeltasFromOriginal() {
+        return getDeltasByType(/*difflib.Delta*/Delta.TYPE.DELETE);
     }
 
     /**
@@ -69,16 +90,35 @@ public class Diff {
      */
     private List<Chunk> getChunksByType(Delta.TYPE type) {
         final List<Chunk> listOfChanges = Lists.newArrayList();
+        final List<Delta> deltas = getDeltasByType(type);
+
+        for (Delta each : deltas) {
+            listOfChanges.add(each.getRevised());
+        }
+
+        return listOfChanges;
+    }
+
+    /**
+     * Gets the list of code deltas matching the delta type.
+     *
+     * @param type the type of chunk to be extracted: insertion, deletion, or change.
+     * @return the list of code deltas.
+     */
+    private List<Delta> getDeltasByType(Delta.TYPE type) {
+        final List<Delta> listOfChanges = Lists.newArrayList();
         final List<Delta> deltas = getDeltas();
 
         for (Delta each : deltas) {
             if (each.getType() == type) {
-                listOfChanges.add(each.getRevised());
+                listOfChanges.add(each);
             }
         }
 
         return listOfChanges;
     }
+
+
 
     private Patch getPatch() {
         return DiffUtils.diff(

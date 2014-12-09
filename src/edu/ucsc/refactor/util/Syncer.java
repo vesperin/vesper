@@ -5,6 +5,7 @@ import edu.ucsc.refactor.Diff;
 import edu.ucsc.refactor.Introspector;
 import edu.ucsc.refactor.Source;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -15,34 +16,48 @@ import java.util.logging.Logger;
  */
 public class Syncer {
     private static final Logger LOGGER = Logger.getLogger(Syncer.class.getName());
+
+    public static Clip patch(Introspector introspector, Clip original, Clip revised){
+        try {
+            final Diff diff = introspector.differences(original.getSource(), revised.getSource());
+            return Clip.makeClip(original.getLabel() + " U " + revised.getLabel(), diff.resolve());
+        } catch (RuntimeException ex){
+            LOGGER.warning("Unable to change " + original.getSource().getName());
+            LOGGER.warning("Unable to resolve changes found in " + revised.getSource().getName());
+            return null;
+        }
+    }
+
     /**
-     * Resolves the differences in code found in a code example
-     * that has been multi-staged.
+     * Syncs, in a forward fashion, the differences between code examples; starting
+     * at the clip after the base.
      *
-     *
-     * @param stages the clip space.
+     * @param selectedClips the divided clip space.
      * @return the patched {@link Source} object.
      */
-    // TODO(Huascar) turn this into DeliveryStrategy interface
-    // one for direct string patching, and the other one for AST swapping.
-    public static Source patch(Introspector introspector, List<Clip> stages){
+    public static Source sync(Introspector introspector, List<Clip> selectedClips){
+
        // [1, 2, 3, 4] => [[1, 2] & 3] & 4
        Source  result  = null;
        Clip    left    = null;
-       for(Clip right : stages){
-         if(left == null) { left = right; continue; }
+       final Iterator<Clip> itr = selectedClips.iterator();
+       while(itr.hasNext()){
+        final Clip right = itr.next();
+        if(left == null) {
+           if(!right.isBaseClip()){
+               left = right;
+           }
 
-         final Diff diff = introspector.differences(left.getSource(), right.getSource());
+           if(itr.hasNext()){
+             continue;
+           }
+        }
 
-         try {
-           result = diff.resolve();
-           left   = Clip.makeClip(left.getLabel() + " U " + right.getLabel(), result);
-         } catch (RuntimeException ex){
-           LOGGER.warning("Unable to change " + diff.getOriginal().getName());
-           LOGGER.warning("Unable to resolve changes found in " + diff.getRevised().getName());
-           return result;
-         }
+        final Clip patched = patch(introspector, left, right);
+        if(patched == null) return result;
 
+        result = patched.getSource();
+        left   = patched;
        }
 
        return result;

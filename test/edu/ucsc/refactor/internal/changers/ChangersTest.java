@@ -1751,7 +1751,7 @@ public class ChangersTest {
         final Introspector introspector = Vesper.createRefactorer().getIntrospector();
         final List<Clip> clipSpace = makeClipSpace(src, introspector);
 
-        final Source patched = Syncer.patch(
+        final Source patched = Syncer.sync(
                 introspector,
                 clipSpace.subList(1, clipSpace.size())
         );
@@ -1763,14 +1763,14 @@ public class ChangersTest {
         assertThat(revised.equals(expected), is(true));
     }
 
-    @Test public void testClipSpaceBackwardPatching() throws Exception {
+    @Test public void testSyncingClipAfterBaseWithBaseClip() throws Exception {
         final Source src = InternalUtil.createQuickSortSource();
 
         final Introspector introspector = Vesper.createRefactorer().getIntrospector();
         final List<Clip> clipSpace = makeClipSpace(src, introspector);
         final List<Clip> clipOneToBaseClip  = clipSpace.subList(0, 2);
 
-        final Source patched = Syncer.patch(introspector, clipOneToBaseClip);
+        final Source patched = Syncer.sync(introspector, clipOneToBaseClip);
 
         final String expected  = clipOneToBaseClip.get(clipOneToBaseClip.size() - 1).getSource().getContents();
         final String revised   = patched.getContents();
