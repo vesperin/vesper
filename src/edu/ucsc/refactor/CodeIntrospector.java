@@ -313,60 +313,43 @@ public class CodeIntrospector implements Introspector {
         static void sink(Block parent, ASTNode node, Set<ASTNode> visited,
                          Graph<ASTNode> graph){
 
-//           if(stop){  // this is a method
-//               for(ASTNode each : AstUtil.getChildren(node)){
-//                   if(Block.class.isInstance(each)){
-//                       update(graph, parent, each);
-//                   }
-//               }
-//           } else {
-               final Deque<ASTNode> Q = new LinkedList<ASTNode>();
-               Q.offer(node);
+           final Deque<ASTNode> Q = new LinkedList<ASTNode>();
+           Q.offer(node);
 
-               while(!Q.isEmpty()){
-                  final ASTNode c = Q.poll();
-                  visited.add(c);
+           while(!Q.isEmpty()){
+              final ASTNode c = Q.poll();
+              visited.add(c);
 
-                   for(ASTNode child : AstUtil.getChildren(c)){
-                       if(!visited.contains(child)){
-                           if(skip(child)) continue;
+               for(ASTNode child : AstUtil.getChildren(c)){
+                   if(!visited.contains(child)){
+                       if(skip(child)) continue;
 
-                           if(Block.class.isInstance(child)){
-                             update(graph, parent, child);
-                             sink((Block)child, child, visited, graph);
+                       if(Block.class.isInstance(child)){
+                         update(graph, parent, child);
+                         sink((Block)child, child, visited, graph);
+                         Q.offer(child);
+                       } else {
+                         parent = parent == null ? (Block) node : parent;
+                         if(MethodInvocation.class.isInstance(child)){
+                           final MethodInvocation invoke = (MethodInvocation) child;
+                           final ASTNode method = AstUtil.findDeclaration(
+                                   invoke.resolveMethodBinding(),
+                                   AstUtil.parent(CompilationUnit.class, invoke)
+                           );
 
-                             // this is new (Dec 12)
-                             Q.offer(child);
-                           } else {
-                             parent = parent == null ? (Block) node : parent;
-                             if(MethodInvocation.class.isInstance(child)){
-                                   final MethodInvocation invoke = (MethodInvocation) child;
-                                   final ASTNode method = AstUtil.findDeclaration(invoke
-                                           .resolveMethodBinding(), AstUtil.parent
-                                           (CompilationUnit.class, invoke));
-                                   // this is new (Dec 12)
-                                   sink(parent, method, visited, graph);
-                                   Q.offer(method);
-                                   //sink(parent, method, visited, graph, true);
-                             } else {
+                           sink(parent, method, visited, graph);
+                           Q.offer(method);
+                         } else {
+                           sink(parent, child, visited, graph);
+                           Q.offer(child);
+                         }
 
-                                   sink(
-                                           parent,
-                                           child,
-                                           visited,
-                                           graph
-                                   );
-
-                                   Q.offer(child);
-                             }
-
-                           }
                        }
-
                    }
 
                }
-           //}
+
+           }
 
         }
 

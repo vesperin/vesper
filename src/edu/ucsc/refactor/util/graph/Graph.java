@@ -361,6 +361,14 @@ public class Graph<T> {
         return addEdge(from, to, cost) && addEdge(to, from, cost);
     }
 
+    /**
+     * Check whether a child vertex is a descendant (immediate or distant) of a
+     * parent vertex.
+     *
+     * @param child The child vertex
+     * @param parent The parent vertex
+     * @return true if the child is a descendant of the parent; false otherwise.
+     */
     public boolean isDescendantOf(Vertex<T> child, Vertex<T> parent){
         final Deque<Vertex<T>> stack = new LinkedList<Vertex<T>>();
         stack.push(child);
