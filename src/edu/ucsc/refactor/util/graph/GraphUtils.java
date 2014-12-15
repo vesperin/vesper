@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public class Traversals {
+public class GraphUtils {
 
     /** Color used to mark unvisited nodes */
     public static final int VISIT_COLOR_WHITE = 1;
@@ -19,7 +19,7 @@ public class Traversals {
     public static final int VISIT_COLOR_BLACK = 3;
 
     /** Private constructor **/
-    private Traversals(){}
+    private GraphUtils(){}
 
 
     /**
@@ -71,6 +71,12 @@ public class Traversals {
                 }
             }
         }
+    }
+
+
+    public static <T> Graph<T> benefit(Graph<T> graph) {
+
+        return graph;
     }
 
     /**

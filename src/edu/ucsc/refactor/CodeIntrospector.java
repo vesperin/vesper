@@ -141,13 +141,11 @@ public class CodeIntrospector implements Introspector {
         final BlockVisitor visitor = new BlockVisitor();
         method.accept(visitor);
 
-        System.out.println();
-        System.out.println("BEGIN:" + startingMethod);
-        System.out.println();
+
         final Graph<ASTNode> graph = visitor.graph();
-        System.out.println(graph);
-        System.out.println();
-        System.out.println("END");
+        final Vertex<ASTNode> root = graph.getRootVertex();
+
+
 
         return ImmutableList.of();
     }
@@ -305,9 +303,13 @@ public class CodeIntrospector implements Introspector {
                 G.addVertex(root);
             }
 
-            sink(null, node, V, G);
+            buildDirectedAcyclicGraph(node, V, G);
 
             return false;
+        }
+
+        static void buildDirectedAcyclicGraph(ASTNode node, Set<ASTNode> visited, Graph<ASTNode> graph){
+            sink(null, node, visited, graph);
         }
 
         static void sink(Block parent, ASTNode node, Set<ASTNode> visited,
@@ -377,6 +379,16 @@ public class CodeIntrospector implements Introspector {
                 graph.addEdge(n, c, 0);
             }
 
+        }
+
+
+        private static boolean isInnerBlock(ASTNode thisBlock, ASTNode thatBlock){
+            return Locations.inside(Locations.locate(thisBlock), Locations.locate(thatBlock));
+        }
+
+        private static int calculateNumberOfLines(ASTNode node){
+            final Location location = Locations.locate(node);
+            return Math.abs(location.getEnd().getLine() - location.getStart().getLine());
         }
 
         Graph<ASTNode> graph() {
