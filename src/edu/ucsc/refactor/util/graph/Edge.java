@@ -1,11 +1,7 @@
 package edu.ucsc.refactor.util.graph;
 
 /**
- * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
- */
-/**
  * A directed, weighted edge in a graph
-
  * @param <T>
  */
 public class Edge<T> {
