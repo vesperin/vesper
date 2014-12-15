@@ -16,6 +16,7 @@ import edu.ucsc.refactor.util.Commit;
 import edu.ucsc.refactor.util.Locations;
 import edu.ucsc.refactor.util.Recommender;
 import edu.ucsc.refactor.util.graph.Graph;
+import edu.ucsc.refactor.util.graph.GraphUtils;
 import edu.ucsc.refactor.util.graph.Vertex;
 import org.eclipse.jdt.core.dom.*;
 
@@ -141,12 +142,11 @@ public class CodeIntrospector implements Introspector {
         final BlockVisitor visitor = new BlockVisitor();
         method.accept(visitor);
 
-
-        final Graph<ASTNode> graph = visitor.graph();
-        final Vertex<ASTNode> root = graph.getRootVertex();
-
+        return solveTreeKnapsack(visitor.graph());
+    }
 
 
+    private static List<Location> solveTreeKnapsack(Graph<Item> graph){
         return ImmutableList.of();
     }
 
@@ -288,17 +288,17 @@ public class CodeIntrospector implements Introspector {
 
     static class BlockVisitor extends SourceVisitor {
 
-        final Graph<ASTNode>    G;
-        final Set<ASTNode>      V;
+        final Graph<Item>    G;
+        final Set<ASTNode>   V;
 
 
         BlockVisitor(){
-            G = new Graph<ASTNode>();
+            G = new Graph<Item>();
             V = Sets.newLinkedHashSet();
         }
 
         @Override public boolean visit(Block node) {
-            final Vertex<ASTNode> root  = new Vertex<ASTNode>(node.toString(), node);
+            final Vertex<Item> root  = new Vertex<Item>(node.toString(), Item.of(node));
             if(G.getRootVertex() == null){ G.addRootVertex(root); } else {
                 G.addVertex(root);
             }
@@ -308,12 +308,12 @@ public class CodeIntrospector implements Introspector {
             return false;
         }
 
-        static void buildDirectedAcyclicGraph(ASTNode node, Set<ASTNode> visited, Graph<ASTNode> graph){
+        static void buildDirectedAcyclicGraph(ASTNode node,
+               Set<ASTNode> visited, Graph<Item> graph){
             sink(null, node, visited, graph);
         }
 
-        static void sink(Block parent, ASTNode node, Set<ASTNode> visited,
-                         Graph<ASTNode> graph){
+        static void sink(Block parent, ASTNode node, Set<ASTNode> visited, Graph<Item> graph){
 
            final Deque<ASTNode> Q = new LinkedList<ASTNode>();
            Q.offer(node);
@@ -328,7 +328,7 @@ public class CodeIntrospector implements Introspector {
 
                        if(Block.class.isInstance(child)){
                          update(graph, parent, child);
-                         sink((Block)child, child, visited, graph);
+                         sink((Block) child, child, visited, graph);
                          Q.offer(child);
                        } else {
                          parent = parent == null ? (Block) node : parent;
@@ -363,27 +363,80 @@ public class CodeIntrospector implements Introspector {
         }
 
 
-        private static void update(Graph<ASTNode> graph, ASTNode parent, ASTNode child){
-            final Vertex<ASTNode> n = graph.findVertexByName(parent.toString());
+        private static void update(Graph<Item> graph, ASTNode parent, ASTNode child){
+            final Vertex<Item> n = graph.findVertexByName(parent.toString());
 
             final Block  b = (Block) child;
-            Vertex<ASTNode> c = graph.findVertexByName(b.toString());
+            Vertex<Item> c = graph.findVertexByName(b.toString());
             if(c == null){
-                c = new Vertex<ASTNode>(b.toString(), b);
+                c = new Vertex<Item>(b.toString(), Item.of(b));
             }
 
             graph.addVertex(n);
             graph.addVertex(c);
 
             if(!graph.isDescendantOf(n, c)) {
-                graph.addEdge(n, c, 0);
+                graph.addEdge(n, c);
+                c.getData().updateBenefit(graph);
+                n.getData().updateWeight(c);
             }
 
         }
 
+        Graph<Item> graph() {
+            return G;
+        }
+    }
 
-        private static boolean isInnerBlock(ASTNode thisBlock, ASTNode thatBlock){
-            return Locations.inside(Locations.locate(thisBlock), Locations.locate(thatBlock));
+    static class Item {
+
+        final ASTNode   node;
+
+        int       benefit;
+        int       weight;
+
+        Item(ASTNode node, int benefit){
+            this.node       = node;
+            this.benefit    = benefit;
+            this.weight     = calculateNumberOfLines(this.node);
+        }
+
+        Item(ASTNode node){
+            this(node, 1);
+        }
+
+
+        static Item of(ASTNode node){
+            return new Item(node);
+        }
+
+
+        public void updateWeight(Vertex<Item> child){
+            if(isInnerBlock(this.node, child.getData().node)){
+              this.weight = this.weight - child.getData().weight;
+            }
+        }
+
+        public void updateBenefit(Graph<Item> graph) {
+            final int depth = GraphUtils.depth(0, graph.findVertexByName(this.node.toString()),
+                    ImmutableList.of(graph.getRootVertex()));
+
+            this.benefit = this.benefit + calculateBenefit(this.node, depth);
+        }
+
+        private static int calculateBenefit(ASTNode/*Block*/ node, int depth){
+
+            final CompilationUnit root = AstUtil.parent(CompilationUnit.class, node);
+
+            int b = 0;
+            for(ASTNode each : AstUtil.getChildren(node)){
+                final SimpleName name = AstUtil.getSimpleName(each);
+                if(name != null){
+                    b += (AstUtil.findByNode(root, name).size()/depth);
+                }
+            }
+
+            return b;
         }
 
         private static int calculateNumberOfLines(ASTNode node){
@@ -391,9 +444,22 @@ public class CodeIntrospector implements Introspector {
             return Math.abs(location.getEnd().getLine() - location.getStart().getLine());
         }
 
-        Graph<ASTNode> graph() {
-            return G;
+        private static boolean isInnerBlock(ASTNode thisBlock, ASTNode thatBlock){
+            return Locations.inside(Locations.locate(thisBlock), Locations.locate(thatBlock));
         }
+
+        @Override public int hashCode() {
+            return node.hashCode();
+        }
+
+        @Override public boolean equals(Object o) {
+            return Item.class.isInstance(o) && node.equals(((Item) o).node);
+        }
+
+        @Override public String toString() {
+            return "Block(benefit:" + benefit + ", weight:" + weight + ")";
+        }
+
     }
 
 }

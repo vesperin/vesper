@@ -50,6 +50,23 @@ public class Graph<T> {
      *          the Edge<T> starting vertex
      * @param to -
      *          the Edge<T> ending vertex
+     * @return true if the Edge<T> was added, false if from already has this Edge<T>
+     * @throws IllegalArgumentException
+     *           if from/to are not vertices in the graph
+     */
+    public boolean addEdge(Vertex<T> from, Vertex<T> to) throws
+            IllegalArgumentException {
+       return addEdge(from, to, 0);
+    }
+
+
+    /**
+     * Insert a directed, weighted Edge<T> into the graph.
+     *
+     * @param from -
+     *          the Edge<T> starting vertex
+     * @param to -
+     *          the Edge<T> ending vertex
      * @param cost -
      *          the Edge<T> weight/cost
      * @return true if the Edge<T> was added, false if from already has this Edge<T>

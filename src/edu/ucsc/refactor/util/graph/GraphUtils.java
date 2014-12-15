@@ -75,7 +75,6 @@ public class GraphUtils {
 
 
     public static <T> Graph<T> benefit(Graph<T> graph) {
-
         return graph;
     }
 
@@ -148,7 +147,7 @@ public class GraphUtils {
         }
 
         if(!nodesAtNextLevel.isEmpty()){
-          depth(depth + 1, vertex, nodesAtNextLevel);
+          return depth(depth + 1, vertex, nodesAtNextLevel);
         }
 
         return -1; // nothing was found
