@@ -22,6 +22,7 @@ import org.junit.Test;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -1775,6 +1776,24 @@ public class ChangersTest {
         final String expected  = clipOneToBaseClip.get(clipOneToBaseClip.size() - 1).getSource().getContents();
         final String revised   = patched.getContents();
         assertThat(revised.equals(expected), is(true));
+    }
+
+
+    @Test public void testSummarizeSingleSourceCode() throws Exception {
+        final Source src = InternalUtil.createQuickSortSource();
+
+        final Introspector introspector = Vesper.createRefactorer().getIntrospector();
+        List<Location> foldingLocations = introspector.summarize("quicksort", src);
+        assertThat(foldingLocations.isEmpty(), is(true));
+    }
+
+
+    @Test public void testSummarizeAllPossibleClips() throws Exception {
+        final Source src = InternalUtil.createQuickSortSource();
+
+        final Introspector introspector = Vesper.createRefactorer().getIntrospector();
+        Map<Clip, List<Location>> allSummaries = introspector.summarizeAllPossibleClips(src);
+        assertThat(allSummaries.isEmpty(), is(false));
     }
 
 

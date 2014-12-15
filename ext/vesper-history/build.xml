@@ -32,7 +32,6 @@
             -->
             <zipfileset excludes="META-INF/**/*" src="${common.basedir}/build/dist/vesper-${version}.jar"/>
             <zipfileset excludes="META-INF/**/*" src="lib/org.eclipse.egit.github.core-3.3.0-SNAPSHOT-sources.jar"/>
-            <zipfileset excludes="META-INF/**/*" src="lib/jgrapht-core-0.9.0.jar"/>
         </jarjar>
     </target>
 

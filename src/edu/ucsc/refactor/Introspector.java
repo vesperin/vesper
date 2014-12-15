@@ -4,6 +4,7 @@ import edu.ucsc.refactor.spi.IssueDetector;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -108,6 +109,28 @@ public interface Introspector {
      * @return The clip space.
      */
     List<Clip> generateClipSpace(Source code);
+
+    /**
+     * Summarizes each clip in a Clip space by detecting block nodes that can be
+     * automatically folded.
+     *
+     * @param code the code example.
+     * @return a map between clips and foldable code areas; together they represent
+     *      the summary of a code example.
+     */
+    Map<Clip, List<Location>> summarizeAllPossibleClips(Source code);
+
+
+    /**
+     * Summarizes a code example by detecting those areas that can be automatically folded. The
+     * unfolded areas represent areas that can be ignored by a developer when trying to
+     * understanding the code example.
+     *
+     * @param startingMethod the method that we need to examine first.
+     * @param code The code example.
+     * @return a list of foldable locations
+     */
+    List<Location> summarize(String startingMethod, Source code);
 
 
     /**

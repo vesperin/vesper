@@ -20,7 +20,10 @@ public class Syncer {
     public static Clip patch(Introspector introspector, Clip original, Clip revised){
         try {
             final Diff diff = introspector.differences(original.getSource(), revised.getSource());
-            return Clip.makeClip(original.getLabel() + " U " + revised.getLabel(), diff.resolve());
+            return Clip.makeClip(revised.getMethodName(),
+                    original.getLabel() + " U " + revised.getLabel(),
+                    diff.resolve()
+            );
         } catch (RuntimeException ex){
             LOGGER.warning("Unable to change " + original.getSource().getName());
             LOGGER.warning("Unable to resolve changes found in " + revised.getSource().getName());
