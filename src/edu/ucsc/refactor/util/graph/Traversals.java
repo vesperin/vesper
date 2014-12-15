@@ -2,6 +2,7 @@ package edu.ucsc.refactor.util.graph;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -117,6 +118,36 @@ public class Traversals {
         }
     }
 
+    /**
+     * Returns the depth of a vertex in a graph.
+     *
+     * @param depth the incrementing depth
+     * @param vertex the vertex to be searched
+     * @param nodesAtCurrentDepth the vertices at the current depth
+     * @param <T> type of data stored in a vertex
+     * @return the depth of the searched vertex; -1 if not found.
+     */
+    public static <T> int depth(int depth, Vertex<T> vertex, List<Vertex<T>> nodesAtCurrentDepth){
+        List<Vertex<T>> nodesAtNextLevel = new ArrayList<Vertex<T>>();
+        for( Vertex<T> each : nodesAtCurrentDepth){
+          if(each.equals(vertex)){
+              return depth;
+          }
+
+          if(each.getOutgoingEdgeCount() > 0){
+             for (Edge<T> child : each.getOutgoingEdges()){
+                 nodesAtNextLevel.add(child.getTo());
+             }
+          }
+        }
+
+        if(!nodesAtNextLevel.isEmpty()){
+          depth(depth + 1, vertex, nodesAtNextLevel);
+        }
+
+        return -1; // nothing was found
+    }
+
 
 
     /**
@@ -146,7 +177,6 @@ public class Traversals {
         cycleEdges.toArray(cycles);
         return cycles;
     }
-
 
 
     private static <T> void visit(Vertex<T> v, ArrayList<Edge<T>> cycleEdges) {

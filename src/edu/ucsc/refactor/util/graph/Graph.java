@@ -83,8 +83,9 @@ public class Graph<T> {
      */
     public void addRootVertex(Vertex<T> root) {
         this.rootVertex = root;
-        if (!containsVertex(root))
-            this.addVertex(root);
+        if(!containsVertex(root)) {
+          this.addVertex(root);
+        }
     }
 
 
@@ -95,8 +96,9 @@ public class Graph<T> {
      * @see Vertex#clearMark()
      */
     public void clearMark() {
-        for (Vertex<T> w : vertices)
-            w.clearMark();
+        for (Vertex<T> w : vertices) {
+          w.clearMark();
+        }
     }
 
     /**
@@ -104,8 +106,9 @@ public class Graph<T> {
      * all edges.
      */
     public void clearEdges() {
-        for (Edge<T> e : edges)
-            e.clearMark();
+        for (Edge<T> e : edges) {
+          e.clearMark();
+        }
     }
 
 
@@ -336,8 +339,11 @@ public class Graph<T> {
 
     @Override public String toString() {
         StringBuilder tmp = new StringBuilder("Graph[");
-        for (Vertex<T> v : vertices)
-            tmp.append(v);
+
+        for (Vertex<T> v : vertices) {
+          tmp.append(v);
+        }
+
         tmp.append(']');
         return tmp.toString();
     }
