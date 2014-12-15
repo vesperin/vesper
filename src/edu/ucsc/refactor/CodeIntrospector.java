@@ -301,7 +301,7 @@ public class CodeIntrospector implements Introspector {
 
         @Override public boolean visit(Block node) {
             final Vertex<ASTNode> root  = new Vertex<ASTNode>(node.toString(), node);
-            if(G.getRootVertex() == null){ G.setRootVertex(root); } else {
+            if(G.getRootVertex() == null){ G.addRootVertex(root); } else {
                 G.addVertex(root);
             }
 
