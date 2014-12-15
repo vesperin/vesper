@@ -324,7 +324,7 @@ public class CodeIntrospector implements Introspector {
 
                for(ASTNode child : AstUtil.getChildren(c)){
                    if(!visited.contains(child)){
-                       if(skip(child)) continue;
+                       if(skipNode(child)) continue;
 
                        if(Block.class.isInstance(child)){
                          update(graph, parent, child);
@@ -356,7 +356,28 @@ public class CodeIntrospector implements Introspector {
         }
 
 
-        private static boolean skip(ASTNode node){
+        private static int calculateBenefit(ASTNode/*Block*/ node, int depth){
+
+            final CompilationUnit root = AstUtil.parent(CompilationUnit.class, node);
+
+            int b = 0;
+            for(ASTNode each : AstUtil.getChildren(node)){
+                final SimpleName name = AstUtil.getSimpleName(each);
+                if(name != null){
+                    b += (AstUtil.findByNode(root, name).size()/depth);
+                }
+            }
+
+            return b;
+        }
+
+
+        private static boolean isInnerBlock(ASTNode thisBlock, ASTNode thatBlock){
+            return Locations.inside(Locations.locate(thisBlock), Locations.locate(thatBlock));
+        }
+
+
+        private static boolean skipNode(ASTNode node){
             return (SimpleName.class.isInstance(node) ||
                     PrimitiveType.class.isInstance(node));
 
@@ -377,10 +398,26 @@ public class CodeIntrospector implements Introspector {
 
             if(!graph.isDescendantOf(n, c)) {
                 graph.addEdge(n, c);
-                c.getData().updateBenefit(graph);
-                n.getData().updateWeight(c);
+
+                updateItemValue(n, c, graph);
             }
 
+        }
+
+
+        private static void updateItemValue(Vertex<Item> from, Vertex<Item> to, Graph<Item> graph){
+            // update benefit of the `to` node
+
+            final List<Vertex<Item>> nodesAtDepth = ImmutableList.of(graph.getRootVertex());
+            final int                depth        = GraphUtils.depth(0, to, nodesAtDepth);
+
+            to.getData().benefit = to.getData().benefit + calculateBenefit(to.getData().node, depth);
+
+
+            // update weight of the `from` node
+            if(isInnerBlock(from.getData().node, to.getData().node)){
+                from.getData().weight = from.getData().weight - to.getData().weight;
+            }
         }
 
         Graph<Item> graph() {
@@ -410,42 +447,9 @@ public class CodeIntrospector implements Introspector {
             return new Item(node);
         }
 
-
-        public void updateWeight(Vertex<Item> child){
-            if(isInnerBlock(this.node, child.getData().node)){
-              this.weight = this.weight - child.getData().weight;
-            }
-        }
-
-        public void updateBenefit(Graph<Item> graph) {
-            final int depth = GraphUtils.depth(0, graph.findVertexByName(this.node.toString()),
-                    ImmutableList.of(graph.getRootVertex()));
-
-            this.benefit = this.benefit + calculateBenefit(this.node, depth);
-        }
-
-        private static int calculateBenefit(ASTNode/*Block*/ node, int depth){
-
-            final CompilationUnit root = AstUtil.parent(CompilationUnit.class, node);
-
-            int b = 0;
-            for(ASTNode each : AstUtil.getChildren(node)){
-                final SimpleName name = AstUtil.getSimpleName(each);
-                if(name != null){
-                    b += (AstUtil.findByNode(root, name).size()/depth);
-                }
-            }
-
-            return b;
-        }
-
         private static int calculateNumberOfLines(ASTNode node){
             final Location location = Locations.locate(node);
             return Math.abs(location.getEnd().getLine() - location.getStart().getLine());
-        }
-
-        private static boolean isInnerBlock(ASTNode thisBlock, ASTNode thatBlock){
-            return Locations.inside(Locations.locate(thisBlock), Locations.locate(thatBlock));
         }
 
         @Override public int hashCode() {
