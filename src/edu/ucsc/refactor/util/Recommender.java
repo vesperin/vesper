@@ -47,8 +47,6 @@ public class Recommender {
         PACKAGES_OF_INTEREST = Collections.unmodifiableMap(container);
     }
 
-    private static final int BOUNDARY = 5;
-
     private Recommender(){}
 
     /**
