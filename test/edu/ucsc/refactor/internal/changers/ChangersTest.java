@@ -1784,7 +1784,7 @@ public class ChangersTest {
 
         final Introspector introspector = Vesper.createRefactorer().getIntrospector();
         List<Location> foldingLocations = introspector.summarize("quicksort", src);
-        assertThat(foldingLocations.isEmpty(), is(true));
+        assertThat(foldingLocations.isEmpty(), is(false));
     }
 
 
