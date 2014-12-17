@@ -117,7 +117,7 @@ public class CodeIntrospector implements Introspector {
     }
 
 
-    @Override public List<Clip> generateClipSpace(Source code) {
+    @Override public List<Clip> multiStage(Source code) {
         final ClipSpaceGeneration spaceGeneration = new ClipSpaceGeneration(makeContext(code));
         // The clip space represents a multi stage example; an example split into chunks
         // where each chunk increases the complexity of the code example.
@@ -126,10 +126,7 @@ public class CodeIntrospector implements Introspector {
         return ImmutableList.copyOf(clipSpace).reverse();
     }
 
-    @Override public Map<Clip, List<Location>> summarizeAllPossibleClips(Source code) {
-        final ClipSpaceGeneration spaceGeneration = new ClipSpaceGeneration(makeContext(code));
-        final Set<Clip> clipSpace = spaceGeneration.generateSpace(code);
-
+    @Override public Map<Clip, List<Location>> summarize(List<Clip> clipSpace) {
         Map<Clip, List<Location>> result = Maps.newLinkedHashMap();
 
         for(Clip each : clipSpace){ /// starts from smallest to larger code example
@@ -137,7 +134,6 @@ public class CodeIntrospector implements Introspector {
             result.put(each, summarize(each.getMethodName(), each.getSource()));
 
         }
-
 
         return result;
     }

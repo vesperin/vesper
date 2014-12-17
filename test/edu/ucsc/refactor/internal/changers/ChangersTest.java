@@ -1792,13 +1792,13 @@ public class ChangersTest {
         final Source src = InternalUtil.createQuickSortSource();
 
         final Introspector introspector = Vesper.createRefactorer().getIntrospector();
-        Map<Clip, List<Location>> allSummaries = introspector.summarizeAllPossibleClips(src);
+        Map<Clip, List<Location>> allSummaries = introspector.summarize(introspector.multiStage(src));
         assertThat(allSummaries.isEmpty(), is(false));
     }
 
 
     private static List<Clip> makeClipSpace(Source src, Introspector introspector){
-        return introspector.generateClipSpace(src);
+        return introspector.multiStage(src);
     }
 
     private static void  checkChangeCreation(SourceChanger changer, SingleEdit resolved){

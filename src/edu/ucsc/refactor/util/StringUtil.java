@@ -3,7 +3,9 @@ package edu.ucsc.refactor.util;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -110,6 +112,17 @@ public class StringUtil {
             endIndex--;
 
         return value.substring(0, endIndex + 1);
+    }
+
+
+    public static Set<String> normalize(Set<String> docs){
+        final Set<String> n = Sets.newHashSet();
+        for(String each : docs){
+            // normalize line endings
+            n.add(each.replaceAll("\r\n", "\n"));
+        }
+
+        return n;
     }
 
 

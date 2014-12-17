@@ -15,7 +15,6 @@ import java.util.Set;
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public interface Introspector {
-
     /**
      * Verifies whether this {@code Source} is valid; purely a syntax checking.
      *
@@ -121,24 +120,23 @@ public interface Introspector {
     Diff differences(Source original, Source revised);
 
     /**
-     * Generates the clips space; i.e., the space containing all the different stages
-     * (functionality) covered in the code example.
+     * Multi stage a source code by generating all possible clips that can be extracted from the
+     * code example.
      *
      * @param code The code example used to created the clip space.
      * @return The clip space.
      */
-    List<Clip> generateClipSpace(Source code);
+    List<Clip> multiStage(Source code);
 
     /**
      * Summarizes each clip in a Clip space by detecting block nodes that can be
      * automatically folded.
      *
-     * @param code the code example.
+     * @param clipSpace the list of clips (stages) extracted from a code example.
      * @return a map between clips and foldable code areas; together they represent
      *      the summary of a code example.
      */
-    Map<Clip, List<Location>> summarizeAllPossibleClips(Source code);
-
+    Map<Clip, List<Location>> summarize(List<Clip> clipSpace);
 
     /**
      * Summarizes a code example by detecting those areas that can be automatically folded. The

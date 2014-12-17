@@ -1,6 +1,5 @@
 package edu.ucsc.refactor.util;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -8,7 +7,6 @@ import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.EclipseJavaParser;
 import edu.ucsc.refactor.internal.util.AstUtil;
 import edu.ucsc.refactor.spi.JavaParser;
-import edu.ucsc.refactor.spi.RankingStrategy;
 import org.eclipse.jdt.core.dom.ASTNode;
 
 import java.util.*;
@@ -157,42 +155,6 @@ public class Recommender {
         return context;
     }
 
-    private static Set<String> normalize(Set<String> docs){
-        final Set<String> n = Sets.newHashSet();
-        for(String each : docs){
-            // normalize line endings
-            n.add(each.replaceAll("\r\n", "\n"));
-        }
-
-        return n;
-    }
-
-    /**
-     * Ranks and then recommends the top K ranked clips.
-     *
-     * @param docs A set of documents describing the code example.
-     * @param clipSpace The space to be ranked.
-     * @return The top K ranked clips.
-     */
-    public static List<Clip> recommendClips(List<Clip> clipSpace, Set<String> docs){
-        final Set<String> normalized = normalize(docs);
-
-        // small enough space (< 5)? if yes, then dont rank it.
-        if(clipSpace.size() <= BOUNDARY){ // 5? on avg, ppl create 5 stages
-            return clipSpace;
-        } else { // otherwise, do the ranking and pick the  top 5 clips (may not be multi-stage
-            final ClipRankingStrategy   ranking     = new ClipRankingStrategy();
-            final List<Clip>            rankedSpace = ranking.rankSpace(clipSpace, normalized);
-            return rankedSpace.subList(0, Math.min(BOUNDARY, rankedSpace.size()));
-        }
-    }
-
-    static class ClipRankingStrategy implements RankingStrategy {
-        @Override public List<Clip> rankSpace(List<Clip> space, Set<String> docs) {
-            final List<Clip> reversed = ImmutableList.copyOf(space).reverse();
-            return ImmutableList.copyOf(reversed);
-        }
-    }
 
 
     private static class Tuple {
