@@ -16,7 +16,8 @@ import edu.ucsc.refactor.spi.SpaceGeneration;
 import edu.ucsc.refactor.util.Commit;
 import edu.ucsc.refactor.util.Locations;
 import edu.ucsc.refactor.util.Recommender;
-import edu.ucsc.refactor.util.graph.Graph;
+import edu.ucsc.refactor.util.graph.DirectedAcyclicGraph;
+import edu.ucsc.refactor.util.graph.DirectedGraph;
 import edu.ucsc.refactor.util.graph.GraphUtils;
 import edu.ucsc.refactor.util.graph.Vertex;
 import org.eclipse.jdt.core.dom.*;
@@ -150,7 +151,7 @@ public class CodeIntrospector implements Introspector {
     }
 
 
-    private static List<Location> summarizeCodeBySolvingTreeKnapsack(Graph<Item> graph, int capacity){
+    private static List<Location> summarizeCodeBySolvingTreeKnapsack(DirectedGraph<Item> graph, int capacity){
 
         final LinkedList<Vertex<Item>> Q = Lists.newLinkedList(graph.getVertices());
         Q.addFirst(new Vertex<Item>()); // required to move the idx to 1
@@ -212,7 +213,7 @@ public class CodeIntrospector implements Introspector {
     }
 
 
-    private static boolean isPrecedenceConstraintMaintained(int[][] opt, int i, int j, Graph<Item> graph){
+    private static boolean isPrecedenceConstraintMaintained(int[][] opt, int i, int j, DirectedGraph<Item> graph){
 
         final Vertex<Item> parent = graph.getVertex(i - 1);
         final Vertex<Item> child  = graph.size() == i ? null : graph.getVertex(i);
@@ -224,14 +225,14 @@ public class CodeIntrospector implements Introspector {
         return true;
     }
 
-    private static MethodDeclaration getMethod(String name, Context context){
+    static MethodDeclaration getMethod(String name, Context context){
         final ProgramUnitLocator    locator     = new ProgramUnitLocator(context);
         final List<NamedLocation>   locations   = locator.locate(new MethodUnit(name));
         final ProgramUnitLocation   target      = (ProgramUnitLocation)locations.get(0);
         return (MethodDeclaration)target.getNode();
     }
 
-    private static Context makeContext(Source code){
+    static Context makeContext(Source code){
         final JavaSnippetParser parser  = new EclipseJavaSnippetParser();
         final Context           context = new Context(code);
         final ResultPackage     parsed  = parser.offer(context);
@@ -246,7 +247,7 @@ public class CodeIntrospector implements Introspector {
         return context;
     }
 
-    private static Clip transform(Clip that, ChangeRequest request, boolean isBase){
+    static Clip transform(Clip that, ChangeRequest request, boolean isBase){
         final Refactorer    refactorer  = Vesper.createRefactorer();
         final Change        change      = refactorer.createChange(request);
         final Commit        commit      = refactorer.apply(change);
@@ -263,15 +264,15 @@ public class CodeIntrospector implements Introspector {
         }
     }
 
-    private static Clip cleanup(Clip that){
+    static Clip cleanup(Clip that){
         return transform(that, ChangeRequest.optimizeImports(that.getSource()), that.isBaseClip());
     }
 
-    private static Clip format(Clip that){
+    static Clip format(Clip that){
         return transform(that, ChangeRequest.reformatSource(that.getSource()), that.isBaseClip());
     }
 
-    private static String capitalize(Iterable<String> words){
+    static String capitalize(Iterable<String> words){
         final StringBuilder builder = new StringBuilder();
         for(String each : words){
             builder.append(capitalize(each)).append(" ");
@@ -280,7 +281,7 @@ public class CodeIntrospector implements Introspector {
         return builder.toString().trim();
     }
 
-    private static String capitalize(String s) {
+    static String capitalize(String s) {
         if (s.length() == 0) return s;
         return s.substring(0, 1).toUpperCase() + s.substring(1).toLowerCase();
     }
@@ -355,12 +356,12 @@ public class CodeIntrospector implements Introspector {
 
     static class BlockVisitor extends SourceVisitor {
 
-        final Graph<Item>    G;
+        final DirectedGraph<Item> G;
         final Set<ASTNode>   V;
 
 
         BlockVisitor(){
-            G = new Graph<Item>();
+            G = new DirectedAcyclicGraph<Item>();
             V = Sets.newLinkedHashSet();
         }
 
@@ -376,11 +377,11 @@ public class CodeIntrospector implements Introspector {
         }
 
         static void buildDirectedAcyclicGraph(ASTNode node,
-               Set<ASTNode> visited, Graph<Item> graph){
+               Set<ASTNode> visited, DirectedGraph<Item> graph){
             sink(null, node, visited, graph);
         }
 
-        static void sink(Block parent, ASTNode node, Set<ASTNode> visited, Graph<Item> graph){
+        static void sink(Block parent, ASTNode node, Set<ASTNode> visited, DirectedGraph<Item> graph){
 
            final Deque<ASTNode> Q = new LinkedList<ASTNode>();
            Q.offer(node);
@@ -451,11 +452,11 @@ public class CodeIntrospector implements Introspector {
         }
 
 
-        private static void update(Graph<Item> graph, ASTNode parent, ASTNode child){
-            final Vertex<Item> n = graph.findVertexByName(parent.toString());
+        private static void update(DirectedGraph<Item> graph, ASTNode parent, ASTNode child){
+            final Vertex<Item> n = graph.getVertex(parent.toString());
 
             final Block  b = (Block) child;
-            Vertex<Item> c = graph.findVertexByName(b.toString());
+            Vertex<Item> c = graph.getVertex(b.toString());
             if(c == null){
                 c = new Vertex<Item>(b.toString(), Item.of(b));
             }
@@ -463,7 +464,7 @@ public class CodeIntrospector implements Introspector {
             graph.addVertex(n);
             graph.addVertex(c);
 
-            if(!graph.isDescendantOf(n, c)) {
+            if(!DirectedAcyclicGraph.isDescendantOf(n, c)) {
                 graph.addEdge(n, c);
 
                 updateItemValue(n, c, graph);
@@ -472,7 +473,7 @@ public class CodeIntrospector implements Introspector {
         }
 
 
-        private static void updateItemValue(Vertex<Item> from, Vertex<Item> to, Graph<Item> graph){
+        private static void updateItemValue(Vertex<Item> from, Vertex<Item> to, DirectedGraph<Item> graph){
             // update benefit of the `to` node
 
             final List<Vertex<Item>> nodesAtDepth = ImmutableList.of(graph.getRootVertex());
@@ -487,7 +488,7 @@ public class CodeIntrospector implements Introspector {
             }
         }
 
-        Graph<Item> graph() {
+        DirectedGraph<Item> graph() {
             return G;
         }
     }

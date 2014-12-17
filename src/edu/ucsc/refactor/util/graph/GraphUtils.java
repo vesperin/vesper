@@ -1,7 +1,6 @@
 package edu.ucsc.refactor.util.graph;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -22,105 +21,8 @@ public class GraphUtils {
     private GraphUtils(){}
 
 
-    /**
-     * Perform a breadth first search of this graph, starting at v.
-     *
-     * @param graph - the graph to be searched.
-     * @param v - the search starting point
-     * @param visitor - the visitor whose visit method is called prior to visiting a vertex.
-     */
-    public <T> void breadthFirstSearch(Graph<T> graph, Vertex<T> v, final Visitor<T> visitor) {
-        VisitorThrow<T, RuntimeException> wrapper = new VisitorThrow<T, RuntimeException>() {
-            public void visit(Graph<T> g, Vertex<T> v) throws RuntimeException {
-                if (visitor != null)
-                    visitor.visit(g, v);
-            }
-        };
-
-        breadthFirstSearch(graph, v, wrapper);
-    }
-
-    /**
-     * Perform a breadth first search of this graph, starting at v. The visit may
-     * be cut short if visitor throws an exception during a visit callback.
-     *
-     * @param <E> the exception type
-     * @param v - the search starting point
-     * @param visitor - the visitor whose visit method is called prior to visiting a vertex.
-     * @throws E if visitor.visit throws an exception
-     */
-    public static <E extends Exception, T> void breadthFirstSearch(Graph<T> graph,
-                  Vertex<T> v, VisitorThrow<T, E> visitor) throws E {
-
-        LinkedList<Vertex<T>> q = new LinkedList<Vertex<T>>();
-
-        q.add(v);
-        if (visitor != null)
-            visitor.visit(graph, v);
-        v.visit();
-        while (!q.isEmpty()) {
-            v = q.removeFirst();
-            for (int i = 0; i < v.getOutgoingEdgeCount(); i++) {
-                Edge<T> e = v.getOutgoingEdge(i);
-                Vertex<T> to = e.getTo();
-                if (!to.visited()) {
-                    q.add(to);
-                    if (visitor != null)
-                        visitor.visit(graph, to);
-                    to.visit();
-                }
-            }
-        }
-    }
-
-
-    public static <T> Graph<T> benefit(Graph<T> graph) {
+    public static <T> DirectedAcyclicGraph<T> benefit(DirectedAcyclicGraph<T> graph) {
         return graph;
-    }
-
-    /**
-     * Perform a depth first search using recursion.
-     *
-     * @param graph - the graph to be searched.
-     * @param v - the Vertex to start the search from
-     * @param visitor - the visitor to inform prior to
-     * @see Visitor#visit(Graph, Vertex)
-     */
-    public static <T extends Exception> void depthFirstSearch(Graph<T> graph,
-                  Vertex<T> v, final Visitor<T> visitor) {
-
-        VisitorThrow<T, RuntimeException> wrapper = new VisitorThrow<T, RuntimeException>() {
-            public void visit(Graph<T> g, Vertex<T> v) throws RuntimeException {
-                if (visitor != null)
-                    visitor.visit(g, v);
-            }
-        };
-
-        depthFirstSearch(graph, v, wrapper);
-    }
-
-    /**
-     * Perform a depth first search using recursion. The search may be cut short
-     * if the visitor throws an exception.
-     *
-     * @param <E> the exception type
-     * @param v - the Vertex to start the search from
-     * @param visitor - the visitor to inform prior to
-     * @see Visitor#visit(Graph, Vertex)
-     * @throws E if visitor.visit throws an exception
-     */
-    public static <E extends Exception, T> void depthFirstSearch(Graph<T> graph,
-                  Vertex<T> v, VisitorThrow<T, E> visitor) throws E {
-
-        if (visitor != null)
-            visitor.visit(graph, v);
-        v.visit();
-        for (int i = 0; i < v.getOutgoingEdgeCount(); i++) {
-            Edge<T> e = v.getOutgoingEdge(i);
-            if (!e.getTo().visited()) {
-                depthFirstSearch(graph, e.getTo(), visitor);
-            }
-        }
     }
 
     /**
@@ -165,7 +67,7 @@ public class GraphUtils {
      * @return the edges that form cycles in the graph. The array will be empty if
      *         there are no cycles.
      */
-    public static <T> Edge<T>[] findCycles(Graph<T> graph) {
+    public static <T> Edge<T>[] findCycles(DirectedGraph<T> graph) {
         ArrayList<Edge<T>> cycleEdges = new ArrayList<Edge<T>>();
         // Mark all vertices as white
         for (int n = 0; n < graph.getVertices().size(); n++) {
