@@ -4,6 +4,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import edu.ucsc.refactor.internal.*;
@@ -142,12 +143,82 @@ public class CodeIntrospector implements Introspector {
         final BlockVisitor visitor = new BlockVisitor();
         method.accept(visitor);
 
-        return solveTreeKnapsack(visitor.graph());
+        return summarizeCodeBySolvingTreeKnapsack(visitor.graph(), 17/*lines of code*/);
     }
 
 
-    private static List<Location> solveTreeKnapsack(Graph<Item> graph){
-        return ImmutableList.of();
+    private static List<Location> summarizeCodeBySolvingTreeKnapsack(Graph<Item> graph, int capacity){
+
+        final LinkedList<Vertex<Item>> Q = Lists.newLinkedList(graph.getVertices());
+        Q.addFirst(new Vertex<Item>()); // required to move the idx to 1
+
+
+        final int N = Q.size();
+        final int W = capacity < 0 ? 0 : capacity;
+
+        int[][]     opt = new int[N][W + 1];
+        boolean[][] sol = new boolean[N][W + 1];
+
+        for (int i = 1; i < Q.size(); i++) {
+            for (int j = 1; j < W + 1; j++) {
+
+                final Vertex<Item> current = Q.get(i);
+                final Item         item    = current.getData();
+
+                if (j - item.weight < 0) {
+                    opt[i][j] = opt[i - 1][j];
+                } else {
+                    final int bi = item.benefit;
+                    final int wi = item.weight;
+
+                    if(isPrecedenceConstraintMaintained(opt, i, j, graph) &&
+                       opt[i - 1][j - wi] + bi > opt[i-1][j]){
+
+                        opt[i][j] = opt[i - 1][j - wi] + bi;
+                        sol[i][j] = true;
+
+                    }
+                }
+            }
+        }
+
+        // determine which items to take
+
+        boolean[] take = new boolean[N];
+        for(int idx = 0, w = W; idx < N; idx++){
+            if (sol[idx][w]) { take[idx] = true;  w = w - Q.get(idx).getData().weight; }
+            else             { take[idx] = false;                                      }
+        }
+
+        final Set<Vertex<Item>> keep = Sets.newLinkedHashSet();
+
+        for (int n = 1; n < N; n++) {
+            if(take[n]) { keep.add(graph.getVertex(n - 1)); }
+        }
+
+        Q.removeFirst();   // remove the null item
+        Q.removeAll(keep); // leave the elements that will be folded
+
+
+        final List<Location> locations = Lists.newLinkedList();
+        for(Vertex<Item> foldable : Q){
+          locations.add(Locations.locate(foldable.getData().node));
+        }
+
+        return locations;
+    }
+
+
+    private static boolean isPrecedenceConstraintMaintained(int[][] opt, int i, int j, Graph<Item> graph){
+
+        final Vertex<Item> parent = graph.getVertex(i - 1);
+        final Vertex<Item> child  = graph.size() == i ? null : graph.getVertex(i);
+
+        if(opt[i][j] != opt[i - 1][j] && parent.hasEdge(child)){
+            return true;
+        }
+
+        return true;
     }
 
     private static MethodDeclaration getMethod(String name, Context context){
@@ -435,7 +506,7 @@ public class CodeIntrospector implements Introspector {
         Item(ASTNode node, int benefit){
             this.node       = node;
             this.benefit    = benefit;
-            this.weight     = calculateNumberOfLines(this.node);
+            this.weight     = this.node == null ? 1 : calculateNumberOfLines(this.node);
         }
 
         Item(ASTNode node){
