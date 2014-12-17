@@ -8,7 +8,6 @@ public class Edge<T> {
     private final Vertex<T> from;
     private final Vertex<T> to;
     private int cost;
-    private boolean mark;
 
     /**
      * Create a zero cost edge between from and to
@@ -36,7 +35,6 @@ public class Edge<T> {
         this.from = from;
         this.to = to;
         this.cost = cost;
-        mark = false;
     }
 
     /**
@@ -64,31 +62,6 @@ public class Edge<T> {
      */
     public int getCost() {
         return cost;
-    }
-
-    /**
-     * Set the mark flag of the edge
-     *
-     */
-    public void mark() {
-        mark = true;
-    }
-
-    /**
-     * Clear the edge mark flag
-     *
-     */
-    public void clearMark() {
-        mark = false;
-    }
-
-    /**
-     * Get the edge mark flag
-     *
-     * @return edge mark flag
-     */
-    public boolean isMarked() {
-        return mark;
     }
 
     /**

@@ -16,7 +16,6 @@ public class Vertex<T> {
     private final List<Edge<T>> outgoingEdges;
     private String name;
 
-    private boolean mark;
     private int markState;
     private T data;
 
@@ -56,7 +55,6 @@ public class Vertex<T> {
         incomingEdges = new ArrayList<Edge<T>>();
         outgoingEdges = new ArrayList<Edge<T>>();
         name = n;
-        mark = false;
         this.data = data;
     }
 
@@ -284,23 +282,6 @@ public class Vertex<T> {
     }
 
     /**
-     * Has this vertex been marked during a visit
-     *
-     * @return true is visit has been called
-     */
-    public boolean visited() {
-        return mark;
-    }
-
-    /**
-     * Set the vertex mark flag.
-     *
-     */
-    public void mark() {
-        mark = true;
-    }
-
-    /**
      * Set the mark state to state.
      *
      * @param state
@@ -317,22 +298,6 @@ public class Vertex<T> {
      */
     public int getMarkState() {
         return markState;
-    }
-
-    /**
-     * Visit the vertex and set the mark flag to true.
-     *
-     */
-    public void visit() {
-        mark();
-    }
-
-    /**
-     * Clear the visited mark flag.
-     *
-     */
-    public void clearMark() {
-        mark = false;
     }
 
     /**
