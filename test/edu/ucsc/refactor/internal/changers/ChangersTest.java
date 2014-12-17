@@ -1418,7 +1418,7 @@ public class ChangersTest {
         final Source  code    = InternalUtil.createGeneralSourceWithInvalidSelection();
 
         final Introspector introspector = Vesper.createRefactorer().getIntrospector();
-        final List<String> problems     = introspector.verifySource(code);
+        final List<String> problems     = introspector.checkCodeSyntax(code);
 
         assertThat(problems.isEmpty(), is(false));
     }

@@ -53,6 +53,13 @@ public class CodeIntrospector implements Introspector {
         this(host, null);
     }
 
+
+    @Override public List<String> checkCodeSyntax(Source code) {
+        return ImmutableList.copyOf(
+                this.host.createContext(code).getSyntaxRelatedProblems()
+        );
+    }
+
     @Override public Set<Issue> detectIssues() {
         return detectIssues(seedContext);
     }
@@ -227,13 +234,6 @@ public class CodeIntrospector implements Introspector {
         final ProgramUnitLocation   target      = (ProgramUnitLocation)locations.get(0);
         return (MethodDeclaration)target.getNode();
     }
-
-    @Override public List<String> verifySource(Source code) {
-        return ImmutableList.copyOf(
-                this.host.createContext(code).getSyntaxRelatedProblems()
-        );
-    }
-
 
     private static Context makeContext(Source code){
         final JavaSnippetParser parser  = new EclipseJavaSnippetParser();

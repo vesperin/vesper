@@ -15,6 +15,25 @@ import java.util.Set;
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public interface Introspector {
+
+    /**
+     * Verifies whether this {@code Source} is valid; purely a syntax checking.
+     *
+     * More specifically, this method checks for:
+     *
+     * <ol>
+     *     <li>Field related problems; e.g., undefined field</li>
+     *     <li>Method related problems; e.g., undefined methods</li>
+     *     <li>Internal related problems; e.g., two classes in same file</li>
+     *     <li>Constructor related problems; e.g., undefined constructor</li>
+     * </ol>
+     *
+     *
+     * @param code The {@code Source} to be verified.
+     * @return a list of error messages or []
+     */
+    List<String> checkCodeSyntax(Source code);
+
     /**
      * Scans a previously given {@link Source} tracked by the {@code Refactorer}, looking for any {@link Issue}s
      * in it.
@@ -131,23 +150,4 @@ public interface Introspector {
      * @return a list of foldable locations
      */
     List<Location> summarize(String startingMethod, Source code);
-
-
-    /**
-     * Verifies whether this {@code Source} is valid; purely a syntax checking.
-     *
-     * More specifically, this method checks for:
-     *
-     * <ol>
-     *     <li>Field related problems; e.g., undefined field</li>
-     *     <li>Method related problems; e.g., undefined methods</li>
-     *     <li>Internal related problems; e.g., two classes in same file</li>
-     *     <li>Constructor related problems; e.g., undefined constructor</li>
-     * </ol>
-     *
-     *
-     * @param code The {@code Source} to be verified.
-     * @return a list of error messages or []
-     */
-    List<String> verifySource(Source code);
 }
