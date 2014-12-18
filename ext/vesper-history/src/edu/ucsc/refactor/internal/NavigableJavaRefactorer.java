@@ -5,7 +5,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import edu.ucsc.refactor.*;
-import edu.ucsc.refactor.util.Commit;
+import edu.ucsc.refactor.Commit;
 import edu.ucsc.refactor.util.CommitHistory;
 import edu.ucsc.refactor.util.CommitPublisher;
 

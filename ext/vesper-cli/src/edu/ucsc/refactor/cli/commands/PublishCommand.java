@@ -5,7 +5,7 @@ import edu.ucsc.refactor.cli.Environment;
 import edu.ucsc.refactor.cli.Result;
 import edu.ucsc.refactor.cli.VesperCommand;
 import edu.ucsc.refactor.cli.results.Results;
-import edu.ucsc.refactor.util.Commit;
+import edu.ucsc.refactor.Commit;
 import io.airlift.airline.Command;
 
 import java.util.List;

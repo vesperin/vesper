@@ -14,7 +14,6 @@ import edu.ucsc.refactor.locators.MethodUnit;
 import edu.ucsc.refactor.spi.IssueDetector;
 import edu.ucsc.refactor.spi.JavaSnippetParser;
 import edu.ucsc.refactor.spi.SpaceGeneration;
-import edu.ucsc.refactor.util.Commit;
 import edu.ucsc.refactor.util.Locations;
 import edu.ucsc.refactor.util.Recommender;
 import edu.ucsc.refactor.spi.graph.DirectedAcyclicGraph;

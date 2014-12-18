@@ -8,7 +8,7 @@ import edu.ucsc.refactor.ChangeRequest;
 import edu.ucsc.refactor.SourceSelection;
 import edu.ucsc.refactor.Vesper;
 import edu.ucsc.refactor.cli.results.Results;
-import edu.ucsc.refactor.util.Commit;
+import edu.ucsc.refactor.Commit;
 import io.airlift.airline.Inject;
 
 import java.io.IOException;

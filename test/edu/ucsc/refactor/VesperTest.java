@@ -1,7 +1,6 @@
 package edu.ucsc.refactor;
 
 import edu.ucsc.refactor.internal.InternalUtil;
-import edu.ucsc.refactor.util.Commit;
 import edu.ucsc.refactor.util.Recommender;
 import edu.ucsc.refactor.spi.graph.*;
 import org.eclipse.jdt.core.dom.MethodDeclaration;

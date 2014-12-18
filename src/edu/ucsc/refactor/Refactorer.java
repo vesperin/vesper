@@ -1,7 +1,5 @@
 package edu.ucsc.refactor;
 
-import edu.ucsc.refactor.util.Commit;
-
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */

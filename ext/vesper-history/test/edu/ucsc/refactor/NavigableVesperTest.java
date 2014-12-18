@@ -3,7 +3,6 @@ package edu.ucsc.refactor;
 import com.google.common.collect.Lists;
 import edu.ucsc.refactor.internal.HostImpl;
 import edu.ucsc.refactor.internal.Upstream;
-import edu.ucsc.refactor.util.Commit;
 import edu.ucsc.refactor.util.CommitPublisher;
 import edu.ucsc.refactor.util.Recommender;
 import org.eclipse.egit.github.core.Comment;

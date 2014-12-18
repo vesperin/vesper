@@ -1,6 +1,6 @@
 package edu.ucsc.refactor.spi;
 
-import edu.ucsc.refactor.util.Commit;
+import edu.ucsc.refactor.Commit;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)

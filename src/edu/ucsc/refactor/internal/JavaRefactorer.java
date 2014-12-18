@@ -7,7 +7,7 @@ import edu.ucsc.refactor.internal.util.Edits;
 import edu.ucsc.refactor.locators.SelectedUnit;
 import edu.ucsc.refactor.spi.CommitRequest;
 import edu.ucsc.refactor.spi.SourceChanger;
-import edu.ucsc.refactor.util.Commit;
+import edu.ucsc.refactor.Commit;
 
 import java.util.List;
 import java.util.Map;

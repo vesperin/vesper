@@ -5,7 +5,7 @@ import com.google.common.base.Strings;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.ProgramUnit;
 import edu.ucsc.refactor.UnitLocator;
-import edu.ucsc.refactor.util.Commit;
+import edu.ucsc.refactor.Commit;
 import edu.ucsc.refactor.util.CommitHistory;
 import edu.ucsc.refactor.util.CommitPublisher;
 

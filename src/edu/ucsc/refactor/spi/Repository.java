@@ -1,7 +1,6 @@
 package edu.ucsc.refactor.spi;
 
-import edu.ucsc.refactor.util.Commit;
-import edu.ucsc.refactor.util.SourceHistory;
+import edu.ucsc.refactor.Commit;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -16,12 +15,4 @@ public interface Repository {
      * @throws java.lang.RuntimeException if unable to publish commit.
      */
     Commit push(Commit commit);
-
-    /**
-     * Pull the CommitHistory of some {@code Source}.
-     *
-     * @param historyForId The source Id
-     * @return The CommitHistory of the Source matching the source id.
-     */
-    SourceHistory pull(String historyForId);
 }

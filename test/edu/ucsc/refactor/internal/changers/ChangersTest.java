@@ -12,7 +12,7 @@ import edu.ucsc.refactor.locators.*;
 import edu.ucsc.refactor.spi.JavaParser;
 import edu.ucsc.refactor.spi.JavaSnippetParser;
 import edu.ucsc.refactor.spi.SourceChanger;
-import edu.ucsc.refactor.util.Commit;
+import edu.ucsc.refactor.Commit;
 import edu.ucsc.refactor.util.Locations;
 import edu.ucsc.refactor.util.Parameters;
 import edu.ucsc.refactor.util.Syncer;
