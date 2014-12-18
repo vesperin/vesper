@@ -46,16 +46,14 @@ public class Vertex<T> {
     /**
      * Create a Vertex with name n and given data
      *
-     * @param n -
-     *          name of vertex
-     * @param data -
-     *          data associated with vertex
+     * @param n name of vertex
+     * @param data data associated with vertex
      */
     public Vertex(String n, T data) {
-        incomingEdges = new ArrayList<Edge<T>>();
-        outgoingEdges = new ArrayList<Edge<T>>();
-        name = n;
-        this.data = data;
+        this.incomingEdges = new ArrayList<Edge<T>>();
+        this.outgoingEdges = new ArrayList<Edge<T>>();
+        this.name          = n;
+        this.data          = data;
     }
 
     /**
@@ -90,13 +88,18 @@ public class Vertex<T> {
      * @return true if the edge was added, false otherwise
      */
     public boolean addEdge(Edge<T> e) {
-        if (e.getFrom() == this)
-            outgoingEdges.add(e);
-        else if (e.getTo() == this)
-            incomingEdges.add(e);
-        else
-            return false;
-        return true;
+
+        if(!hasEdge(e)){
+            if (e.getFrom() == this)
+                outgoingEdges.add(e);
+            else if (e.getTo() == this)
+                incomingEdges.add(e);
+            else
+                return false;
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -108,8 +111,8 @@ public class Vertex<T> {
      *          the edge cost
      */
     public void addOutgoingEdge(Vertex<T> to, int cost) {
-        Edge<T> out = new Edge<T>(this, to, cost);
-        outgoingEdges.add(out);
+        Edge<T> outgoing = new Edge<T>(this, to, cost);
+        addEdge(outgoing);
     }
 
     /**
@@ -121,8 +124,8 @@ public class Vertex<T> {
      *          the edge cost
      */
     public void addIncomingEdge(Vertex<T> from, int cost) {
-        Edge<T> out = new Edge<T>(this, from, cost);
-        incomingEdges.add(out);
+        Edge<T> incoming = new Edge<T>(from, this, cost);
+        addEdge(incoming);
     }
 
     @Override public boolean equals(Object o) {
@@ -156,13 +159,17 @@ public class Vertex<T> {
      *         to this vertex
      */
     public boolean remove(Edge<T> e) {
-        if (e.getFrom() == this)
-            incomingEdges.remove(e);
-        else if (e.getTo() == this)
-            outgoingEdges.remove(e);
-        else
-            return false;
-        return true;
+        if(hasEdge(e)){
+            if (e.getFrom() == this)
+                incomingEdges.remove(e);
+            else if (e.getTo() == this)
+                outgoingEdges.remove(e);
+            else
+                return false;
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -253,8 +260,7 @@ public class Vertex<T> {
     /**
      * What is the cost from this vertex to the dest vertex.
      *
-     * @param dest -
-     *          the destination vertex.
+     * @param dest the destination vertex.
      * @return Return Integer.MAX_VALUE if we have no edge to dest, 0 if dest is
      *         this vertex, the cost of the outgoing edge otherwise.
      */
@@ -272,8 +278,7 @@ public class Vertex<T> {
     /**
      * Is there an outgoing edge ending at dest.
      *
-     * @param dest -
-     *          the vertex to check
+     * @param dest the vertex to check
      * @return true if there is an outgoing edge ending at vertex, false
      *         otherwise.
      */
@@ -284,8 +289,7 @@ public class Vertex<T> {
     /**
      * Set the mark state to state.
      *
-     * @param state
-     *          the state
+     * @param state the state
      */
     public void setMarkState(int state) {
         markState = state;

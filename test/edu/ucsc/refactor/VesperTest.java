@@ -3,10 +3,7 @@ package edu.ucsc.refactor;
 import edu.ucsc.refactor.internal.InternalUtil;
 import edu.ucsc.refactor.util.Commit;
 import edu.ucsc.refactor.util.Recommender;
-import edu.ucsc.refactor.util.graph.DirectedAcyclicGraph;
-import edu.ucsc.refactor.util.graph.DirectedGraph;
-import edu.ucsc.refactor.util.graph.Edge;
-import edu.ucsc.refactor.util.graph.GraphUtils;
+import edu.ucsc.refactor.util.graph.*;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.junit.Test;
@@ -63,6 +60,29 @@ public class VesperTest {
 
         Edge<CodeIntrospector.Item>[] edges = GraphUtils.findCycles(graph);
         assertThat(edges.length, is(0));
+
+    }
+
+    @Test public void testCycleDetectorInDirectedAcyclicGraph() throws Exception {
+        final DirectedAcyclicGraph<String> graph = new DirectedAcyclicGraph<String>();
+        graph.addRootVertex(new Vertex<String>("a", "a"));
+
+        final Vertex<String> b = new Vertex<String>("b", "b");
+        final Vertex<String> c = new Vertex<String>("c", "c");
+        final Vertex<String> d = new Vertex<String>("d", "d");
+
+        graph.addVertex(b);
+        graph.addVertex(c);
+        graph.addVertex(d);
+
+        graph.addEdge(graph.getRootVertex(), b);
+        graph.addEdge(graph.getRootVertex(), c);
+
+        graph.addEdge(b, d);
+        graph.addEdge(d, graph.getRootVertex());
+
+        Edge<String>[] edges = GraphUtils.findCycles(graph);
+        assertThat(edges.length, is(1));
 
     }
 }
