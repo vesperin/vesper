@@ -3,8 +3,7 @@ package edu.ucsc.refactor;
 import edu.ucsc.refactor.internal.InternalUtil;
 import edu.ucsc.refactor.util.Commit;
 import edu.ucsc.refactor.util.Recommender;
-import edu.ucsc.refactor.util.graph.*;
-import org.eclipse.jdt.core.dom.ASTNode;
+import edu.ucsc.refactor.spi.graph.*;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.junit.Test;
 
@@ -33,7 +32,7 @@ public class VesperTest {
     @Test public void testCommitBrandNewChange() throws Exception {
         final Refactorer refactorer = Vesper.createRefactorer();
 
-        final Introspector introspector = refactorer.getIntrospector(CODE);
+        final Introspector introspector = Vesper.createIntrospector();
         final Set<Issue> issues = introspector.detectIssues(CODE);
         assertThat(!issues.isEmpty(), is(true));
 

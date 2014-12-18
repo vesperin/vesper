@@ -1,10 +1,11 @@
-package edu.ucsc.refactor.internal;
+package edu.ucsc.refactor.locators;
 
 import com.google.common.collect.Lists;
 import edu.ucsc.refactor.Context;
 import edu.ucsc.refactor.Location;
 import edu.ucsc.refactor.NamedLocation;
 import edu.ucsc.refactor.SourceSelection;
+import edu.ucsc.refactor.internal.ProgramUnitLocation;
 import edu.ucsc.refactor.internal.visitors.SelectedStatementNodesVisitor;
 import edu.ucsc.refactor.util.Locations;
 import edu.ucsc.refactor.util.StringUtil;

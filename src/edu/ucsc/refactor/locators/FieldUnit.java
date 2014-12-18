@@ -1,30 +1,28 @@
-package edu.ucsc.refactor.internal;
+package edu.ucsc.refactor.locators;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import edu.ucsc.refactor.Context;
 import edu.ucsc.refactor.Location;
 import edu.ucsc.refactor.NamedLocation;
+import edu.ucsc.refactor.internal.ProgramUnitLocation;
 import edu.ucsc.refactor.internal.util.AstUtil;
-import edu.ucsc.refactor.internal.visitors.SelectedStatementNodesVisitor;
-import edu.ucsc.refactor.util.Locations;
 import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
 
 import java.util.List;
 
 /**
- * This represents a local variable of a class.
+ * This represents a field of a class.
  *
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public class VarUnit extends AbstractProgramUnit {
+public class FieldUnit extends AbstractProgramUnit {
     /**
-     * Construct a new {@code Local Variable} program unit.
+     * Construct a new {@code Field} program unit.
      *
      * @param name The field's name
      */
-    public VarUnit(String name){
+    public FieldUnit(String name){
         super(name);
     }
 
@@ -35,14 +33,14 @@ public class VarUnit extends AbstractProgramUnit {
     }
 
     @Override protected void addDeclaration(List<NamedLocation> namedLocations, Location each, ASTNode eachNode) {
-        final VariableDeclarationStatement localVar = AstUtil.parent(
-                VariableDeclarationStatement.class,
+        final FieldDeclaration field = AstUtil.parent(
+                FieldDeclaration.class,
                 eachNode
         );
 
-        if(localVar != null){
-            if(!AstUtil.contains(namedLocations, localVar)){
-                namedLocations.add(new ProgramUnitLocation(localVar, each));
+        if(field != null){
+            if(!AstUtil.contains(namedLocations, field)){
+                namedLocations.add(new ProgramUnitLocation(field, each));
             }
         }
     }

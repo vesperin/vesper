@@ -1,6 +1,5 @@
 package edu.ucsc.refactor;
 
-import edu.ucsc.refactor.spi.UnitLocator;
 import edu.ucsc.refactor.util.Commit;
 
 /**
@@ -54,28 +53,5 @@ public interface Refactorer {
      */
     Change createChange(ChangeRequest request);
 
-    /**
-     * Returns a locator of any structural unit of a base {@code Source} (class, member, ...).
-     * Units exclude the code in a text form. Units include nodes in an AST.
-     *
-     * @param src The current {@code Source}
-     * @return The locator created for this {@code Source}
-     * @throws java.lang.NullPointerException if {@code Source} null.
-     */
-    UnitLocator getLocator(Source src);
-
-    /**
-     * It creates a new {@code Introspector} object.
-     *
-     * @return a new {@code Introspector} object
-     */
-    Introspector getIntrospector();
-
-    /**
-     * It examines a {@code Source} object.
-     *
-     * @param src The current {@code Source}
-     * @return a new {@code Introspector} object
-     */
-    Introspector getIntrospector(Source src);
+    @Override String toString();
 }

@@ -10,16 +10,17 @@ import com.google.common.collect.Sets;
 import edu.ucsc.refactor.internal.*;
 import edu.ucsc.refactor.internal.util.AstUtil;
 import edu.ucsc.refactor.internal.visitors.MethodDeclarationVisitor;
+import edu.ucsc.refactor.locators.MethodUnit;
 import edu.ucsc.refactor.spi.IssueDetector;
 import edu.ucsc.refactor.spi.JavaSnippetParser;
 import edu.ucsc.refactor.spi.SpaceGeneration;
 import edu.ucsc.refactor.util.Commit;
 import edu.ucsc.refactor.util.Locations;
 import edu.ucsc.refactor.util.Recommender;
-import edu.ucsc.refactor.util.graph.DirectedAcyclicGraph;
-import edu.ucsc.refactor.util.graph.DirectedGraph;
-import edu.ucsc.refactor.util.graph.GraphUtils;
-import edu.ucsc.refactor.util.graph.Vertex;
+import edu.ucsc.refactor.spi.graph.DirectedAcyclicGraph;
+import edu.ucsc.refactor.spi.graph.DirectedGraph;
+import edu.ucsc.refactor.spi.graph.GraphUtils;
+import edu.ucsc.refactor.spi.graph.Vertex;
 import org.eclipse.jdt.core.dom.*;
 
 import java.util.*;
@@ -41,7 +42,7 @@ public class CodeIntrospector implements Introspector {
      * @param seedContext cached {@code Context}
      */
     public CodeIntrospector(Host host, Context seedContext){
-        this.host           = Preconditions.checkNotNull(host);
+        this.host        = Preconditions.checkNotNull(host);
         this.seedContext = seedContext;
     }
 

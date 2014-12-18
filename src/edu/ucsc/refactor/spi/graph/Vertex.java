@@ -1,4 +1,4 @@
-package edu.ucsc.refactor.util.graph;
+package edu.ucsc.refactor.spi.graph;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)

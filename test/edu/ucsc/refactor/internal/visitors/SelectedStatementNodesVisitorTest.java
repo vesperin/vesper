@@ -1,10 +1,8 @@
 package edu.ucsc.refactor.internal.visitors;
 
-import edu.ucsc.refactor.Context;
-import edu.ucsc.refactor.Location;
-import edu.ucsc.refactor.NamedLocation;
-import edu.ucsc.refactor.Source;
+import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.*;
+import edu.ucsc.refactor.locators.MethodUnit;
 import edu.ucsc.refactor.spi.JavaParser;
 import org.junit.After;
 import org.junit.Before;

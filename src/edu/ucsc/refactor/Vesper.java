@@ -1,5 +1,6 @@
 package edu.ucsc.refactor;
 
+import com.google.common.base.Preconditions;
 import edu.ucsc.refactor.internal.HostImpl;
 import edu.ucsc.refactor.internal.InternalRefactorerCreator;
 
@@ -33,7 +34,7 @@ import java.util.List;
  *
  *     // print the reason for the change
  *
- *     final Set<Issue> issues = refactorer.getIntrospector().detectIssues(code);
+ *     final Set<Issue> issues = Vesper.createIntrospector().detectIssues(code);
  *     final List<Change> changes = Recommender.recommendChanges(refactorer, code, issues);
  *     for(Change each : changes){
  *        System.out.println(each.getCause().getName());
@@ -50,7 +51,7 @@ import java.util.List;
  *     while(!recommended.isEmpty()){
  *         final Commit applied = refactor.apply(recommended.get(0));
  *         System.out.println(applied.more());
- *         final Set<Issue> badStuff = refactorer.getIntrospector().detectIssues(code);
+ *         final Set<Issue> badStuff = Vesper.createIntrospector().detectIssues(code);
  *         recommended = Recommender.recommendChanges(refactorer, code, badStuff); // get an updated list of changes
  *     }
  *
@@ -88,6 +89,46 @@ public final class Vesper {
     public static Refactorer createRefactorer(){
         return createRefactorer(DEFAULT_CONFIG);
     }
+
+    /**
+     * @return a new Introspector
+     */
+    public static Introspector createIntrospector(){
+        final Host host     = new HostImpl();
+        host.install(DEFAULT_CONFIG);
+        return new CodeIntrospector(host);
+    }
+
+    /**
+     * Returns a locator of any structural unit of a base {@code Source} (class, member, ...).
+     * Units exclude the code in a text form. Units include nodes in an AST.
+     *
+     * @param code The current {@code Source}
+     * @return The locator created for this {@code Source}
+     * @throws java.lang.NullPointerException if {@code Source} null.
+     */
+    public static UnitLocator createUnitLocator(Source code){
+        final Host host     = new HostImpl();
+        host.install(DEFAULT_CONFIG);
+        final Source src    = Preconditions.checkNotNull(code);
+        final Context context = host.createContext(src);
+        return createUnitLocator(context);
+    }
+
+    /**
+     * Returns a locator of any parsed {@code Source} (the context).
+     * Units exclude the code in a text form. Units include nodes in an AST.
+     *
+     * @param context The parsed {@code Source}
+     * @return The locator created for this {@code Source}
+     * @throws java.lang.NullPointerException if {@code Source} null.
+     */
+    public static UnitLocator createUnitLocator(Context context){
+        Preconditions.checkNotNull(context);
+        Preconditions.checkArgument(!context.isMalformedContext());
+        return new ProgramUnitLocator(context);
+    }
+
 
 
     /**

@@ -4,14 +4,16 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.util.Edits;
+import edu.ucsc.refactor.locators.SelectedUnit;
 import edu.ucsc.refactor.spi.CommitRequest;
 import edu.ucsc.refactor.spi.SourceChanger;
-import edu.ucsc.refactor.spi.UnitLocator;
 import edu.ucsc.refactor.util.Commit;
 
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+
+import static edu.ucsc.refactor.Vesper.createUnitLocator;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -74,7 +76,7 @@ public class JavaRefactorer implements Refactorer {
         final Source          code    = select.first().getSource();
         final Context         context = validContext(code);
 
-        final UnitLocator           inferredUnitLocator = getLocator(context);
+        final UnitLocator           inferredUnitLocator = createUnitLocator(context);
         final List<NamedLocation>   namedLocations      = inferredUnitLocator.locate(
                 new SelectedUnit(select)
         );
@@ -114,29 +116,6 @@ public class JavaRefactorer implements Refactorer {
         return context != null
                 && !getRefactoringHost().getIssueDetectors().isEmpty()
                 && context.getSource() != null;
-    }
-
-
-    @Override public UnitLocator getLocator(Source readSource) {
-        Preconditions.checkNotNull(readSource);
-        final Context context = validContext(readSource);
-        return getLocator(context);
-    }
-
-    @Override public Introspector getIntrospector() {
-        return new CodeIntrospector(this.host);
-    }
-
-    @Override public Introspector getIntrospector(Source readSource) {
-        Preconditions.checkNotNull(readSource);
-        final Context context = validContext(readSource);
-        return new CodeIntrospector(this.host, context);
-    }
-
-    UnitLocator getLocator(Context context) {
-        Preconditions.checkNotNull(context);
-        Preconditions.checkArgument(!context.isMalformedContext());
-        return new ProgramUnitLocator(context);
     }
 
 

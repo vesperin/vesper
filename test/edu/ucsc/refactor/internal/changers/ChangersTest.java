@@ -8,6 +8,7 @@ import edu.ucsc.refactor.internal.detectors.*;
 import edu.ucsc.refactor.internal.util.AstUtil;
 import edu.ucsc.refactor.internal.util.Edits;
 import edu.ucsc.refactor.internal.visitors.SimpleNameVisitor;
+import edu.ucsc.refactor.locators.*;
 import edu.ucsc.refactor.spi.JavaParser;
 import edu.ucsc.refactor.spi.JavaSnippetParser;
 import edu.ucsc.refactor.spi.SourceChanger;
@@ -683,7 +684,7 @@ public class ChangersTest {
         final Commit commit = change.perform().commit();
         assertThat(commit != null, is(true));
 
-        final Introspector i = Vesper.createRefactorer().getIntrospector();
+        final Introspector i = Vesper.createIntrospector();
         assert commit != null;
         final Set<Issue> issues = i.detectIssues(commit.getSourceAfterChange());
 
@@ -1417,7 +1418,7 @@ public class ChangersTest {
     @Test public void testRemoveInvalidSelectedRegion(){
         final Source  code    = InternalUtil.createGeneralSourceWithInvalidSelection();
 
-        final Introspector introspector = Vesper.createRefactorer().getIntrospector();
+        final Introspector introspector = Vesper.createIntrospector();
         final List<String> problems     = introspector.checkCodeSyntax(code);
 
         assertThat(problems.isEmpty(), is(false));
@@ -1592,7 +1593,7 @@ public class ChangersTest {
 
         assertThat(BINDINGS.isEmpty(), is(false));
 
-        final Introspector introspector = Vesper.createRefactorer().getIntrospector();
+        final Introspector introspector = Vesper.createIntrospector();
         final Set<String>  required     = introspector.detectMissingImports(code);
         assertThat(required.size(), is(1));
 
@@ -1614,7 +1615,7 @@ public class ChangersTest {
         final Set<String> imports  = AstUtil.getUsedTypesInCode(compilationUnit);
         assertThat(imports.size(), is(9));
 
-        final Introspector introspector = Vesper.createRefactorer().getIntrospector();
+        final Introspector introspector = Vesper.createIntrospector();
         final Set<String>  required     = introspector.detectMissingImports(code);
         assertThat(required.isEmpty(), is(false));
 
@@ -1688,7 +1689,7 @@ public class ChangersTest {
     @Test public void testClipSpaceGeneration() throws Exception {
         final Source src = InternalUtil.createQuickSortSource();
 
-        final List<Clip> clipSpace = makeClipSpace(src, Vesper.createRefactorer().getIntrospector());
+        final List<Clip> clipSpace = makeClipSpace(src, Vesper.createIntrospector());
 
         assertThat(clipSpace.isEmpty(), is(false));
 
@@ -1697,7 +1698,7 @@ public class ChangersTest {
     @Test public void testDeleteDifferences() throws Exception {
         final Source src = InternalUtil.createQuickSortSource();
 
-        final Introspector introspector = Vesper.createRefactorer().getIntrospector();
+        final Introspector introspector = Vesper.createIntrospector();
         final List<Clip> clipSpace = makeClipSpace(src, introspector);
         final List<Clip> clipOneToBaseClip  = clipSpace.subList(0, 2);
 
@@ -1714,7 +1715,7 @@ public class ChangersTest {
     @Test public void testInsertDifferences() throws Exception {
         final Source src = InternalUtil.createQuickSortSource();
 
-        final Introspector introspector = Vesper.createRefactorer().getIntrospector();
+        final Introspector introspector = Vesper.createIntrospector();
         final List<Clip> clipSpace = makeClipSpace(src, introspector);
 
         final Diff diff = introspector.differences(
@@ -1729,7 +1730,7 @@ public class ChangersTest {
     @Test public void testChangeDifferences() throws Exception {
         final Source src = InternalUtil.createQuickSortSource();
 
-        final Introspector introspector = Vesper.createRefactorer().getIntrospector();
+        final Introspector introspector = Vesper.createIntrospector();
         final List<Clip> clipSpace = makeClipSpace(src, introspector);
 
         final Source a = clipSpace.get(1).getSource();
@@ -1749,7 +1750,7 @@ public class ChangersTest {
     @Test public void testClipSpaceForwardPatching() throws Exception {
         final Source src = InternalUtil.createQuickSortSource();
 
-        final Introspector introspector = Vesper.createRefactorer().getIntrospector();
+        final Introspector introspector = Vesper.createIntrospector();
         final List<Clip> clipSpace = makeClipSpace(src, introspector);
 
         final Source patched = Syncer.sync(
@@ -1767,7 +1768,7 @@ public class ChangersTest {
     @Test public void testSyncingClipAfterBaseWithBaseClip() throws Exception {
         final Source src = InternalUtil.createQuickSortSource();
 
-        final Introspector introspector = Vesper.createRefactorer().getIntrospector();
+        final Introspector introspector = Vesper.createIntrospector();
         final List<Clip> clipSpace = makeClipSpace(src, introspector);
         final List<Clip> clipOneToBaseClip  = clipSpace.subList(0, 2);
 
@@ -1782,7 +1783,7 @@ public class ChangersTest {
     @Test public void testSummarizeSingleSourceCode() throws Exception {
         final Source src = InternalUtil.createQuickSortSource();
 
-        final Introspector introspector = Vesper.createRefactorer().getIntrospector();
+        final Introspector introspector = Vesper.createIntrospector();
         List<Location> foldingLocations = introspector.summarize("quicksort", src);
         assertThat(foldingLocations.isEmpty(), is(false));
     }
@@ -1791,7 +1792,7 @@ public class ChangersTest {
     @Test public void testSummarizeAllPossibleClips() throws Exception {
         final Source src = InternalUtil.createQuickSortSource();
 
-        final Introspector introspector = Vesper.createRefactorer().getIntrospector();
+        final Introspector introspector = Vesper.createIntrospector();
         Map<Clip, List<Location>> allSummaries = introspector.summarize(introspector.multiStage(src));
         assertThat(allSummaries.isEmpty(), is(false));
     }

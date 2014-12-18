@@ -1,4 +1,4 @@
-package edu.ucsc.refactor.util.graph;
+package edu.ucsc.refactor.spi.graph;
 
 import com.google.common.collect.Sets;
 

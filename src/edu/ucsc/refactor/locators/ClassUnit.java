@@ -1,48 +1,47 @@
-package edu.ucsc.refactor.internal;
+package edu.ucsc.refactor.locators;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import edu.ucsc.refactor.Context;
 import edu.ucsc.refactor.Location;
 import edu.ucsc.refactor.NamedLocation;
+import edu.ucsc.refactor.internal.ProgramUnitLocation;
 import edu.ucsc.refactor.internal.util.AstUtil;
-import edu.ucsc.refactor.internal.visitors.SelectedStatementNodesVisitor;
-import edu.ucsc.refactor.util.Locations;
 import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import java.util.List;
 
 /**
- * This represents a field of a class.
+ * This element represents classes in the base Source.
  *
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public class FieldUnit extends AbstractProgramUnit {
+public class ClassUnit extends AbstractProgramUnit {
     /**
-     * Construct a new {@code Field} program unit.
+     * Construct a new {@code Class} program unit.
      *
-     * @param name The field's name
+     * @param name The class's name
      */
-    public FieldUnit(String name){
+    public ClassUnit(String name) {
         super(name);
     }
 
     @Override public List<NamedLocation> getLocations(Context context) {
+
         Preconditions.checkNotNull(context);
 
         return getNamedLocations(context);
     }
 
     @Override protected void addDeclaration(List<NamedLocation> namedLocations, Location each, ASTNode eachNode) {
-        final FieldDeclaration field = AstUtil.parent(
-                FieldDeclaration.class,
+        final TypeDeclaration classDeclaration = AstUtil.parent(
+                TypeDeclaration.class,
                 eachNode
         );
 
-        if(field != null){
-            if(!AstUtil.contains(namedLocations, field)){
-                namedLocations.add(new ProgramUnitLocation(field, each));
+        if(classDeclaration != null){
+            if(!AstUtil.contains(namedLocations, classDeclaration) && getName().equals(classDeclaration.getName().getIdentifier())){
+                namedLocations.add(new ProgramUnitLocation(classDeclaration, each));
             }
         }
     }

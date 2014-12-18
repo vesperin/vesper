@@ -1,4 +1,4 @@
-package edu.ucsc.refactor.util.graph;
+package edu.ucsc.refactor.spi.graph;
 
 /**
  * A directed, weighted edge in a graph

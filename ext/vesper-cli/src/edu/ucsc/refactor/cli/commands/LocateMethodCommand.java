@@ -1,7 +1,7 @@
 package edu.ucsc.refactor.cli.commands;
 
-import edu.ucsc.refactor.internal.MethodUnit;
-import edu.ucsc.refactor.spi.ProgramUnit;
+import edu.ucsc.refactor.locators.MethodUnit;
+import edu.ucsc.refactor.ProgramUnit;
 import io.airlift.airline.Command;
 
 /**

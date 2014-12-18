@@ -1,6 +1,4 @@
-package edu.ucsc.refactor.spi;
-
-import edu.ucsc.refactor.NamedLocation;
+package edu.ucsc.refactor;
 
 import java.util.List;
 
