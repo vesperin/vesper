@@ -34,20 +34,6 @@ public interface Introspector {
     List<String> checkCodeSyntax(Source code);
 
     /**
-     * Scans a previously given {@link Source} tracked by the {@code Refactorer}, looking for any {@link Issue}s
-     * in it.
-     *
-     * <p />
-     *
-     * Contexts are cached when invoking this method. THis mean that if this method is not invoked,
-     * then a new context will be created per change request.
-     *
-     * @return a set of issues found in {@code Source}.
-     * @throws java.lang.NullPointerException if {@code Source} null.
-     */
-    Set<Issue> detectIssues();
-
-    /**
      * Scans a {@link Source} tracked by the {@code Refactorer}, looking for any {@link Issue}s
      * in it.
      *

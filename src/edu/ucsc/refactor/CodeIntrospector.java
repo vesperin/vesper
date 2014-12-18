@@ -33,18 +33,6 @@ import static edu.ucsc.refactor.Context.throwCompilationErrorIfExist;
 public class CodeIntrospector implements Introspector {
 
     private final Host      host;
-    private final Context   seedContext;
-
-    /**
-     * Construct a code introspector.
-     *
-     * @param host {@code Vesper}'s main {@link Host}.
-     * @param seedContext cached {@code Context}
-     */
-    public CodeIntrospector(Host host, Context seedContext){
-        this.host        = Preconditions.checkNotNull(host);
-        this.seedContext = seedContext;
-    }
 
     /**
      * Construct a code introspector.
@@ -52,7 +40,7 @@ public class CodeIntrospector implements Introspector {
      * @param host {@code Vesper}'s main {@link Host}.
      */
     public CodeIntrospector(Host host){
-        this(host, null);
+        this.host = Preconditions.checkNotNull(host);
     }
 
 
@@ -60,10 +48,6 @@ public class CodeIntrospector implements Introspector {
         return ImmutableList.copyOf(
                 this.host.createContext(code).getSyntaxRelatedProblems()
         );
-    }
-
-    @Override public Set<Issue> detectIssues() {
-        return detectIssues(seedContext);
     }
 
     @Override public Set<Issue> detectIssues(Source code) {
