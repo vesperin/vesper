@@ -70,8 +70,8 @@ public class JavaRefactorer implements Refactorer {
     }
 
 
-    private SingleEdit prepSingleEdit(CauseOfChange cause, ChangeRequest request){
-        final SingleEdit      edit    = (SingleEdit) cause;
+    private Edit prepSingleEdit(CauseOfChange cause, ChangeRequest request){
+        final Edit edit    = (Edit) cause;
         final SourceSelection select  = request.getSelection();
         final Source          code    = select.first().getSource();
         final Context         context = validContext(code);

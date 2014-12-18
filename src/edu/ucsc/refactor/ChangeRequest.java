@@ -95,12 +95,12 @@ public class ChangeRequest {
      * @param edit The {@code SingleEdit}
      * @return A new {@link ChangeRequest}
      */
-    public static ChangeRequest forEdit(SingleEdit edit){
+    public static ChangeRequest forEdit(Edit edit){
         return forEdit(edit, DEFAULT_PARAMETERS);
     }
 
     /**
-     * Clips a source selection. Check {@link SingleEdit#clipSelection(SourceSelection)}
+     * Clips a source selection. Check {@link Edit#clipSelection(SourceSelection)}
      * for details of how this works.
      *
      * @param selection The source selection to be clipped.
@@ -108,7 +108,7 @@ public class ChangeRequest {
      */
     public static ChangeRequest clipSelection(SourceSelection selection){
         return ChangeRequest.forEdit(
-                SingleEdit.clipSelection(selection)
+                Edit.clipSelection(selection)
         );
     }
 
@@ -116,11 +116,11 @@ public class ChangeRequest {
     /**
      * Delete a class change request given selection.
      *
-     * @see {@link SingleEdit#deleteClass(SourceSelection)}
+     * @see {@link Edit#deleteClass(SourceSelection)}
      */
     public static ChangeRequest deleteClass(SourceSelection selection){
         return ChangeRequest.forEdit(
-                SingleEdit.deleteClass(selection)
+                Edit.deleteClass(selection)
         );
     }
 
@@ -128,11 +128,11 @@ public class ChangeRequest {
     /**
      * Delete a method change request given selection.
      *
-     * @see {@link SingleEdit#deleteMethod(SourceSelection)}
+     * @see {@link Edit#deleteMethod(SourceSelection)}
      */
     public static ChangeRequest deleteMethod(SourceSelection selection){
         return ChangeRequest.forEdit(
-                SingleEdit.deleteMethod(selection)
+                Edit.deleteMethod(selection)
         );
     }
 
@@ -140,11 +140,11 @@ public class ChangeRequest {
     /**
      * Delete a field change request given selection.
      *
-     * @see {@link SingleEdit#deleteField(SourceSelection)}
+     * @see {@link Edit#deleteField(SourceSelection)}
      */
     public static ChangeRequest deleteField(SourceSelection selection){
         return ChangeRequest.forEdit(
-                SingleEdit.deleteField(selection)
+                Edit.deleteField(selection)
         );
     }
 
@@ -152,11 +152,11 @@ public class ChangeRequest {
     /**
      * Delete a local variable ChangeRequest given selection.
      *
-     * @see {@link SingleEdit#deleteField(SourceSelection)}
+     * @see {@link Edit#deleteField(SourceSelection)}
      */
     public static ChangeRequest deleteLocalVariable(SourceSelection selection){
         return ChangeRequest.forEdit(
-                SingleEdit.deleteLocalVariable(selection)
+                Edit.deleteLocalVariable(selection)
         );
     }
 
@@ -164,11 +164,11 @@ public class ChangeRequest {
     /**
      * Delete a parameter change request given selection.
      *
-     * @see {@link SingleEdit#deleteParameter(SourceSelection)}
+     * @see {@link Edit#deleteParameter(SourceSelection)}
      */
     public static ChangeRequest deleteParameter(SourceSelection selection){
         return ChangeRequest.forEdit(
-                SingleEdit.deleteParameter(selection)
+                Edit.deleteParameter(selection)
         );
     }
 
@@ -176,22 +176,22 @@ public class ChangeRequest {
     /**
      * Delete a code region change request given selection.
      *
-     * @see {@link SingleEdit#deleteRegion(SourceSelection)}
+     * @see {@link Edit#deleteRegion(SourceSelection)}
      */
     public static ChangeRequest deleteRegion(SourceSelection selection){
         return ChangeRequest.forEdit(
-                SingleEdit.deleteRegion(selection)
+                Edit.deleteRegion(selection)
         );
     }
 
     /**
      * Rename a 'selected member change request' with selection and newName as values.
      *
-     * @see {@link SingleEdit#renameSelectedMember(SourceSelection)}
+     * @see {@link Edit#renameSelectedMember(SourceSelection)}
      */
     public static ChangeRequest renameSelectedMember(SourceSelection selection, String newName){
         return ChangeRequest.forEdit(
-                SingleEdit.renameSelectedMember(selection),
+                Edit.renameSelectedMember(selection),
                 Parameters.newMemberName(newName)
         );
     }
@@ -200,11 +200,11 @@ public class ChangeRequest {
     /**
      * Rename a class/interface change request with selection and newName as values.
      *
-     * @see {@link SingleEdit#renameMethod(SourceSelection)}
+     * @see {@link Edit#renameMethod(SourceSelection)}
      */
     public static ChangeRequest renameClassOrInterface(SourceSelection selection, String newName){
         return ChangeRequest.forEdit(
-                SingleEdit.renameClassOrInterface(selection),
+                Edit.renameClassOrInterface(selection),
                 Parameters.newMemberName(newName)
         );
     }
@@ -212,11 +212,11 @@ public class ChangeRequest {
     /**
      * Rename a method change request with selection and newName as values.
      *
-     * @see {@link SingleEdit#renameMethod(SourceSelection)}
+     * @see {@link Edit#renameMethod(SourceSelection)}
      */
     public static ChangeRequest renameMethod(SourceSelection selection, String newName){
         return ChangeRequest.forEdit(
-                SingleEdit.renameMethod(selection),
+                Edit.renameMethod(selection),
                 Parameters.newMemberName(newName)
         );
     }
@@ -225,11 +225,11 @@ public class ChangeRequest {
     /**
      * Rename a parameter change request with selection and newName as values.
      *
-     * @see {@link SingleEdit#renameParameter(SourceSelection)}
+     * @see {@link Edit#renameParameter(SourceSelection)}
      */
     public static ChangeRequest renameParameter(SourceSelection selection, String newName){
         return ChangeRequest.forEdit(
-                SingleEdit.renameParameter(selection),
+                Edit.renameParameter(selection),
                 Parameters.newMemberName(newName)
         );
     }
@@ -239,11 +239,11 @@ public class ChangeRequest {
     /**
      * Rename a field change request with selection and newName as values.
      *
-     * @see {@link SingleEdit#renameField(SourceSelection)}
+     * @see {@link Edit#renameField(SourceSelection)}
      */
     public static ChangeRequest renameField(SourceSelection selection, String newName){
         return ChangeRequest.forEdit(
-                SingleEdit.renameField(selection),
+                Edit.renameField(selection),
                 Parameters.newMemberName(newName)
         );
     }
@@ -252,11 +252,11 @@ public class ChangeRequest {
     /**
      * Rename local variable ChangeRequest with selection and newName as values.
      *
-     * @see {@link SingleEdit#renameLocalVariable(SourceSelection)}
+     * @see {@link Edit#renameLocalVariable(SourceSelection)}
      */
     public static ChangeRequest renameLocalVariable(SourceSelection selection, String newName){
         return ChangeRequest.forEdit(
-                SingleEdit.renameLocalVariable(selection),
+                Edit.renameLocalVariable(selection),
                 Parameters.newMemberName(newName)
         );
     }
@@ -265,11 +265,11 @@ public class ChangeRequest {
     /**
      * Reformat source code change request with source as value.
      *
-     * @see {@link SingleEdit#reformatCode(Source)}
+     * @see {@link Edit#reformatCode(Source)}
      */
     public static ChangeRequest reformatSource(Source source){
         return ChangeRequest.forEdit(
-                SingleEdit.reformatCode(source)
+                Edit.reformatCode(source)
         );
     }
 
@@ -277,11 +277,11 @@ public class ChangeRequest {
      * Optimizes the import declarations of a {@code Source}, cleaning out any
      * un-used imports.
      *
-     * @see {@link SingleEdit#optimizeImports(Source)}
+     * @see {@link Edit#optimizeImports(Source)}
      */
     public static ChangeRequest optimizeImports(Source code){
         return ChangeRequest.forEdit(
-                SingleEdit.optimizeImports(code)
+                Edit.optimizeImports(code)
         );
     }
 
@@ -292,7 +292,7 @@ public class ChangeRequest {
      * @param edit The {@code SingleEdit}
      * @return A new {@link ChangeRequest}
      */
-    public static ChangeRequest forEdit(SingleEdit edit, Map<String, Parameter> parameters){
+    public static ChangeRequest forEdit(Edit edit, Map<String, Parameter> parameters){
         return new ChangeRequest(edit, edit.getSourceSelection(), parameters);
     }
 

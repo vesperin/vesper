@@ -29,7 +29,7 @@ public class ChangeRequestTest {
 
 
     @Test public void testChangeRequestForEditCreation(){
-        final SingleEdit cause = SingleEdit.reformatCode(new Source("Test.java", "class Test {}"));
+        final Edit cause = Edit.reformatCode(new Source("Test.java", "class Test {}"));
         final ChangeRequest request = ChangeRequest.forEdit(cause);
 
         assertNotNull(request);

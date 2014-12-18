@@ -89,7 +89,7 @@ public class ChangersTest {
 
             final Location          loc         = Locations.locate(declaration);
             final RemoveUnusedTypes remove      = new RemoveUnusedTypes();
-            final SingleEdit        edit        = SingleEdit.deleteClass(new SourceSelection(loc));
+            final Edit edit        = Edit.deleteClass(new SourceSelection(loc));
             edit.addNode(declaration);
             final Change            change      = remove.createChange(edit, Maps.<String, Parameter>newHashMap());
 
@@ -150,7 +150,7 @@ public class ChangersTest {
         final List<NamedLocation>   locations  = locator.locate(new SelectedUnit(selection));
 
 
-        final SingleEdit       edit   = SingleEdit.renameSelectedMember(selection);
+        final Edit edit   = Edit.renameSelectedMember(selection);
         assertThat(locations.isEmpty(), is(false));
 
         for(NamedLocation eachLocation : locations){
@@ -160,7 +160,7 @@ public class ChangersTest {
 
 
         final RenameMethod  rename      = new RenameMethod();
-        final SingleEdit    resolved    = Edits.resolve(edit);
+        final Edit resolved    = Edits.resolve(edit);
 
         checkChangeCreation(rename, resolved);
     }
@@ -182,7 +182,7 @@ public class ChangersTest {
             final List<NamedLocation>   locations  = locator.locate(new SelectedUnit(selection));
 
 
-            final SingleEdit       edit   = SingleEdit.renameSelectedMember(selection);
+            final Edit edit   = Edit.renameSelectedMember(selection);
             assertThat(locations.isEmpty(), is(false));
 
             for(NamedLocation eachLocation : locations){
@@ -197,7 +197,7 @@ public class ChangersTest {
 
 
             final RenameField  rename      = new RenameField();
-            final SingleEdit   resolved    = Edits.resolve(edit);
+            final Edit resolved    = Edits.resolve(edit);
 
             checkChangeCreation(rename, resolved);
         }
@@ -221,7 +221,7 @@ public class ChangersTest {
             final List<NamedLocation>   locations  = locator.locate(new SelectedUnit(selection));
 
 
-            final SingleEdit       edit   = SingleEdit.renameSelectedMember(selection);
+            final Edit edit   = Edit.renameSelectedMember(selection);
             assertThat(locations.isEmpty(), is(false));
 
             for(NamedLocation eachLocation : locations){
@@ -231,7 +231,7 @@ public class ChangersTest {
 
 
             final RenameClassOrInterface    rename      = new RenameClassOrInterface();
-            final SingleEdit                resolved    = Edits.resolve(edit);
+            final Edit resolved    = Edits.resolve(edit);
 
             checkChangeCreation(rename, resolved);
         }
@@ -255,7 +255,7 @@ public class ChangersTest {
             final List<NamedLocation>   locations  = locator.locate(new SelectedUnit(selection));
 
 
-            final SingleEdit       edit   = SingleEdit.renameSelectedMember(selection);
+            final Edit edit   = Edit.renameSelectedMember(selection);
             assertThat(locations.isEmpty(), is(false));
 
             for(NamedLocation eachLocation : locations){
@@ -265,7 +265,7 @@ public class ChangersTest {
 
 
             final RenameLocalVariable   rename      = new RenameLocalVariable();
-            final SingleEdit            resolved    = Edits.resolve(edit);
+            final Edit resolved    = Edits.resolve(edit);
 
             checkChangeCreation(rename, resolved);
         }
@@ -289,7 +289,7 @@ public class ChangersTest {
             final List<NamedLocation>   locations  = locator.locate(new SelectedUnit(selection));
 
 
-            final SingleEdit       edit   = SingleEdit.renameSelectedMember(selection);
+            final Edit edit   = Edit.renameSelectedMember(selection);
             assertThat(locations.isEmpty(), is(false));
 
             for(NamedLocation eachLocation : locations){
@@ -299,7 +299,7 @@ public class ChangersTest {
 
 
             final RenameParam  rename     = new RenameParam();
-            final SingleEdit   resolved   = Edits.resolve(edit);
+            final Edit resolved   = Edits.resolve(edit);
 
             checkChangeCreation(rename, resolved);
         }
@@ -314,7 +314,7 @@ public class ChangersTest {
         parser.parseJava(context);
 
         final RemoveUnusedImports remove = new RemoveUnusedImports();
-        final SingleEdit          edit   = SingleEdit.optimizeImports(code);
+        final Edit edit   = Edit.optimizeImports(code);
         edit.addNode(context.getCompilationUnit());
         final Change              change = remove.createChange(edit, Maps.<String, Parameter>newHashMap());
         assertThat(change.isValid(), is(true));
@@ -328,7 +328,7 @@ public class ChangersTest {
         parser.parseJava(context);
 
         final RemoveUnusedImports remove = new RemoveUnusedImports();
-        final SingleEdit          edit   = SingleEdit.optimizeImports(code);
+        final Edit edit   = Edit.optimizeImports(code);
         edit.addNode(context.getCompilationUnit());
         final Change              change = remove.createChange(edit, Maps.<String, Parameter>newHashMap());
         assertThat(change.isValid(), is(true));
@@ -386,7 +386,7 @@ public class ChangersTest {
         final SourceSelection    selection = new SourceSelection(context.getSource(), 30, 358);
         final List<NamedLocation>     locations = locator.locate(new SelectedUnit(selection));
 
-        final SingleEdit       edit   = SingleEdit.deleteRegion(selection);
+        final Edit edit   = Edit.deleteRegion(selection);
         assertThat(locations.isEmpty(), is(false));
 
         for(NamedLocation eachLocation : locations){
@@ -396,7 +396,7 @@ public class ChangersTest {
 
 
         final RemoveUnusedMethods   remove      = new RemoveUnusedMethods();
-        final SingleEdit            resolved    = Edits.resolve(edit);
+        final Edit resolved    = Edits.resolve(edit);
 
         checkChangeCreation(remove, resolved);
     }
@@ -411,7 +411,7 @@ public class ChangersTest {
         final SourceSelection    selection = new SourceSelection(context.getSource(), 31, 496);
         final List<NamedLocation>     locations = locator.locate(new SelectedUnit(selection));
 
-        final SingleEdit       edit   = SingleEdit.clipSelection(selection);
+        final Edit edit   = Edit.clipSelection(selection);
         assertThat(locations.isEmpty(), is(false));
 
         for(NamedLocation eachLocation : locations){
@@ -421,7 +421,7 @@ public class ChangersTest {
 
 
         final ClipSelection  remove     = new ClipSelection();
-        final SingleEdit     resolved   = Edits.resolve(edit);
+        final Edit resolved   = Edits.resolve(edit);
 
         checkChangeCreation(remove, resolved);
     }
@@ -437,7 +437,7 @@ public class ChangersTest {
         final SourceSelection    selection = new SourceSelection(context.getSource(), 76, 492);
         final List<NamedLocation>     locations = locator.locate(new SelectedUnit(selection));
 
-        final SingleEdit       edit   = SingleEdit.deleteRegion(selection);
+        final Edit edit   = Edit.deleteRegion(selection);
         assertThat(locations.isEmpty(), is(false));
 
         for(NamedLocation eachLocation : locations){
@@ -447,7 +447,7 @@ public class ChangersTest {
 
 
         final RemoveCodeRegion  remove  = new RemoveCodeRegion();
-        final SingleEdit     resolved   = Edits.resolve(edit);
+        final Edit resolved   = Edits.resolve(edit);
 
         checkChangeCreation(remove, resolved);
     }
@@ -463,7 +463,7 @@ public class ChangersTest {
         final SourceSelection    selection = new SourceSelection(context.getSource(), 128, 492);
         final List<NamedLocation>     locations = locator.locate(new SelectedUnit(selection));
 
-        final SingleEdit       edit   = SingleEdit.deleteRegion(selection);
+        final Edit edit   = Edit.deleteRegion(selection);
         assertThat(locations.isEmpty(), is(false));
 
         for(NamedLocation eachLocation : locations){
@@ -473,7 +473,7 @@ public class ChangersTest {
 
 
         final RemoveCodeRegion  remove  = new RemoveCodeRegion();
-        final SingleEdit     resolved   = Edits.resolve(edit);
+        final Edit resolved   = Edits.resolve(edit);
 
         final Change  change  = remove.createChange(resolved, Parameters.newMemberName("hey"));
         assertThat(change.isValid(), is(false));
@@ -490,7 +490,7 @@ public class ChangersTest {
         final SourceSelection     selection = new SourceSelection(SourceLocation.createLocation(code, code.getContents(), 88, 165));
         final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
 
-        final SingleEdit       edit = SingleEdit.clipSelection(selection);
+        final Edit edit = Edit.clipSelection(selection);
 
 
         assertThat(locations.isEmpty(), is(false));
@@ -501,7 +501,7 @@ public class ChangersTest {
         }
 
         final ClipSelection  remove     = new ClipSelection();
-        final SingleEdit     resolved   = Edits.resolve(edit);
+        final Edit resolved   = Edits.resolve(edit);
 
         checkChangeCreation(remove, resolved);
     }
@@ -517,7 +517,7 @@ public class ChangersTest {
         final SourceSelection     selection = new SourceSelection(SourceLocation.createLocation(code, code.getContents(), 88, 238));
         final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
 
-        final SingleEdit       edit = SingleEdit.clipSelection(selection);
+        final Edit edit = Edit.clipSelection(selection);
 
 
         assertThat(locations.isEmpty(), is(false));
@@ -528,7 +528,7 @@ public class ChangersTest {
         }
 
         final ClipSelection  remove     = new ClipSelection();
-        final SingleEdit     resolved   = Edits.resolve(edit);
+        final Edit resolved   = Edits.resolve(edit);
 
         checkChangeCreation(remove, resolved);
     }
@@ -545,7 +545,7 @@ public class ChangersTest {
         final SourceSelection     selection = new SourceSelection(SourceLocation.createLocation(code, code.getContents(), 88, 165));
         final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
 
-        final SingleEdit       edit = SingleEdit.clipSelection(selection);
+        final Edit edit = Edit.clipSelection(selection);
 
 
         assertThat(locations.isEmpty(), is(false));
@@ -556,7 +556,7 @@ public class ChangersTest {
         }
 
         final ClipSelection  remove     = new ClipSelection();
-        final SingleEdit     resolved   = Edits.resolve(edit);
+        final Edit resolved   = Edits.resolve(edit);
 
         checkChangeCreation(remove, resolved);
     }
@@ -572,7 +572,7 @@ public class ChangersTest {
         final SourceSelection     selection = new SourceSelection(SourceLocation.createLocation(code, code.getContents(), 88, 165));
         final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
 
-        final SingleEdit       edit = SingleEdit.clipSelection(selection);
+        final Edit edit = Edit.clipSelection(selection);
 
 
         assertThat(locations.isEmpty(), is(false));
@@ -583,7 +583,7 @@ public class ChangersTest {
         }
 
         final ClipSelection  remove     = new ClipSelection();
-        final SingleEdit     resolved   = Edits.resolve(edit);
+        final Edit resolved   = Edits.resolve(edit);
 
         checkChangeCreation(remove, resolved);
     }
@@ -599,7 +599,7 @@ public class ChangersTest {
         final SourceSelection     selection = new SourceSelection(SourceLocation.createLocation(code, code.getContents(), 167, 238));
         final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
 
-        final SingleEdit       edit = SingleEdit.clipSelection(selection);
+        final Edit edit = Edit.clipSelection(selection);
 
 
         assertThat(locations.isEmpty(), is(false));
@@ -610,7 +610,7 @@ public class ChangersTest {
         }
 
         final ClipSelection  remove     = new ClipSelection();
-        final SingleEdit     resolved   = Edits.resolve(edit);
+        final Edit resolved   = Edits.resolve(edit);
 
         checkChangeCreation(remove, resolved);
     }
@@ -626,7 +626,7 @@ public class ChangersTest {
         final SourceSelection    selection = new SourceSelection(context.getSource(), 1169, 1430);
         final List<NamedLocation>     locations = locator.locate(new SelectedUnit(selection));
 
-        final SingleEdit       edit   = SingleEdit.clipSelection(selection);
+        final Edit edit   = Edit.clipSelection(selection);
         assertThat(locations.isEmpty(), is(false));
 
         for(NamedLocation eachLocation : locations){
@@ -636,7 +636,7 @@ public class ChangersTest {
 
 
         final ClipSelection  remove     = new ClipSelection();
-        final SingleEdit     resolved   = Edits.resolve(edit);
+        final Edit resolved   = Edits.resolve(edit);
 
         checkChangeCreation(remove, resolved);
     }
@@ -652,7 +652,7 @@ public class ChangersTest {
         final SourceSelection     selection = new SourceSelection(SourceLocation.createLocation(code, code.getContents(), 41, 723));
         final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
 
-        final SingleEdit       edit = SingleEdit.clipSelection(selection);
+        final Edit edit = Edit.clipSelection(selection);
 
 
         assertThat(locations.isEmpty(), is(false));
@@ -663,7 +663,7 @@ public class ChangersTest {
         }
 
         final ClipSelection  remove     = new ClipSelection();
-        final SingleEdit     resolved   = Edits.resolve(edit);
+        final Edit resolved   = Edits.resolve(edit);
 
         checkChangeCreation(remove, resolved, false);
     }
@@ -676,7 +676,7 @@ public class ChangersTest {
         parser.parseJava(context);
 
         final RemoveUnusedImports remove = new RemoveUnusedImports();
-        final SingleEdit          edit   = SingleEdit.optimizeImports(src);
+        final Edit edit   = Edit.optimizeImports(src);
         edit.addNode(context.getCompilationUnit());
         final Change              change = remove.createChange(edit, Maps.<String, Parameter>newHashMap());
         assertThat(change.isValid(), is(true));
@@ -708,7 +708,7 @@ public class ChangersTest {
         final List<NamedLocation>   locations  = locator.locate(new SelectedUnit(selection));
 
 
-        final SingleEdit       edit   = SingleEdit.renameSelectedMember(selection);
+        final Edit edit   = Edit.renameSelectedMember(selection);
         assertThat(locations.isEmpty(), is(false));
 
         for(NamedLocation eachLocation : locations){
@@ -718,7 +718,7 @@ public class ChangersTest {
 
 
         final RenameParam   rename      = new RenameParam();
-        final SingleEdit    resolved    = Edits.resolve(edit);
+        final Edit resolved    = Edits.resolve(edit);
 
 
         final Change  change  = rename.createChange(resolved, Parameters.newMemberName("start"));
@@ -749,7 +749,7 @@ public class ChangersTest {
         final List<NamedLocation>   locations  = locator.locate(new SelectedUnit(selection));
 
 
-        final SingleEdit       edit   = SingleEdit.renameSelectedMember(selection);
+        final Edit edit   = Edit.renameSelectedMember(selection);
         assertThat(locations.isEmpty(), is(false));
 
         for(NamedLocation eachLocation : locations){
@@ -759,7 +759,7 @@ public class ChangersTest {
 
 
         final RenameLocalVariable   rename      = new RenameLocalVariable();
-        final SingleEdit            resolved    = Edits.resolve(edit);
+        final Edit resolved    = Edits.resolve(edit);
 
 
         final Change  change  = rename.createChange(resolved, Parameters.newMemberName("start"));
@@ -787,7 +787,7 @@ public class ChangersTest {
         final List<NamedLocation>   locations  = locator.locate(new SelectedUnit(selection));
 
 
-        final SingleEdit       edit   = SingleEdit.deleteRegion(selection);
+        final Edit edit   = Edit.deleteRegion(selection);
         assertThat(locations.isEmpty(), is(false));
 
         for(NamedLocation eachLocation : locations){
@@ -797,7 +797,7 @@ public class ChangersTest {
 
 
         final RemoveUnusedLocalVariable   remove      = new RemoveUnusedLocalVariable();
-        final SingleEdit                  resolved    = Edits.resolve(edit);
+        final Edit resolved    = Edits.resolve(edit);
 
 
         final Change            change      = remove.createChange(resolved, Maps.<String, Parameter>newHashMap());
@@ -819,7 +819,7 @@ public class ChangersTest {
             final List<NamedLocation>   locations  = locator.locate(new SelectedUnit(selection));
 
 
-            final SingleEdit       edit   = SingleEdit.renameSelectedMember(selection);
+            final Edit edit   = Edit.renameSelectedMember(selection);
             assertThat(locations.isEmpty(), is(false));
 
             for(NamedLocation eachLocation : locations){
@@ -829,7 +829,7 @@ public class ChangersTest {
 
 
             final RenameLocalVariable   rename      = new RenameLocalVariable();
-            final SingleEdit            resolved    = Edits.resolve(edit);
+            final Edit resolved    = Edits.resolve(edit);
 
 
             final Change  change  = rename.createChange(resolved, Parameters.newMemberName("localArray"));
@@ -861,7 +861,7 @@ public class ChangersTest {
         final List<NamedLocation>   locations  = locator.locate(new SelectedUnit(selection));
 
 
-        final SingleEdit       edit   = SingleEdit.renameSelectedMember(selection);
+        final Edit edit   = Edit.renameSelectedMember(selection);
         assertThat(locations.isEmpty(), is(false));
 
         for(NamedLocation eachLocation : locations){
@@ -871,7 +871,7 @@ public class ChangersTest {
 
 
         final RenameClassOrInterface    rename      = new RenameClassOrInterface();
-        final SingleEdit                resolved    = Edits.resolve(edit);
+        final Edit resolved    = Edits.resolve(edit);
 
 
         final Change  change  = rename.createChange(resolved, Parameters.newMemberName("SortingFromLowestToHighest"));
@@ -903,7 +903,7 @@ public class ChangersTest {
             final List<NamedLocation>   locations  = locator.locate(new SelectedUnit(selection));
 
 
-            final SingleEdit       edit   = SingleEdit.renameSelectedMember(selection);
+            final Edit edit   = Edit.renameSelectedMember(selection);
             assertThat(locations.isEmpty(), is(false));
 
             for(NamedLocation eachLocation : locations){
@@ -913,7 +913,7 @@ public class ChangersTest {
 
 
             final RenameField   rename      = new RenameField();
-            final SingleEdit    resolved    = Edits.resolve(edit);
+            final Edit resolved    = Edits.resolve(edit);
 
 
             final Change  change  = rename.createChange(resolved, Parameters.newMemberName("localArray"));
@@ -958,7 +958,7 @@ public class ChangersTest {
         final Location           loc    = Locations.locate(declaration);
         final RemoveUnusedFields remove = new RemoveUnusedFields();
 
-        final SingleEdit        edit        = SingleEdit.deleteField(new SourceSelection(loc));
+        final Edit edit        = Edit.deleteField(new SourceSelection(loc));
         edit.addNode(declaration);
         final Change            change      = remove.createChange(edit, Maps.<String, Parameter>newHashMap());
         assertThat(change.isValid(), is(false));
@@ -975,7 +975,7 @@ public class ChangersTest {
         final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
 
 
-        final SingleEdit       edit   = SingleEdit.deleteRegion(selection);
+        final Edit edit   = Edit.deleteRegion(selection);
         assertThat(locations.isEmpty(), is(false));
 
         for(NamedLocation eachLocation : locations){
@@ -985,7 +985,7 @@ public class ChangersTest {
 
 
         final RemoveUnusedFields    remove      = new RemoveUnusedFields();
-        final SingleEdit            resolved    = Edits.resolve(edit);
+        final Edit resolved    = Edits.resolve(edit);
 
         checkChangeCreation(remove, resolved);
     }
@@ -1002,7 +1002,7 @@ public class ChangersTest {
         final SourceSelection    select    = new SourceSelection(context.getSource(), 363, 440);
         final List<NamedLocation>     locations = locator.locate(new SelectedUnit(select));
 
-        final SingleEdit       edit   = SingleEdit.deleteRegion(select);
+        final Edit edit   = Edit.deleteRegion(select);
         assertThat(locations.isEmpty(), is(false));
 
         for(NamedLocation eachLocation : locations){
@@ -1012,7 +1012,7 @@ public class ChangersTest {
 
 
         final RemoveCodeRegion remover  = new RemoveCodeRegion();
-        final SingleEdit       resolved = Edits.resolve(edit);
+        final Edit resolved = Edits.resolve(edit);
 
         final Change            change      = remover.createChange(resolved, Maps.<String, Parameter>newHashMap());
         assertThat(change.isValid(), is(false));
@@ -1031,7 +1031,7 @@ public class ChangersTest {
         final SourceSelection    select    = new SourceSelection(context.getSource(), 68, 117);
         final List<NamedLocation>     locations = locator.locate(new SelectedUnit(select));
 
-        final SingleEdit       edit   = SingleEdit.deleteRegion(select);
+        final Edit edit   = Edit.deleteRegion(select);
         assertThat(locations.isEmpty(), is(false));
 
         for(NamedLocation eachLocation : locations){
@@ -1041,7 +1041,7 @@ public class ChangersTest {
 
 
         final RemoveUnusedLocalVariable remover  = new RemoveUnusedLocalVariable();
-        final SingleEdit                resolved = Edits.resolve(edit);
+        final Edit resolved = Edits.resolve(edit);
 
         checkChangeCreation(remover, resolved);
 
@@ -1077,7 +1077,7 @@ public class ChangersTest {
         final SourceSelection    select    = new SourceSelection(context.getSource(), 44, 62);
         final List<NamedLocation>     locations = locator.locate(new SelectedUnit(select));
 
-        final SingleEdit       edit   = SingleEdit.deleteRegion(select);
+        final Edit edit   = Edit.deleteRegion(select);
         assertThat(locations.isEmpty(), is(false));
 
         for(NamedLocation eachLocation : locations){
@@ -1087,7 +1087,7 @@ public class ChangersTest {
 
 
         final RemoveUnusedParameters    remover  = new RemoveUnusedParameters();
-        final SingleEdit                resolved = Edits.resolve(edit);
+        final Edit resolved = Edits.resolve(edit);
 
         checkChangeCreation(remover, resolved);
 
@@ -1111,7 +1111,7 @@ public class ChangersTest {
             final List<NamedLocation>   locations  = locator.locate(new SelectedUnit(selection));
 
 
-            final SingleEdit       edit   = SingleEdit.deleteRegion(selection);
+            final Edit edit   = Edit.deleteRegion(selection);
             assertThat(locations.isEmpty(), is(false));
 
             for(NamedLocation eachLocation : locations){
@@ -1121,7 +1121,7 @@ public class ChangersTest {
 
 
             final RemoveUnusedLocalVariable     remover     = new RemoveUnusedLocalVariable();
-            final SingleEdit                    resolved    = Edits.resolve(edit);
+            final Edit resolved    = Edits.resolve(edit);
 
             final Change  change  = remover.createChange(resolved, Maps.<String, Parameter>newHashMap());
             assertThat(change.isValid(), is(false));
@@ -1145,7 +1145,7 @@ public class ChangersTest {
             final List<NamedLocation>   locations  = locator.locate(new SelectedUnit(selection));
 
 
-            final SingleEdit       edit   = SingleEdit.deleteRegion(selection);
+            final Edit edit   = Edit.deleteRegion(selection);
             assertThat(locations.isEmpty(), is(false));
 
             for(NamedLocation eachLocation : locations){
@@ -1154,7 +1154,7 @@ public class ChangersTest {
             }
 
             final RemoveUnusedLocalVariable remover = new RemoveUnusedLocalVariable();
-            final SingleEdit                    resolved    = Edits.resolve(edit);
+            final Edit resolved    = Edits.resolve(edit);
 
             checkChangeCreation(remover, resolved);
         }
@@ -1173,7 +1173,7 @@ public class ChangersTest {
         final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
 
 
-        final SingleEdit       edit   = SingleEdit.deleteRegion(selection);
+        final Edit edit   = Edit.deleteRegion(selection);
         assertThat(locations.isEmpty(), is(false));
 
         for(NamedLocation eachLocation : locations){
@@ -1183,7 +1183,7 @@ public class ChangersTest {
 
 
         final RemoveUnusedMethods   remove      = new RemoveUnusedMethods();
-        final SingleEdit            resolved    = Edits.resolve(edit);
+        final Edit resolved    = Edits.resolve(edit);
 
         checkChangeCreation(remove, resolved);
     }
@@ -1201,7 +1201,7 @@ public class ChangersTest {
         final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
 
 
-        final SingleEdit       edit   = SingleEdit.deleteRegion(selection);
+        final Edit edit   = Edit.deleteRegion(selection);
         assertThat(locations.isEmpty(), is(false));
 
         for(NamedLocation eachLocation : locations){
@@ -1211,7 +1211,7 @@ public class ChangersTest {
 
 
         final RemoveUnusedTypes   remove      = new RemoveUnusedTypes();
-        final SingleEdit          resolved    = Edits.resolve(edit);
+        final Edit resolved    = Edits.resolve(edit);
 
         checkChangeCreation(remove, resolved);
     }
@@ -1229,7 +1229,7 @@ public class ChangersTest {
         final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
 
 
-        final SingleEdit       edit   = SingleEdit.deleteRegion(selection);
+        final Edit edit   = Edit.deleteRegion(selection);
         assertThat(locations.isEmpty(), is(false));
 
         for(NamedLocation eachLocation : locations){
@@ -1239,7 +1239,7 @@ public class ChangersTest {
 
 
         final RemoveUnusedParameters    remove      = new RemoveUnusedParameters();
-        final SingleEdit                resolved    = Edits.resolve(edit);
+        final Edit resolved    = Edits.resolve(edit);
 
         checkChangeCreation(remove, resolved);
     }
@@ -1261,7 +1261,7 @@ public class ChangersTest {
             assertNotNull(target);
 
             final Location      loc     = Locations.locate(target);
-            final SingleEdit    edit    = SingleEdit.deleteField(new SourceSelection(loc));
+            final Edit edit    = Edit.deleteField(new SourceSelection(loc));
             edit.addNode(target);
 
             final RemoveUnusedFields remove = new RemoveUnusedFields();
@@ -1310,7 +1310,7 @@ public class ChangersTest {
         final Location            loc    = Locations.locate(declaration);
         final RemoveUnusedMethods remove = new RemoveUnusedMethods();
 
-        final SingleEdit        edit        = SingleEdit.deleteMethod(new SourceSelection(loc));
+        final Edit edit        = Edit.deleteMethod(new SourceSelection(loc));
         edit.addNode(declaration);
         final Change            change      = remove.createChange(edit, Maps.<String, Parameter>newHashMap());
         assertThat(change.isValid(), is(false));
@@ -1355,7 +1355,7 @@ public class ChangersTest {
             final ProgramUnitLocation target  = (ProgramUnitLocation)each;
             final MethodDeclaration   method  = AstUtil.exactCast(MethodDeclaration.class, target.getNode().getParent());
             if(method.getName().getIdentifier().equals("boom")){
-                final SingleEdit        edit        = SingleEdit.deleteParameter(new SourceSelection(each));
+                final Edit edit        = Edit.deleteParameter(new SourceSelection(each));
                 edit.addNode(target.getNode());
                 final Change            change      = remove.createChange(edit, Maps.<String, Parameter>newHashMap());
                 assertThat(change.isValid(), is(false));
@@ -1400,7 +1400,7 @@ public class ChangersTest {
         final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
 
         final RemoveCodeRegion remove = new RemoveCodeRegion();
-        final SingleEdit       edit   = SingleEdit.deleteRegion(selection);
+        final Edit edit   = Edit.deleteRegion(selection);
 
 
         assertThat(locations.isEmpty(), is(false));
@@ -1449,7 +1449,7 @@ public class ChangersTest {
         final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
 
 
-        final SingleEdit       edit   = SingleEdit.renameSelectedMember(selection);
+        final Edit edit   = Edit.renameSelectedMember(selection);
         assertThat(locations.isEmpty(), is(false));
 
         for(NamedLocation eachLocation : locations){
@@ -1459,7 +1459,7 @@ public class ChangersTest {
 
 
         final RenameMethod  rename      = new RenameMethod();
-        final SingleEdit    resolved    = Edits.resolve(edit);
+        final Edit resolved    = Edits.resolve(edit);
 
         checkChangeCreation(rename, resolved);
     }
@@ -1476,7 +1476,7 @@ public class ChangersTest {
         final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
 
 
-        final SingleEdit       edit   = SingleEdit.renameSelectedMember(selection);
+        final Edit edit   = Edit.renameSelectedMember(selection);
         assertThat(locations.isEmpty(), is(false));
 
         for(NamedLocation eachLocation : locations){
@@ -1486,7 +1486,7 @@ public class ChangersTest {
 
 
         final RenameClassOrInterface    rename      = new RenameClassOrInterface();
-        final SingleEdit                resolved    = Edits.resolve(edit);
+        final Edit resolved    = Edits.resolve(edit);
 
         checkChangeCreation(rename, resolved);
     }
@@ -1503,7 +1503,7 @@ public class ChangersTest {
         final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
 
 
-        final SingleEdit       edit   = SingleEdit.renameSelectedMember(selection);
+        final Edit edit   = Edit.renameSelectedMember(selection);
         assertThat(locations.isEmpty(), is(false));
 
         for(NamedLocation eachLocation : locations){
@@ -1529,7 +1529,7 @@ public class ChangersTest {
         final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
 
 
-        final SingleEdit       edit   = SingleEdit.renameSelectedMember(selection);
+        final Edit edit   = Edit.renameSelectedMember(selection);
         assertThat(locations.isEmpty(), is(false));
 
         for(NamedLocation eachLocation : locations){
@@ -1539,7 +1539,7 @@ public class ChangersTest {
 
 
         final RenameParam    rename      = new RenameParam();
-        final SingleEdit     resolved    = Edits.resolve(edit);
+        final Edit resolved    = Edits.resolve(edit);
 
         checkChangeCreation(rename, resolved);
     }
@@ -1556,7 +1556,7 @@ public class ChangersTest {
         final List<NamedLocation> locations = locator.locate(new SelectedUnit(selection));
 
 
-        final SingleEdit       edit   = SingleEdit.renameSelectedMember(selection);
+        final Edit edit   = Edit.renameSelectedMember(selection);
         assertThat(locations.isEmpty(), is(false));
 
         for(NamedLocation eachLocation : locations){
@@ -1566,7 +1566,7 @@ public class ChangersTest {
 
 
         final RenameField    rename      = new RenameField();
-        final SingleEdit     resolved    = Edits.resolve(edit);
+        final Edit resolved    = Edits.resolve(edit);
 
         checkChangeCreation(rename, resolved);
     }
@@ -1670,7 +1670,7 @@ public class ChangersTest {
         final SourceSelection    selection = new SourceSelection(context.getSource(), 329, 538);
         final List<NamedLocation>     locations = locator.locate(new SelectedUnit(selection));
 
-        final SingleEdit       edit   = SingleEdit.clipSelection(selection);
+        final Edit edit   = Edit.clipSelection(selection);
         assertThat(locations.isEmpty(), is(false));
 
         for(NamedLocation eachLocation : locations){
@@ -1680,7 +1680,7 @@ public class ChangersTest {
 
 
         final ClipSelection  remove     = new ClipSelection();
-        final SingleEdit     resolved   = Edits.resolve(edit);
+        final Edit resolved   = Edits.resolve(edit);
 
         checkChangeCreation(remove, resolved);
     }
@@ -1802,11 +1802,11 @@ public class ChangersTest {
         return introspector.multiStage(src);
     }
 
-    private static void  checkChangeCreation(SourceChanger changer, SingleEdit resolved){
+    private static void  checkChangeCreation(SourceChanger changer, Edit resolved){
        checkChangeCreation(changer, resolved, true);
     }
 
-    private static void checkChangeCreation(SourceChanger changer, SingleEdit resolved, boolean target){
+    private static void checkChangeCreation(SourceChanger changer, Edit resolved, boolean target){
         final Change  change  = changer.createChange(resolved, Parameters.newMemberName("hey"));
         assertThat(change.isValid(), is(target));
 
