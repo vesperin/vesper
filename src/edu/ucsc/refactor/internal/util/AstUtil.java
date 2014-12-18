@@ -218,7 +218,7 @@ public class AstUtil {
 
     public static Set<ImportDeclaration> getUsedImports(CompilationUnit unit){
         @SuppressWarnings("unchecked")
-        final Set<ImportDeclaration> allImports = Sets.newHashSet(unit.imports());
+        final Set<ImportDeclaration> allImports = Sets.newLinkedHashSet(unit.imports());
 
         for(ASTNode each : getUnusedImports(unit)){
             if(ImportDeclaration.class.isInstance(each)){

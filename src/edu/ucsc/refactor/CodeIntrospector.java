@@ -28,6 +28,7 @@ import static edu.ucsc.refactor.Context.throwCompilationErrorIfExist;
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public class CodeIntrospector implements Introspector {
+
     private static Map<String, Set<String>> PACKAGES_OF_INTEREST;
     static {
         final Map<String, Set<String>> container = Maps.newHashMap();
@@ -178,7 +179,32 @@ public class CodeIntrospector implements Introspector {
         final BlockVisitor visitor = new BlockVisitor();
         method.accept(visitor);
 
-        return summarizeCodeBySolvingTreeKnapsack(visitor.graph(), 17/*lines of code*/);
+        final List<Location> foldableLocations = summarizeCodeBySolvingTreeKnapsack(
+                visitor.graph(),
+                17/*lines of code*/
+        );
+
+        // Imports are folded regardless of the previous computation
+        final Location foldedImports = foldImportDeclaration(context.getCompilationUnit());
+
+        if(foldedImports != null){
+            foldableLocations.add(foldedImports);
+        }
+
+        return foldableLocations;
+
+    }
+
+    private static Location foldImportDeclaration(CompilationUnit unit){
+        SourceSelection selection = new SourceSelection();
+        // TODO(Huascar) maybe this method should be promoted to main util package; please
+        // investigate
+        final Set<ImportDeclaration> imports = AstUtil.getUsedImports(unit);
+        for( ImportDeclaration each : imports){
+          selection.add(Locations.locate(each));
+        }
+
+        return !selection.isEmpty() ? selection.toLocation() : null;
     }
 
 
