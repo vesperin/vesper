@@ -15,10 +15,7 @@ import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Queue;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -33,6 +30,30 @@ public class AstUtil {
 
 
     private AstUtil() {}
+
+
+    public static List<Statement> getStatements(ASTNode block) {
+
+        if(AstUtil.isOfType(CompilationUnit.class, block)){
+            throw new RuntimeException(Arrays.toString(((CompilationUnit) block).getProblems()));
+        }
+
+        final Block             bl  = AstUtil.exactCast(Block.class, block);
+        final List<Statement>   sts = Lists.newArrayList();
+
+        for (Object eachObject : bl.statements()) {
+            final Statement eachStatement = (Statement)eachObject;
+            sts.add((Statement) ASTNode.copySubtree(eachStatement.getAST(), eachStatement));
+        }
+
+        return sts;
+
+    }
+
+
+    public static CompilationUnit getCompilationUnit(ASTNode node){
+        return AstUtil.parent(CompilationUnit.class, node);
+    }
 
     public static boolean isAnnotated(MethodDeclaration methodDeclaration) {
         final List modifiers = methodDeclaration.modifiers();
@@ -197,16 +218,19 @@ public class AstUtil {
 
     public static Set<ImportDeclaration> getUsedImports(CompilationUnit unit){
         @SuppressWarnings("unchecked")
-        final Set<ImportDeclaration> allImports = Sets.newHashSet(unit.imports());
+        final Set<ImportDeclaration> allImports = Sets.newLinkedHashSet(unit.imports());
 
-        allImports.removeAll(getUnusedImports(unit));
+        for(ASTNode each : getUnusedImports(unit)){
+            if(ImportDeclaration.class.isInstance(each)){
+                allImports.add(AstUtil.exactCast(ImportDeclaration.class, each));
+            }
+        }
+
         return allImports;
     }
 
     public static Set<ASTNode> getUnusedImports(CompilationUnit unit){
-        final boolean visitJavaDocTags  = AstUtil.processJavadocComments(unit);
-        final ImportsReferencesVisitor visitor = new ImportsReferencesVisitor(visitJavaDocTags);
-        unit.accept(visitor);
+        final ImportsReferencesVisitor visitor = createImportsReferencesVisitor(unit);
 
         final Set<String> importNames   = visitor.getImportNames();
         final Set<String> staticNames   = visitor.getStaticImportNames();
@@ -298,15 +322,28 @@ public class AstUtil {
                final TypeDeclaration unit = AstUtil.parent(TypeDeclaration.class, each);
                final MethodInvocation inv = AstUtil.exactCast(MethodInvocation.class, each);
                final ASTNode dec = AstUtil.findDeclaration(inv.getName().resolveBinding(), unit);
-               result.add(dec);
+               if(dec != null){
+                   result.add(dec);
+               } else {
+                   result.addAll(unwindBindings(inv));
+               }
            } else if(AstUtil.isOfType(InfixExpression.class, each)) {
                result.addAll(unwindBindings(each));
            } else if(AstUtil.isOfType(ExpressionStatement.class, each)) {
                result.addAll(unwindBindings(each));
            } else if(AstUtil.isOfType(VariableDeclarationExpression.class, each)) {
                result.addAll(unwindBindings(each));
+           } else if(AstUtil.isOfType(VariableDeclarationStatement.class, each)){
+               result.addAll(unwindBindings(each));
+           } else if(AstUtil.isOfType(VariableDeclarationFragment.class, each)){
+               result.addAll(unwindBindings(each));
            } else {
-               result.add(each);
+               // handle the rest of statements
+               if(Statement.class.isInstance(each)){
+                   result.addAll(unwindBindings(each));
+               } else {
+                   result.add(each);
+               }
            }
         }
 
@@ -408,6 +445,27 @@ public class AstUtil {
                 ||  AstUtil.getTypeDeclaration(node) != null;
     }
 
+
+    private static ImportsReferencesVisitor createImportsReferencesVisitor(CompilationUnit unit){
+        final boolean visitJavaDocTags  = AstUtil.processJavadocComments(unit);
+        final ImportsReferencesVisitor visitor = new ImportsReferencesVisitor(visitJavaDocTags);
+        unit.accept(visitor);
+
+        return visitor;
+    }
+
+
+    public static Set<String> getUsedTypesInCode(CompilationUnit unit){
+        final ImportsReferencesVisitor visitor = createImportsReferencesVisitor(unit);
+
+        return visitor.getImportNames();
+    }
+
+
+    public static Set<String> getUsedStaticTypesInCode(CompilationUnit unit){
+        final ImportsReferencesVisitor visitor = createImportsReferencesVisitor(unit);
+        return visitor.getStaticImportNames();
+    }
 
     public static List<ASTNode> getChildren(ASTNode node) {
         final List<ASTNode> result = Lists.newArrayList();
@@ -603,6 +661,7 @@ public class AstUtil {
 
         if(node instanceof FieldDeclaration) {
             final Queue<SimpleName> ans = Lists.newLinkedList();
+            @SuppressWarnings("unchecked")
             final List<VariableDeclarationFragment> fragments   = ((FieldDeclaration)node).fragments();
             for (VariableDeclarationFragment fragment : fragments) {
                 final SimpleName name = fragment.getName();

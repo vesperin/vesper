@@ -4,6 +4,7 @@ import com.google.common.base.Objects;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.spi.IssueDetector;
 import edu.ucsc.refactor.spi.JavaParser;
+import edu.ucsc.refactor.spi.JavaSnippetParser;
 import edu.ucsc.refactor.spi.SourceChanger;
 
 import java.util.ArrayList;
@@ -19,7 +20,7 @@ public class HostImpl implements Host {
     private final List<IssueDetector>   detectors;
     private final List<SourceChanger>   changers;
 
-    private JavaParser  parser;
+    private JavaSnippetParser parser;
     private Credential credential;
 
     /**
@@ -41,7 +42,7 @@ public class HostImpl implements Host {
         addError(new Throwable(String.format(message, arguments)));
     }
 
-    @Override public void addJavaParser(JavaParser parser) {
+    @Override public void addJavaParser(JavaSnippetParser parser) {
         this.parser = parser;
     }
 
@@ -106,7 +107,7 @@ public class HostImpl implements Host {
         return Collections.unmodifiableList(changers);
     }
 
-    @Override public JavaParser getJavaParser() {
+    @Override public JavaSnippetParser getJavaParser() {
         return parser;
     }
 

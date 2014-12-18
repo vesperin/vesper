@@ -1,5 +1,6 @@
 package edu.ucsc.refactor;
 
+import com.google.common.base.Preconditions;
 import edu.ucsc.refactor.internal.HostImpl;
 import edu.ucsc.refactor.internal.InternalRefactorerCreator;
 
@@ -33,7 +34,8 @@ import java.util.List;
  *
  *     // print the reason for the change
  *
- *     final List<Change> changes = refactorer.recommendChanges(code);
+ *     final Set<Issue> issues = Vesper.createIntrospector().detectIssues(code);
+ *     final List<Change> changes = Recommender.recommendChanges(refactorer, code, issues);
  *     for(Change each : changes){
  *        System.out.println(each.getCause().getName());
  *     }
@@ -45,11 +47,12 @@ import java.util.List;
  *
  *     // or handle All recommended changes
  *
- *     List<Change> recommended = refactorer.recommendChanges(code);
+ *     List<Change> recommended = Recommender.recommendChanges(refactorer, code, issues);
  *     while(!recommended.isEmpty()){
  *         final Commit applied = refactor.apply(recommended.get(0));
  *         System.out.println(applied.more());
- *         recommended = refactorer.recommendChanges(code); // get an updated list of changes
+ *         final Set<Issue> badStuff = Vesper.createIntrospector().detectIssues(code);
+ *         recommended = Recommender.recommendChanges(refactorer, code, badStuff); // get an updated list of changes
  *     }
  *
  *
@@ -87,6 +90,44 @@ public final class Vesper {
         return createRefactorer(DEFAULT_CONFIG);
     }
 
+    /**
+     * @return a new Introspector
+     */
+    public static Introspector createIntrospector(){
+        final Host configuredHost = installConfiguration(DEFAULT_CONFIG, new HostImpl());
+        return new CodeIntrospector(configuredHost);
+    }
+
+    /**
+     * Returns a locator of any structural unit of a base {@code Source} (class, member, ...).
+     * Units exclude the code in a text form. Units include nodes in an AST.
+     *
+     * @param code The current {@code Source}
+     * @return The locator created for this {@code Source}
+     * @throws java.lang.NullPointerException if {@code Source} null.
+     */
+    public static UnitLocator createUnitLocator(Source code){
+        final Host configuredHost = installConfiguration(DEFAULT_CONFIG, new HostImpl());
+        final Source src    = Preconditions.checkNotNull(code);
+        final Context context = configuredHost.createContext(src);
+        return createUnitLocator(context);
+    }
+
+    /**
+     * Returns a locator of any parsed {@code Source} (the context).
+     * Units exclude the code in a text form. Units include nodes in an AST.
+     *
+     * @param context The parsed {@code Source}
+     * @return The locator created for this {@code Source}
+     * @throws java.lang.NullPointerException if {@code Source} null.
+     */
+    public static UnitLocator createUnitLocator(Context context){
+        Preconditions.checkNotNull(context);
+        Preconditions.checkArgument(!context.isMalformedContext());
+        return new ProgramUnitLocator(context);
+    }
+
+
 
     /**
      * Creates a refactorer for the given set of sources using
@@ -113,19 +154,20 @@ public final class Vesper {
      *
      * @return a new Refactorer
      */
-    public static Refactorer createRefactorer(
-            Configuration configuration,
-            Host host
-    ){
+    public static Refactorer createRefactorer(Configuration configuration, Host host){
+        final Host configuredHost = installConfiguration(configuration, host);
+        return new InternalRefactorerCreator(installConfiguration(configuration, configuredHost))
+                .build();
+    }
 
+
+    private static Host installConfiguration(Configuration configuration, Host host){
         Vesper.nonNull(configuration, host);
-
 
         // installs a configuration to Vesper's host.
         host.install(configuration);
 
-        return new InternalRefactorerCreator(host)
-                .build();
+        return host;
     }
 
 

@@ -1,6 +1,5 @@
 package edu.ucsc.refactor;
 
-import edu.ucsc.refactor.util.Commit;
 import edu.ucsc.refactor.util.CommitHistory;
 import edu.ucsc.refactor.util.CommitPublisher;
 

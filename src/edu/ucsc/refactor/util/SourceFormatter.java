@@ -398,7 +398,7 @@ public class SourceFormatter implements Formatter {
             }
 
             LOGGER.fine("Code has been formatted.");
-            return document.get();
+            return StringUtil.trimEnd(document.get(), '\n');
         }
     }
 

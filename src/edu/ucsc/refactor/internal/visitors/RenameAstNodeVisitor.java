@@ -164,7 +164,9 @@ public class RenameAstNodeVisitor extends ASTVisitor {
     static void renameType(SimpleName node, String newName){
         if(node.getParent() instanceof TypeDeclaration
                 || node.getParent() instanceof ConstructorInvocation
-                || node.getParent() instanceof MethodRef){
+                || node.getParent() instanceof MethodRef
+                || node.getParent() instanceof MethodDeclaration
+                || node.getParent() instanceof MethodInvocation){
             node.setIdentifier(newName);
         }
     }

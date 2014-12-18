@@ -1,7 +1,7 @@
 package edu.ucsc.refactor;
 
 import edu.ucsc.refactor.spi.IssueDetector;
-import edu.ucsc.refactor.spi.JavaParser;
+import edu.ucsc.refactor.spi.JavaSnippetParser;
 import edu.ucsc.refactor.spi.SourceChanger;
 
 import java.util.List;
@@ -28,11 +28,11 @@ public interface Host {
     void addError(String message, Object... arguments);
 
     /**
-     * Adds a {@link JavaParser} implementation.
+     * Adds a {@link JavaSnippetParser} implementation.
      *
-     * @param parser A {@link JavaParser} implementation.
+     * @param parser A {@link JavaSnippetParser} implementation.
      */
-    void addJavaParser(JavaParser parser);
+    void addJavaParser(JavaSnippetParser parser);
 
     /**
      * Adds a {@link IssueDetector} implementation.
@@ -85,9 +85,9 @@ public interface Host {
     /**
      * Gets the Java parser required for constructing the {@code Refactorer}.
      *
-     * @return The {@link JavaParser}.
+     * @return The {@link JavaSnippetParser}.
      */
-    JavaParser getJavaParser();
+    JavaSnippetParser getJavaParser();
 
     /**
      * Installs a configuration that automatically configures this host.

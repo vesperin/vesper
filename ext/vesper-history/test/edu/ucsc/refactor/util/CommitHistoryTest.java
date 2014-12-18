@@ -1,5 +1,6 @@
 package edu.ucsc.refactor.util;
 
+import edu.ucsc.refactor.Commit;
 import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.spi.CommitSummary;
 import edu.ucsc.refactor.spi.Refactoring;
@@ -104,7 +105,7 @@ public class CommitHistoryTest {
 
 
     private static Commit createCheckpoint(Refactoring refactoring, Source before, Source after){
-       return new Commit(
+       return Commit.createValidCommit(
                refactoring,
                before,
                after,

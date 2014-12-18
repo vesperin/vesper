@@ -1,11 +1,5 @@
 package edu.ucsc.refactor;
 
-import edu.ucsc.refactor.spi.UnitLocator;
-import edu.ucsc.refactor.util.Commit;
-
-import java.util.List;
-import java.util.Set;
-
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
@@ -57,45 +51,5 @@ public interface Refactorer {
      */
     Change createChange(ChangeRequest request);
 
-    /**
-     * Returns a locator of any structural unit of a base {@code Source} (class, member, ...).
-     * Units exclude the code in a text form. Units include nodes in an AST.
-     *
-     * @param src The current {@code Source}
-     * @return The locator created for this {@code Source}
-     * @throws java.lang.NullPointerException if {@code Source} null.
-     */
-    UnitLocator getLocator(Source src);
-
-    /**
-     * It creates a new {@code Introspector} object.
-     *
-     * @return a new {@code Introspector} object
-     */
-    Introspector getIntrospector();
-
-    /**
-     * It examines a {@code Source} object.
-     *
-     * @param src The current {@code Source}
-     * @return a new {@code Introspector} object
-     */
-    Introspector getIntrospector(Source src);
-
-    /**
-     * Recommends changes for a {@code Source} based on a list of found {@code issues}.
-     * E.g., if this {@code Source} has 10 issues in it, then the
-     * {@code Refactorer} will recommend 10 changes that will address this 10 issues.
-     *
-     * <p />
-     *
-     * Context cache is flushed out after recommending changes for a set of issues. THis mean that
-     * if this method is not invoked, then the cached contexts will remain.
-     *
-     * @param code The {@code Source}
-     * @param issues The issues from where changes will be recommended.
-     * @return The list of recommended changes
-     * @throws java.lang.NullPointerException if {@code Source} null.
-     */
-    List<Change> recommendChanges(Source code, Set<Issue> issues);
+    @Override String toString();
 }

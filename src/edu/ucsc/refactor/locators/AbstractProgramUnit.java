@@ -1,4 +1,4 @@
-package edu.ucsc.refactor.internal;
+package edu.ucsc.refactor.locators;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -7,7 +7,7 @@ import edu.ucsc.refactor.Context;
 import edu.ucsc.refactor.Location;
 import edu.ucsc.refactor.NamedLocation;
 import edu.ucsc.refactor.internal.visitors.SelectedStatementNodesVisitor;
-import edu.ucsc.refactor.spi.ProgramUnit;
+import edu.ucsc.refactor.ProgramUnit;
 import edu.ucsc.refactor.util.Locations;
 import org.eclipse.jdt.core.dom.ASTNode;
 

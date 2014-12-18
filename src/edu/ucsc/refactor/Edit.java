@@ -7,7 +7,7 @@ import edu.ucsc.refactor.spi.Refactoring;
  * A user-triggered change
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public class SingleEdit extends AbstractCauseOfChange {
+public class Edit extends AbstractCauseOfChange {
     private final Refactoring       name;         // name of operation
     private final SourceSelection   selection;    // source range
 
@@ -16,7 +16,7 @@ public class SingleEdit extends AbstractCauseOfChange {
      * @param name The name or description of this edit.
      * @param selection The scope of this edit.
      */
-    public SingleEdit(Refactoring name, SourceSelection selection){
+    public Edit(Refactoring name, SourceSelection selection){
         super();
         this.name       = name;
         this.selection  = selection;
@@ -28,8 +28,8 @@ public class SingleEdit extends AbstractCauseOfChange {
      * @param code The source code to be formatted.
      * @return The {@code SingleEdit}.
      */
-    public static SingleEdit reformatCode(Source code){
-        return new SingleEdit(
+    public static Edit reformatCode(Source code){
+        return new Edit(
                 Refactoring.REFORMAT_CODE,
                 new SourceSelection(code, 0, code.getLength())
         );
@@ -52,8 +52,8 @@ public class SingleEdit extends AbstractCauseOfChange {
      * @param selection The source selection to be clipped.
      * @return The {@code SingleEdit}.
      */
-    public static SingleEdit clipSelection(SourceSelection selection){
-        return new SingleEdit(Refactoring.CLIP_SELECTION, selection);
+    public static Edit clipSelection(SourceSelection selection){
+        return new Edit(Refactoring.CLIP_SELECTION, selection);
     }
 
 
@@ -66,8 +66,8 @@ public class SingleEdit extends AbstractCauseOfChange {
      * @param selection The selected field
      * @return The {@code SingleEdit}.
      */
-    public static SingleEdit deleteClass(SourceSelection selection){
-        return new SingleEdit(Refactoring.DELETE_TYPE, selection);
+    public static Edit deleteClass(SourceSelection selection){
+        return new Edit(Refactoring.DELETE_TYPE, selection);
     }
 
     /**
@@ -76,8 +76,8 @@ public class SingleEdit extends AbstractCauseOfChange {
      * @param selection The selected method
      * @return The {@code SingleEdit}.
      */
-    public static SingleEdit deleteMethod(SourceSelection selection){
-        return new SingleEdit(Refactoring.DELETE_METHOD, selection);
+    public static Edit deleteMethod(SourceSelection selection){
+        return new Edit(Refactoring.DELETE_METHOD, selection);
     }
 
 
@@ -87,8 +87,8 @@ public class SingleEdit extends AbstractCauseOfChange {
      * @param selection The selected field
      * @return The {@code SingleEdit}.
      */
-    public static SingleEdit deleteField(SourceSelection selection){
-        return new SingleEdit(Refactoring.DELETE_FIELD, selection);
+    public static Edit deleteField(SourceSelection selection){
+        return new Edit(Refactoring.DELETE_FIELD, selection);
     }
 
 
@@ -98,8 +98,8 @@ public class SingleEdit extends AbstractCauseOfChange {
      * @param selection The selected local variable
      * @return The {@code SingleEdit}.
      */
-    public static SingleEdit deleteLocalVariable(SourceSelection selection){
-        return new SingleEdit(Refactoring.DELETE_VARIABLE, selection);
+    public static Edit deleteLocalVariable(SourceSelection selection){
+        return new Edit(Refactoring.DELETE_VARIABLE, selection);
     }
 
 
@@ -109,8 +109,8 @@ public class SingleEdit extends AbstractCauseOfChange {
      * @param selection The selected method parameter
      * @return The {@code SingleEdit}.
      */
-    public static SingleEdit deleteParameter(SourceSelection selection){
-        return new SingleEdit(Refactoring.DELETE_PARAMETER, selection);
+    public static Edit deleteParameter(SourceSelection selection){
+        return new Edit(Refactoring.DELETE_PARAMETER, selection);
     }
 
 
@@ -120,8 +120,8 @@ public class SingleEdit extends AbstractCauseOfChange {
      * @param selection The selected region
      * @return The {@code SingleEdit}.
      */
-    public static SingleEdit deleteRegion(SourceSelection selection){
-        return new SingleEdit(Refactoring.DELETE_REGION, selection);
+    public static Edit deleteRegion(SourceSelection selection){
+        return new Edit(Refactoring.DELETE_REGION, selection);
     }
 
     /**
@@ -131,8 +131,8 @@ public class SingleEdit extends AbstractCauseOfChange {
      * @param selection The selected member
      * @return The {@code SingleEdit}.
      */
-    public static SingleEdit renameSelectedMember(SourceSelection selection){
-        return new SingleEdit(Refactoring.RENAME_SELECTION, selection);
+    public static Edit renameSelectedMember(SourceSelection selection){
+        return new Edit(Refactoring.RENAME_SELECTION, selection);
     }
 
     /**
@@ -141,8 +141,8 @@ public class SingleEdit extends AbstractCauseOfChange {
      * @param code The source code whose import declarations will be optimized.
      * @return The {@code SingleEdit}.
      */
-    public static SingleEdit optimizeImports(Source code) {
-        return new SingleEdit(
+    public static Edit optimizeImports(Source code) {
+        return new Edit(
                 Refactoring.DELETE_UNUSED_IMPORTS,
                 new SourceSelection(code, 0, code.getLength())
         );
@@ -155,8 +155,8 @@ public class SingleEdit extends AbstractCauseOfChange {
      * @param selection The selected class
      * @return The {@code SingleEdit}.
      */
-    public static SingleEdit renameClassOrInterface(SourceSelection selection){
-        return new SingleEdit(Refactoring.RENAME_TYPE, selection);
+    public static Edit renameClassOrInterface(SourceSelection selection){
+        return new Edit(Refactoring.RENAME_TYPE, selection);
     }
 
     /**
@@ -165,8 +165,8 @@ public class SingleEdit extends AbstractCauseOfChange {
      * @param selection The selected method
      * @return The {@code SingleEdit}.
      */
-    public static SingleEdit renameMethod(SourceSelection selection){
-        return new SingleEdit(Refactoring.RENAME_METHOD, selection);
+    public static Edit renameMethod(SourceSelection selection){
+        return new Edit(Refactoring.RENAME_METHOD, selection);
     }
 
     /**
@@ -176,8 +176,8 @@ public class SingleEdit extends AbstractCauseOfChange {
      * @param selection The selected parameter in a given method.
      * @return The {@code SingleEdit}.
      */
-    public static SingleEdit renameParameter(SourceSelection selection){
-        return new SingleEdit(Refactoring.RENAME_PARAMETER, selection);
+    public static Edit renameParameter(SourceSelection selection){
+        return new Edit(Refactoring.RENAME_PARAMETER, selection);
     }
 
 
@@ -188,8 +188,8 @@ public class SingleEdit extends AbstractCauseOfChange {
      * @param selection The selected field in a given class.
      * @return The {@code SingleEdit}.
      */
-    public static SingleEdit renameField(SourceSelection selection){
-        return new SingleEdit(Refactoring.RENAME_FIELD, selection);
+    public static Edit renameField(SourceSelection selection){
+        return new Edit(Refactoring.RENAME_FIELD, selection);
     }
 
 
@@ -200,8 +200,8 @@ public class SingleEdit extends AbstractCauseOfChange {
      * @param selection The selected local variable in a given class | method.
      * @return The {@code SingleEdit}.
      */
-    public static SingleEdit renameLocalVariable(SourceSelection selection){
-        return new SingleEdit(Refactoring.RENAME_VARIABLE, selection);
+    public static Edit renameLocalVariable(SourceSelection selection){
+        return new Edit(Refactoring.RENAME_VARIABLE, selection);
     }
 
     @Override public Refactoring getName() {

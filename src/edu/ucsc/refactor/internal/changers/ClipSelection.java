@@ -15,10 +15,7 @@ import edu.ucsc.refactor.spi.SourceChanger;
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 
-import java.util.Deque;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -52,9 +49,8 @@ public class ClipSelection extends SourceChanger {
         return AstUtil.parent(TypeDeclaration.class, cause.getAffectedNodes().get(0));
     }
 
-
-    private Delta cropCodeRegionNotInClippedRegion(TypeDeclaration unit, ASTRewrite rewrite, CauseOfChange cause){
-        final Set<IBinding> methods     = collectMethodDeclarations(cause);
+    private Delta cropCodeRegionNotInClippedRegion(TypeDeclaration unit, ASTRewrite rewrite, List<ASTNode> affectedNodes){
+        final Set<IBinding> methods     = collectMethodDeclarations(affectedNodes);
         final Set<IBinding> slice       = cropCodeSnippet(unit, methods);
         final Set<IBinding> universe    = generateUniverse(unit);
 
@@ -65,18 +61,47 @@ public class ClipSelection extends SourceChanger {
 
         for(IBinding binding: trash){
             final ASTNode declaringNode = AstUtil.findDeclaration(binding, unit);
+            if(AstUtil.isField(declaringNode)){
+                final FieldDeclaration parent = AstUtil.parent(
+                        FieldDeclaration.class,
+                        declaringNode
+                );
 
-            rewrite.remove(declaringNode, null);
+                rewrite.remove(parent, null);
+            } else {
+                rewrite.remove(declaringNode, null);
+            }
+
         }
 
         return createDelta(unit, rewrite);
     }
 
-    private Set<IBinding> collectMethodDeclarations(CauseOfChange cause) {
+
+    private Delta cropCodeRegionNotInClippedRegion(TypeDeclaration unit, ASTRewrite rewrite, CauseOfChange cause){
+        final List<ASTNode> affectedNodes = cause.getAffectedNodes();
+        ensureNoWholeClassSelection(affectedNodes);
+        return cropCodeRegionNotInClippedRegion(unit, rewrite, affectedNodes);
+    }
+
+
+    private static void ensureNoWholeClassSelection(List<ASTNode> affectedNodes){
+        for(ASTNode each : affectedNodes){
+            if(AstUtil.isClass(each)) {
+                throw new RuntimeException("Classes are not clipable. Only methods are.");
+            }
+        }
+    }
+
+    private Set<IBinding> collectMethodDeclarations(List<ASTNode> affectedNodes) {
         final Set<IBinding> filtered = Sets.newHashSet();
-        for(ASTNode eachNode : cause.getAffectedNodes()){
+        for(ASTNode eachNode : affectedNodes){
             if(AstUtil.isMethod(eachNode)){
-                final MethodDeclaration d = AstUtil.exactCast(MethodDeclaration.class, eachNode);
+
+                final MethodDeclaration d = AstUtil.isOfType(MethodDeclaration.class, eachNode)
+                        ? AstUtil.exactCast(MethodDeclaration.class, eachNode)
+                        : AstUtil.parent(MethodDeclaration.class, eachNode);
+
                 filtered.add(d.resolveBinding());
             } else {
                 final MethodDeclaration parent = AstUtil.parent(MethodDeclaration.class, eachNode);
@@ -85,6 +110,7 @@ public class ClipSelection extends SourceChanger {
                 }
             }
         }
+
         return filtered;
     }
 

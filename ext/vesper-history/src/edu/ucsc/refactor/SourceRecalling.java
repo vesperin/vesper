@@ -4,7 +4,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import difflib.DiffUtils;
 import difflib.Patch;
-import edu.ucsc.refactor.spi.Repository;
+import edu.ucsc.refactor.spi.PullableRepository;
 import edu.ucsc.refactor.util.SourceHistory;
 
 import java.util.List;
@@ -13,8 +13,8 @@ import java.util.List;
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public class SourceRecalling {
-    private final Repository    repository;
-    private final String        sourceId;
+    private final PullableRepository    repository;
+    private final String                sourceId;
 
     /**
      * Construct a new {@code SourceRecalling} object.
@@ -22,7 +22,7 @@ public class SourceRecalling {
      * @param repository The location from where the source history is retrieved.
      * @param sourceId   The id of a source.
      */
-    public SourceRecalling(Repository repository, String sourceId){
+    public SourceRecalling(PullableRepository repository, String sourceId){
         this.repository = repository;
         this.sourceId   = sourceId;
     }
@@ -63,7 +63,7 @@ public class SourceRecalling {
      * @return The {@code SourceHistory}.
      * @throws java.lang.NullPointerException if either the sourceId or the repository are null.
      */
-    public SourceHistory replay(Repository fromRepository, String sourceId){
+    public SourceHistory replay(PullableRepository fromRepository, String sourceId){
         return fromRepository.pull(sourceId);
     }
 

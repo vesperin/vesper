@@ -3,7 +3,6 @@ package edu.ucsc.refactor;
 import com.google.common.collect.Lists;
 import edu.ucsc.refactor.internal.HostImpl;
 import edu.ucsc.refactor.internal.Upstream;
-import edu.ucsc.refactor.util.Commit;
 import edu.ucsc.refactor.util.CommitPublisher;
 import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.Gist;
@@ -37,7 +36,7 @@ public class NavigableVesperTest extends VesperTest {
         final Set<Issue> issues = navigableRefactorer.detectIssues(CODE);
         assertThat(!issues.isEmpty(), is(true));
 
-        final List<Change> suggestedChanges = refactorer.recommendChanges(src, issues);
+        final List<Change> suggestedChanges = Vesper.createIntrospector().detectImprovements(issues);
         assertThat(suggestedChanges.isEmpty(), is(false));
 
         final Change first = suggestedChanges.get(0);

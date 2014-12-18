@@ -5,8 +5,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import edu.ucsc.refactor.*;
-import edu.ucsc.refactor.spi.UnitLocator;
-import edu.ucsc.refactor.util.Commit;
+import edu.ucsc.refactor.Commit;
 import edu.ucsc.refactor.util.CommitHistory;
 import edu.ucsc.refactor.util.CommitPublisher;
 
@@ -76,7 +75,7 @@ public class NavigableJavaRefactorer implements NavigableRefactorer {
 
 
     @Override public Set<Issue> detectIssues(Source code) {
-        final Introspector introspector = refactorer.getIntrospector(code);
+        final Introspector introspector = Vesper.createIntrospector();
         try {
             final Set<Issue> issues = introspector.detectIssues(code);
             for(Issue each : issues){
@@ -102,14 +101,6 @@ public class NavigableJavaRefactorer implements NavigableRefactorer {
         return findings;
     }
 
-
-    @Override public Introspector getIntrospector() {
-        return refactorer.getIntrospector();
-    }
-
-    @Override public Introspector getIntrospector(Source src) {
-        return refactorer.getIntrospector(src);
-    }
 
     @Override public List<Issue> getIssues(Source key) {
         if(getIssueRegistry().containsKey(key)){
@@ -137,10 +128,6 @@ public class NavigableJavaRefactorer implements NavigableRefactorer {
     }
 
 
-    @Override public UnitLocator getLocator(Source src) {
-        return refactorer.getLocator(src);
-    }
-
     @Override public boolean hasIssues(Source code) {
         return !getIssues(Preconditions.checkNotNull(code)).isEmpty();
     }
@@ -166,11 +153,6 @@ public class NavigableJavaRefactorer implements NavigableRefactorer {
         timeline.get(key).add(commit);
     }
 
-
-
-    @Override public List<Change> recommendChanges(Source code, Set<Issue> issues) {
-        return refactorer.recommendChanges(code, issues);
-    }
 
     @Override public Source rewriteHistory(Source source) {
 

@@ -1,7 +1,6 @@
 package edu.ucsc.refactor;
 
-import edu.ucsc.refactor.internal.*;
-import edu.ucsc.refactor.spi.UnitLocator;
+import edu.ucsc.refactor.locators.*;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -43,8 +42,7 @@ public class RefactorersTest {
     }
 
     @Test public void testRefactorerIssueDetection(){
-        final Refactorer refactorer = Vesper.createRefactorer();
-        final Introspector introspector = refactorer.getIntrospector(SRC);
+        final Introspector introspector = Vesper.createIntrospector();
         final Set<Issue> issues = introspector.detectIssues(SRC);
         assertThat(issues.isEmpty(), is(false));
     }
@@ -52,7 +50,7 @@ public class RefactorersTest {
     @Test public void testRefactorerCreateChanges() {
         // for issue and for edit
         final Refactorer refactorer = Vesper.createRefactorer();
-        final Introspector introspector = refactorer.getIntrospector(SRC);
+        final Introspector introspector = Vesper.createIntrospector();
         final Set<Issue> issues     = introspector.detectIssues(SRC);
 
         assertThat(issues.isEmpty(), is(false));
@@ -83,17 +81,15 @@ public class RefactorersTest {
 
     @Test public void testRefactorerRecommendChange(){
         // for any issues found on the SRC
-        final Refactorer refactorer = Vesper.createRefactorer();
-        final Introspector introspector = refactorer.getIntrospector(SRC);
-        final List<Change> changes = refactorer.recommendChanges(SRC, introspector.detectIssues(SRC));
+        final Introspector introspector = Vesper.createIntrospector();
+        final List<Change> changes = introspector.detectImprovements(SRC);
 
         assertThat(changes.isEmpty(), is(false));
         assertThat(changes.size(), is(3));
     }
 
     @Test public void testRefactorerUnitLocator() {
-        final Refactorer    refactorer  = Vesper.createRefactorer();
-        final UnitLocator   locator     = refactorer.getLocator(SRC);
+        final UnitLocator   locator = Vesper.createUnitLocator(SRC);
 
         final List<NamedLocation> params = locator.locate(new ParameterUnit("message"));
         assertThat(params.isEmpty(), is(false));

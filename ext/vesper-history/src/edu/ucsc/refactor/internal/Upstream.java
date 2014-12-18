@@ -5,13 +5,13 @@ import com.google.common.collect.Iterables;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import edu.ucsc.refactor.Commit;
 import edu.ucsc.refactor.Credential;
-import edu.ucsc.refactor.util.Note;
 import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.spi.CommitSummary;
 import edu.ucsc.refactor.spi.Name;
-import edu.ucsc.refactor.spi.Repository;
-import edu.ucsc.refactor.util.Commit;
+import edu.ucsc.refactor.spi.PullableRepository;
+import edu.ucsc.refactor.util.Note;
 import edu.ucsc.refactor.util.Notes;
 import edu.ucsc.refactor.util.SourceHistory;
 import edu.ucsc.refactor.util.StringUtil;
@@ -32,7 +32,7 @@ import java.util.logging.Logger;
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public class Upstream implements Repository {
+public class Upstream implements PullableRepository {
     private static final Logger LOGGER = Logger.getLogger(Upstream.class.getName());
 
     private final Credential    credential;

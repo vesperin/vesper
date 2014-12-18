@@ -3,9 +3,9 @@ package edu.ucsc.refactor.cli;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import edu.ucsc.refactor.*;
-import edu.ucsc.refactor.spi.ProgramUnit;
-import edu.ucsc.refactor.spi.UnitLocator;
-import edu.ucsc.refactor.util.Commit;
+import edu.ucsc.refactor.ProgramUnit;
+import edu.ucsc.refactor.UnitLocator;
+import edu.ucsc.refactor.Commit;
 import edu.ucsc.refactor.util.CommitHistory;
 import edu.ucsc.refactor.util.CommitPublisher;
 
@@ -168,7 +168,7 @@ public class Environment {
      * @return The Unit locator
      */
     public UnitLocator getCodeLocator(){
-        return getCodeRefactorer().getLocator(getOrigin());
+        return Vesper.createUnitLocator(getOrigin());
     }
 
     /**

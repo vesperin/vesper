@@ -1,11 +1,11 @@
 package edu.ucsc.refactor;
 
 import com.google.common.base.Objects;
-import edu.ucsc.refactor.internal.EclipseJavaParser;
+import edu.ucsc.refactor.internal.EclipseJavaSnippetParser;
 import edu.ucsc.refactor.internal.changers.*;
 import edu.ucsc.refactor.internal.detectors.*;
 import edu.ucsc.refactor.spi.IssueDetector;
-import edu.ucsc.refactor.spi.JavaParser;
+import edu.ucsc.refactor.spi.JavaSnippetParser;
 import edu.ucsc.refactor.spi.SourceChanger;
 
 /**
@@ -62,7 +62,7 @@ public abstract class AbstractConfiguration implements Configuration {
      * when creating their configuration.
      */
     protected void installDefaultSettings(){
-        addJavaParser(new EclipseJavaParser());
+        addJavaParser(new EclipseJavaSnippetParser());
         addIssueDetector(new UnusedImports());
         addSourceChanger(new RemoveUnusedImports());
         addIssueDetector(new UnusedMethods());
@@ -99,9 +99,9 @@ public abstract class AbstractConfiguration implements Configuration {
     }
 
     /**
-     * @see {@link Host#addJavaParser(JavaParser)}
+     * @see {@link Host#addJavaParser(JavaSnippetParser)}
      */
-    protected void addJavaParser(JavaParser parser){
+    protected void addJavaParser(JavaSnippetParser parser){
         this.host.addJavaParser(parser);
     }
 

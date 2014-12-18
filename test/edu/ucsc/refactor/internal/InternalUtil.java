@@ -229,6 +229,77 @@ public class InternalUtil {
     }
 
 
+    public static Source createQuickSortSource(){
+        final String content = "import java.util.Random;\n" +
+                "\n" +
+                "public class Quicksort {\n" +
+                "  private static Random rand = new Random();\n" +
+                "\n" +
+                "  public static void quicksort(int[] arr, int left, int right) {\n" +
+                "    if (left < right) {\n" +
+                "      int pivot = randomizedPartition(arr, left, right);\n" +
+                "      quicksort(arr, left, pivot);\n" +
+                "      quicksort(arr, pivot + 1, right);\n" +
+                "    }\n" +
+                "  }\n" +
+                "\n" +
+                "  private static int randomizedPartition(int[] arr, int left, int right) {\n" +
+                "    int swapIndex = left + rand.nextInt(right - left) + 1;\n" +
+                "    swap(arr, left, swapIndex);\n" +
+                "    return partition(arr, left, right);\n" +
+                "  }\n" +
+                "\n" +
+                "  private static int partition(int[] arr, int left, int right) {\n" +
+                "    int pivot = arr[left];\n" +
+                "    int i = left - 1;\n" +
+                "    int j = right + 1;\n" +
+                "    while (true) {\n" +
+                "      do\n" +
+                "        j--;\n" +
+                "      while (arr[j] > pivot);\n" +
+                "\n" +
+                "      do\n" +
+                "        i++;\n" +
+                "      while (arr[i] < pivot);\n" +
+                "\n" +
+                "      if (i < j)\n" +
+                "        swap(arr, i, j);\n" +
+                "      else\n" +
+                "        return j;\n" +
+                "    }\n" +
+                "  }\n" +
+                "\n" +
+                "  private static void swap(int[] arr, int i, int j) {\n" +
+                "    int tmp = arr[i];\n" +
+                "    arr[i] = arr[j];\n" +
+                "    arr[j] = tmp;\n" +
+                "  }\n" +
+                "\n" +
+                "  // Sort 100k elements that are in reversed sorted order\n" +
+                "  public static void main(String[] args) {\n" +
+                "    int arr[] = new int[100000];\n" +
+                "    for (int i = 0; i < arr.length; i++)\n" +
+                "      arr[i] = arr.length - i;\n" +
+                "\n" +
+                "    System.out.println(\"First 20 elements\");\n" +
+                "    System.out.print(\"Before sort: \");\n" +
+                "    for (int i = 0; i < 20; i++)\n" +
+                "      System.out.print(arr[i] + \" \");\n" +
+                "    System.out.println();\n" +
+                "\n" +
+                "    quicksort(arr, 0, arr.length - 1);\n" +
+                "    System.out.print(\"After sort: \");\n" +
+                "    for (int i = 0; i < 20; i++)\n" +
+                "      System.out.print(arr[i] + \" \");\n" +
+                "    System.out.println();\n" +
+                "  }\n" +
+                "\n" +
+                "}\n";
+
+        return createSource("Quicksort.java", new StringBuilder(content));
+    }
+
+
     public static Source createBrokenBubbleSortSource2() {
         final String content = "class BubbleSort {\n" +
                 "\tpublic static void main(String[] arguments) {\n" +
@@ -273,13 +344,55 @@ public class InternalUtil {
     }
 
 
-    public static Source createSourceWithUsedField(){
+    public static Source createSourceWithUsedField() {
         return createSource(
                 "Name.java",
                 new StringBuilder("class Name {\n")
                         .append("\tint a = 0;")
                         .append("\tvoid boom(String msg){ a = 1; if(msg.length() > 1) {}}\n")
                         .append("}")
+        );
+    }
+
+    public static Source createSourceWithMissingImports(){
+        return createSource(
+                "Name.java",
+                new StringBuilder("class Name implements Comparator {\n")
+                        .append("\tint a = 0;")
+//                        .append("\tint compare(Object a, Object c){ return 0; }")
+                        .append("\tvoid boom(String msg){ a = 1; if(msg.length() > 1) {}}\n")
+                        .append("}")
+        );
+    }
+
+
+    public static Source createSourceWithOnlyStatements(){
+        return createSource(
+                "Name.java",
+                new StringBuilder("\n")
+                        .append("\tList<String> list = new ArrayList<String>();\n")
+                        .append("\tSet<String> list = new HashSet<String>();\n")
+                        .append("\tMap<String,String> map = new HashMap<String, String>();\n")
+                        .append("\tTreeSet<String> list = new TreeSet<String>();\n")
+                        .append("\tString toString = toString(list);\n")
+                        .append("\tpublic int compare(Object a, String c){ return 0; }")
+//                        .append("\tvoid boom(String msg){ a = 1; if(msg.length() > 1) {}}\n")
+                        .append("")
+        );
+    }
+
+
+    public static Source createSourceWithCommentsAndStatements(){
+        return createSource(
+                "Sample.java",
+                new StringBuilder("\n")
+                        .append("\tList<String> list = new ArrayList<String>();\n")
+                        .append("\tSet<String> list = new HashSet<String>();\n")
+                        .append("\tMap<String,String> map = new HashMap<String, String>();\n")
+                        .append("\tTreeSet<String> list = new TreeSet<String>();\n")
+                        .append("\n\tthis is a simple program\n\n")
+                        .append("\tpublic int compare(Object a, String c){ return 0; }")
+                        .append("")
         );
     }
 
@@ -315,6 +428,35 @@ public class InternalUtil {
                         .append("\tvoid boom(String msg){ final Name old = new Name(); \n")
                         .append("a = 1; int b = 0; b = 1; if(msg.length() > 1) {}}\n")
                         .append("}")
+        );
+    }
+
+
+    public static Source createSourceForClippingAtClassLevel(){
+        String content = "import java.util.*;\n" +
+                "import java.lang.*;\n" +
+                "\n" +
+                "class ComparatorSorter {\n" +
+                "  private static <K, V extends Comparable<V>> Map<K, V> sortByComparator(Map<K, V> unsortMap) {\n" +
+                "    List<Map.Entry<K, V>> list = new LinkedList<Map.Entry<K, V>>(unsortMap.entrySet());\n" +
+                "    Collections.sort(list, new Comparator<Map.Entry<K, V>>() {\n" +
+                "      @Override\n" +
+                "      public int compare(Map.Entry<K, V> o1, Map.Entry<K, V> o2) {\n" +
+                "        return o1.getValue().compareTo(o2.getValue());\n" +
+                "      }\n" +
+                "    });\n" +
+                "    Map<K, V> sortedMap = new LinkedHashMap<K, V>();\n" +
+                "    for (Iterator<Map.Entry<K, V>> it = list.iterator(); it.hasNext();) {\n" +
+                "      Map.Entry<K, V> entry = it.next();\n" +
+                "      sortedMap.put(entry.getKey(), entry.getValue());\n" +
+                "    }\n" +
+                "    return sortedMap;\n" +
+                "  }\n" +
+                "}";
+
+        return createSource(
+                "ComparatorSorter.java",
+                new StringBuilder(content)
         );
     }
 
@@ -587,6 +729,249 @@ public class InternalUtil {
 
         return createSource("BubbleSort.java", new StringBuilder(content));
     }
+
+    public static Source createSortingFromLowestToHighest(){
+        String content = "import java.util.*;\n" +
+                "import java.lang.*;\n" +
+                "\n" +
+                "class Sorting {\n" +
+                "  private Sorting() {\n" +
+                "    throw new Error(\"This class cannot be instantiated; it is a util class!\");\n" +
+                "  }\n" +
+                "\n" +
+                "  static void sort(Integer[] arr) {\n" +
+                "    Arrays.sort(arr, new Comparator<Integer>() {\n" +
+                "      @Override\n" +
+                "      public int compare(Integer x, Integer y) {\n" +
+                "        return x - y;\n" +
+                "      }\n" +
+                "    });\n" +
+                "  }\n" +
+                "\n" +
+                "  public static void main(String... args) {\n" +
+                "    Integer[] arr = {12, 67, 1, 34, 9, 78, 6, 31};\n" +
+                "    Sorting.sort(arr);\n" +
+                "    System.out.println(\"low to high:\" + Arrays.toString(arr));\n" +
+                "  }\n" +
+                "\n" +
+                "}\n";
+
+        return createSource("Sorting.java", new StringBuilder(content));
+    }
+
+    public static Source createSourceWithStaticNestedClass_ClippingEntireInnerClass(){
+       String content = "import java.util.ArrayList;\n" +
+               "import java.util.Collections;\n" +
+               "import java.util.List;\n" +
+               "\n" +
+               "public class Runme {\n" +
+               "\n" +
+               "  public static void main(String args[]) {\n" +
+               "\n" +
+               "    ToSort toSort1 = new ToSort(new Float(3), \"3\");\n" +
+               "    ToSort toSort2 = new ToSort(new Float(6), \"6\");\n" +
+               "    ToSort toSort3 = new ToSort(new Float(9), \"9\");\n" +
+               "    ToSort toSort4 = new ToSort(new Float(1), \"1\");\n" +
+               "    ToSort toSort5 = new ToSort(new Float(5), \"5\");\n" +
+               "    ToSort toSort6 = new ToSort(new Float(0), \"0\");\n" +
+               "    ToSort toSort7 = new ToSort(new Float(3), \"3\");\n" +
+               "    ToSort toSort8 = new ToSort(new Float(-3), \"-3\");\n" +
+               "\n" +
+               "    List<ToSort> sortList = new ArrayList<ToSort>();\n" +
+               "    sortList.add(toSort1);\n" +
+               "    sortList.add(toSort2);\n" +
+               "    sortList.add(toSort3);\n" +
+               "    sortList.add(toSort4);\n" +
+               "    sortList.add(toSort5);\n" +
+               "    sortList.add(toSort6);\n" +
+               "    sortList.add(toSort7);\n" +
+               "    sortList.add(toSort8);\n" +
+               "\n" +
+               "    Collections.sort(sortList);\n" +
+               "\n" +
+               "    for (ToSort toSort : sortList) {\n" +
+               "      System.out.println(toSort.toString());\n" +
+               "    }\n" +
+               "  }\n" +
+               "\n" +
+               "  public static class ToSort implements Comparable {\n" +
+               "\n" +
+               "    private Float val;\n" +
+               "    private String id;\n" +
+               "\n" +
+               "    public ToSort(Float val, String id) {\n" +
+               "      this.val = val;\n" +
+               "      this.id = id;\n" +
+               "    }\n" +
+               "\n" +
+               "    @Override\n" +
+               "    public int compareTo(Object o) {\n" +
+               "\n" +
+               "      ToSort f = (ToSort) o;\n" +
+               "\n" +
+               "      if (val.floatValue() > f.val.floatValue()) {\n" +
+               "        return 1;\n" +
+               "      } else if (val.floatValue() < f.val.floatValue()) {\n" +
+               "        return -1;\n" +
+               "      } else {\n" +
+               "        return 0;\n" +
+               "      }\n" +
+               "\n" +
+               "    }\n" +
+               "\n" +
+               "    @Override\n" +
+               "    public String toString() {\n" +
+               "      return this.id;\n" +
+               "    }\n" +
+               "  }\n" +
+               "\n" +
+               "}\n";
+
+        return createSource("Runme.java", new StringBuilder(content));
+    }
+
+    public static Source createToSortSource(){
+        String content = "import java.util.ArrayList;\n" +
+                "import java.util.Collections;\n" +
+                "import java.util.List;\n" +
+                "import java.util.*;\n" +
+                "\n" +
+                "public class ToSort implements Comparable {\n" +
+                "\n" +
+                "    private Float val;\n" +
+                "    private String id;\n" +
+                "\n" +
+                "    public ToSort(Float val, String id) {\n" +
+                "      this.val = val;\n" +
+                "      this.id = id;\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    public int compareTo(Object o) {\n" +
+                "\n" +
+                "      ToSort f = (ToSort) o;\n" +
+                "\n" +
+                "      if (val.floatValue() > f.val.floatValue()) {\n" +
+                "        return 1;\n" +
+                "      } else if (val.floatValue() < f.val.floatValue()) {\n" +
+                "        return -1;\n" +
+                "      } else {\n" +
+                "        return 0;\n" +
+                "      }\n" +
+                "\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    public String toString() {\n" +
+                "      return this.id;\n" +
+                "    }\n" +
+                "  }";
+
+        return createSource("ToSort.java", new StringBuilder(content));
+    }
+
+
+    public static Source createSourceWithOptimizationBug(){
+        String content = "import java.util.*;\n" +
+                "import java.lang.*;\n" +
+                "import java.util.regex.*;\n" +
+                "import java.text.*; \n" +
+                "class Tunein {\n" +
+                "  public static void main(String[] args) throws Exception {\n" +
+                "    List<String> values = new ArrayList<String>();\n" +
+                "    values.add(\"AB\");\n" +
+                "    values.add(\"A012B\");\n" +
+                "    values.add(\"CD\");\n" +
+                "    values.add(\"1\");\n" +
+                "    values.add(\"10\");\n" +
+                "    values.add(\"01\");\n" +
+                "    values.add(\"9\");\n" +
+                "\n" +
+                "    int maxLen = 0;\n" +
+                "    for (String string : values) {\n" +
+                "        if (string.length() > maxLen) {\n" +
+                "            maxLen = string.length();\n" +
+                "        }\n" +
+                "    }\n" +
+                "\n" +
+                "    Collections.sort(values, new MyComparator(maxLen));\n" +
+                "\n" +
+                "    System.out.println(values);\n" +
+                "}\n" +
+                "  \n" +
+                "  public static String leftPad(String stringToPad, String padder, Integer size) {\n" +
+                "\n" +
+                "    final StringBuilder strb = new StringBuilder(size.intValue());\n" +
+                "    final StringCharacterIterator sci = new StringCharacterIterator(padder);\n" +
+                "\n" +
+                "    while (strb.length() < (size.intValue() - stringToPad.length())) {\n" +
+                "        for (char ch = sci.first(); ch != CharacterIterator.DONE; ch = sci.next()) {\n" +
+                "            if (strb.length() < (size.intValue() - stringToPad.length())) {\n" +
+                "                strb.insert(strb.length(), String.valueOf(ch));\n" +
+                "            }\n" +
+                "        }\n" +
+                "    }\n" +
+                "\n" +
+                "    return strb.append(stringToPad).toString();\n" +
+                "}\n" +
+                "  \n" +
+                "  public static class MyComparator implements Comparator<String> {\n" +
+                "    private int maxLen;\n" +
+                "    private static final String REGEX = \"[0-9]+\";\n" +
+                "\n" +
+                "    public MyComparator(int maxLen) {\n" +
+                "        this.maxLen = maxLen;\n" +
+                "\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    public int compare(String obj1, String obj2) {\n" +
+                "        String o1 = obj1;\n" +
+                "        String o2 = obj2;\n" +
+                "        // both numbers\n" +
+                "        if (o1.matches(\"[1-9]+\") && o2.matches(\"[1-9]+\")) {\n" +
+                "            Integer integer1 = Integer.valueOf(o1);\n" +
+                "            Integer integer2 = Integer.valueOf(o2);\n" +
+                "            return integer1.compareTo(integer2);\n" +
+                "        }\n" +
+                "\n" +
+                "        // both string\n" +
+                "        if (o1.matches(\"[a-zA-Z]+\") && o2.matches(\"[a-zA-Z]+\")) {\n" +
+                "            return o1.compareTo(o2);\n" +
+                "        }\n" +
+                "\n" +
+                "        Pattern p = Pattern.compile(REGEX);\n" +
+                "        Matcher m1 = p.matcher(o1);\n" +
+                "        Matcher m2 = p.matcher(o2);\n" +
+                "\n" +
+                "        List<String> list = new ArrayList<String>();\n" +
+                "        while (m1.find()) {\n" +
+                "            list.add(m1.group());\n" +
+                "        }\n" +
+                "        for (String string : list) {\n" +
+                "            o1.replaceFirst(string, leftPad(string, \"0\", maxLen));\n" +
+                "        }\n" +
+                "\n" +
+                "        list.clear();\n" +
+                "\n" +
+                "        while (m2.find()) {\n" +
+                "            list.add(m2.group());\n" +
+                "        }\n" +
+                "        for (String string : list) {\n" +
+                "            o2.replaceFirst(string, leftPad(string, \"0\", maxLen));\n" +
+                "        }\n" +
+                "        return o1.compareTo(o2);\n" +
+                "\n" +
+                "    }\n" +
+                "}\n" +
+                "\n" +
+                "\n" +
+                "}";
+
+        return createSource("Tunein.java", new StringBuilder(content));
+    }
+
+
 
     public static Source createSource(String name, StringBuilder builder){
         return new Source(name, builder.toString());

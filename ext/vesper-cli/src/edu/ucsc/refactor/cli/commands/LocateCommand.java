@@ -7,7 +7,7 @@ import edu.ucsc.refactor.cli.Environment;
 import edu.ucsc.refactor.cli.Result;
 import edu.ucsc.refactor.cli.VesperCommand;
 import edu.ucsc.refactor.cli.results.Results;
-import edu.ucsc.refactor.spi.ProgramUnit;
+import edu.ucsc.refactor.ProgramUnit;
 import io.airlift.airline.Arguments;
 
 import java.util.List;

@@ -1,9 +1,8 @@
-package edu.ucsc.refactor.util;
+package edu.ucsc.refactor;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Atomics;
-import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.spi.CommitSummary;
 import edu.ucsc.refactor.spi.Name;
 
@@ -59,7 +58,13 @@ public class Commit implements Comparable <Commit> {
     }
 
     public static Commit createValidCommit(Name causeName, Source before, Source after, CommitSummary status) {
-        return new Commit(causeName, before, after, status.getCommittedAt().getTime(), status);
+        return createValidCommit(causeName, before, after, status.getCommittedAt().getTime(), status);
+    }
+
+
+    public static Commit createValidCommit(Name causeName, Source before, Source after,
+                  long timeStamp, CommitSummary status) {
+        return new Commit(causeName, before, after, timeStamp, status);
     }
 
 

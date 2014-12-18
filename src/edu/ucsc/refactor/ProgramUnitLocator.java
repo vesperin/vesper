@@ -1,11 +1,6 @@
-package edu.ucsc.refactor.internal;
+package edu.ucsc.refactor;
 
 import com.google.common.base.Preconditions;
-import edu.ucsc.refactor.Context;
-import edu.ucsc.refactor.Location;
-import edu.ucsc.refactor.NamedLocation;
-import edu.ucsc.refactor.spi.ProgramUnit;
-import edu.ucsc.refactor.spi.UnitLocator;
 
 import java.util.List;
 

@@ -2,6 +2,7 @@ package edu.ucsc.refactor.util;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import edu.ucsc.refactor.Commit;
 import edu.ucsc.refactor.Credential;
 import edu.ucsc.refactor.internal.Upstream;
 import edu.ucsc.refactor.spi.Repository;

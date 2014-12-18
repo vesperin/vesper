@@ -4,7 +4,7 @@ import edu.ucsc.refactor.Change;
 import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.spi.CommitSummary;
 import edu.ucsc.refactor.spi.Name;
-import edu.ucsc.refactor.util.Commit;
+import edu.ucsc.refactor.Commit;
 import edu.ucsc.refactor.util.StringUtil;
 import org.eclipse.jdt.core.dom.ASTNode;
 

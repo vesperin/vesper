@@ -183,6 +183,11 @@ public class Context {
             for(IProblem each : problems){
                 final boolean hasSyntaxProblem  = (each.getID() & IProblem.Syntax) != 0;
 
+                // HACK (due to OpenJDK 1.6)
+                final boolean isJava15RelatedIssue = each.toString().contains("Syntax error") && each.toString().contains("source level") && each.toString().contains("1.5");
+
+                if(isJava15RelatedIssue) continue;
+
                 if(each.isError() && (hasSyntaxProblem || inBlackList(each))){
                     final String message = buildMessage(each);
                     syntaxRelatedProblems.add(message);
