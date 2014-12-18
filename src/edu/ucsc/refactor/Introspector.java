@@ -92,6 +92,38 @@ public interface Introspector {
     Set<String> detectMissingImports(Source code);
 
     /**
+     * Recommends changes for a {@code Source} based on a list of found {@code issues}.
+     * E.g., if this {@code Source} has 10 issues in it, then the
+     * {@code Refactorer} will recommend 10 changes that will address this 10 issues.
+     *
+     * <p />
+     *
+     * Context cache is flushed out after recommending changes for a set of issues. THis mean that
+     * if this method is not invoked, then the cached contexts will remain.
+     *
+     * @param code The {@code Source}
+     * @return The list of recommended changes
+     * @throws java.lang.NullPointerException if {@code Source} null.
+     */
+    List<Change> detectImprovements(Source code);
+
+    /**
+     * Recommends changes for a {@code Source} based on a list of found {@code issues}.
+     * E.g., if this {@code Source} has 10 issues in it, then the
+     * {@code Refactorer} will recommend 10 changes that will address this 10 issues.
+     *
+     * <p />
+     *
+     * Context cache is flushed out after recommending changes for a set of issues. THis mean that
+     * if this method is not invoked, then the cached contexts will remain.
+     *
+     * @param issues the set of detected issues
+     * @return The list of recommended changes
+     * @throws java.lang.NullPointerException if {@code Source} null.
+     */
+    List<Change> detectImprovements(Set<Issue> issues);
+
+    /**
      * Compares two source and return their differences; i.e., insertions, changes, or deletions.
      *
      * Due to multi stage code examples goes from less to more complexity, we assume that

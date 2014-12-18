@@ -94,9 +94,8 @@ public final class Vesper {
      * @return a new Introspector
      */
     public static Introspector createIntrospector(){
-        final Host host     = new HostImpl();
-        host.install(DEFAULT_CONFIG);
-        return new CodeIntrospector(host);
+        final Host configuredHost = installConfiguration(DEFAULT_CONFIG, new HostImpl());
+        return new CodeIntrospector(configuredHost);
     }
 
     /**
@@ -108,10 +107,9 @@ public final class Vesper {
      * @throws java.lang.NullPointerException if {@code Source} null.
      */
     public static UnitLocator createUnitLocator(Source code){
-        final Host host     = new HostImpl();
-        host.install(DEFAULT_CONFIG);
+        final Host configuredHost = installConfiguration(DEFAULT_CONFIG, new HostImpl());
         final Source src    = Preconditions.checkNotNull(code);
-        final Context context = host.createContext(src);
+        final Context context = configuredHost.createContext(src);
         return createUnitLocator(context);
     }
 
@@ -156,19 +154,20 @@ public final class Vesper {
      *
      * @return a new Refactorer
      */
-    public static Refactorer createRefactorer(
-            Configuration configuration,
-            Host host
-    ){
+    public static Refactorer createRefactorer(Configuration configuration, Host host){
+        final Host configuredHost = installConfiguration(configuration, host);
+        return new InternalRefactorerCreator(installConfiguration(configuration, configuredHost))
+                .build();
+    }
 
+
+    private static Host installConfiguration(Configuration configuration, Host host){
         Vesper.nonNull(configuration, host);
-
 
         // installs a configuration to Vesper's host.
         host.install(configuration);
 
-        return new InternalRefactorerCreator(host)
-                .build();
+        return host;
     }
 
 
