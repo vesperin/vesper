@@ -220,7 +220,12 @@ public class AstUtil {
         @SuppressWarnings("unchecked")
         final Set<ImportDeclaration> allImports = Sets.newHashSet(unit.imports());
 
-        allImports.removeAll(getUnusedImports(unit));
+        for(ASTNode each : getUnusedImports(unit)){
+            if(ImportDeclaration.class.isInstance(each)){
+                allImports.add(AstUtil.exactCast(ImportDeclaration.class, each));
+            }
+        }
+
         return allImports;
     }
 
@@ -656,6 +661,7 @@ public class AstUtil {
 
         if(node instanceof FieldDeclaration) {
             final Queue<SimpleName> ans = Lists.newLinkedList();
+            @SuppressWarnings("unchecked")
             final List<VariableDeclarationFragment> fragments   = ((FieldDeclaration)node).fragments();
             for (VariableDeclarationFragment fragment : fragments) {
                 final SimpleName name = fragment.getName();
