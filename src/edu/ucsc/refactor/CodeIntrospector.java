@@ -175,11 +175,15 @@ public class CodeIntrospector implements Introspector {
 
         for(Clip each : clipSpace){ /// starts from smallest to larger code example
 
-            result.put(each, summarize(each.getMethodName(), each.getSource()));
+            result.put(each, summarize(each));
 
         }
 
         return result;
+    }
+
+    @Override public List<Location> summarize(Clip clip) {
+        return summarize(clip.getMethodName(), clip.getSource());
     }
 
     @Override public List<Location> summarize(String startingMethod, Source code) {

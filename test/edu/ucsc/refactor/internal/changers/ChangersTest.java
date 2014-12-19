@@ -1800,6 +1800,18 @@ public class ChangersTest {
     }
 
 
+    @Test public void testSummarizeClipByRanking() throws Exception {
+        final Source src = InternalUtil.createQuickSortSource();
+
+        final Introspector introspector = Vesper.createIntrospector();
+        List<Clip> clips = introspector.multiStage(src);
+
+        final Clip clip = Clip.find(src, clips);
+        assertNotNull(clip);
+
+    }
+
+
     private static List<Clip> makeClipSpace(Source src, Introspector introspector){
         return introspector.multiStage(src);
     }

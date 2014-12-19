@@ -157,6 +157,16 @@ public interface Introspector {
     Map<Clip, List<Location>> summarize(List<Clip> clipSpace);
 
     /**
+     * Summarizes a clip by detecting block nodes that can be
+     * automatically folded.
+     *
+     * @param clip a clip extracted from a code example.
+     * @return a map between clips and foldable code areas; together they represent
+     *      the summary of a code example.
+     */
+    List<Location> summarize(Clip clip);
+
+    /**
      * Summarizes a code example by detecting those areas that can be automatically folded. The
      * unfolded areas represent areas that can be ignored by a developer when trying to
      * understanding the code example.
