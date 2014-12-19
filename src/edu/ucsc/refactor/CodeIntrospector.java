@@ -1,5 +1,6 @@
 package edu.ucsc.refactor;
 
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -28,6 +29,12 @@ import static edu.ucsc.refactor.Context.throwCompilationErrorIfExist;
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public class CodeIntrospector implements Introspector {
+
+    private static final Function<Clip, Integer> LINES_OF_CODE = new Function<Clip, Integer>() {
+        @Override public Integer apply(Clip obj) {
+            return obj.getSource().getContents().split(System.getProperty("line.separator")).length;
+        }
+    };
 
     private static Map<String, Set<String>> PACKAGES_OF_INTEREST;
     static {
@@ -156,7 +163,11 @@ public class CodeIntrospector implements Introspector {
         // where each chunk increases the complexity of the code example.
         final Set<Clip> clipSpace = spaceGeneration.generateSpace(code);
 
-        return ImmutableList.copyOf(clipSpace).reverse();
+        Ordering<Clip> byLinesOfCode =
+                Ordering.natural()
+                        .onResultOf(LINES_OF_CODE);
+
+        return byLinesOfCode.sortedCopy(ImmutableList.copyOf(clipSpace));
     }
 
     @Override public Map<Clip, List<Location>> summarize(List<Clip> clipSpace) {

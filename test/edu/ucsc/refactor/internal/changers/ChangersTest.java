@@ -1,5 +1,6 @@
 package edu.ucsc.refactor.internal.changers;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import edu.ucsc.refactor.*;
@@ -1700,7 +1701,8 @@ public class ChangersTest {
 
         final Introspector introspector = Vesper.createIntrospector();
         final List<Clip> clipSpace = makeClipSpace(src, introspector);
-        final List<Clip> clipOneToBaseClip  = clipSpace.subList(0, 2);
+        final List<Clip> clipOneToBaseClip  = ImmutableList.of(clipSpace.get(clipSpace.size() -
+                1), clipSpace.get(1));
 
         final Diff diff = introspector.differences(
                 clipOneToBaseClip.get(0).getSource(),
@@ -1733,8 +1735,8 @@ public class ChangersTest {
         final Introspector introspector = Vesper.createIntrospector();
         final List<Clip> clipSpace = makeClipSpace(src, introspector);
 
-        final Source a = clipSpace.get(1).getSource();
-        final Source b = clipSpace.get(2).getSource();
+        final Source a = clipSpace.get(0).getSource();
+        final Source b = clipSpace.get(1).getSource();
 
         final Source c = Source.from(b, b.getContents().replaceAll("swap", "exchange"));
 
