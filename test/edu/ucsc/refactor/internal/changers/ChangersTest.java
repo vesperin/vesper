@@ -13,7 +13,6 @@ import edu.ucsc.refactor.locators.*;
 import edu.ucsc.refactor.spi.JavaParser;
 import edu.ucsc.refactor.spi.JavaSnippetParser;
 import edu.ucsc.refactor.spi.SourceChanger;
-import edu.ucsc.refactor.Commit;
 import edu.ucsc.refactor.util.Locations;
 import edu.ucsc.refactor.util.Parameters;
 import edu.ucsc.refactor.util.Syncer;
@@ -1790,6 +1789,24 @@ public class ChangersTest {
         assertThat(foldingLocations.isEmpty(), is(false));
     }
 
+    @Test public void testSummarizeSingleMethodAndLongSourceCode() throws Exception {
+        final Source src = InternalUtil.createSourceWithShortNameMembers();
+
+        final Introspector introspector = Vesper.createIntrospector();
+        List<Location> foldingLocations = introspector.summarize("qsort", src);
+        assertThat(foldingLocations.isEmpty(), is(false));
+
+    }
+
+
+    @Test public void testSummarizeSourceCodeWithStaticNestedClass() throws Exception {
+        final Source src = InternalUtil.createSourceWithStaticNestedClass_ClippingEntireInnerClass();
+
+        final Introspector introspector = Vesper.createIntrospector();
+        List<Location> foldingLocations = introspector.summarize("main", src);
+        assertThat(foldingLocations.isEmpty(), is(false));
+
+    }
 
     @Test public void testSummarizeAllPossibleClips() throws Exception {
         final Source src = InternalUtil.createQuickSortSource();
