@@ -21,10 +21,6 @@ public class GraphUtils {
     private GraphUtils(){}
 
 
-    public static <T> DirectedAcyclicGraph<T> benefit(DirectedAcyclicGraph<T> graph) {
-        return graph;
-    }
-
     /**
      * Returns the depth of a vertex in a graph.
      *

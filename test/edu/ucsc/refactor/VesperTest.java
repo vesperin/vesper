@@ -82,4 +82,18 @@ public class VesperTest {
         assertThat(edges.length, is(1));
 
     }
+
+
+    @Test public void testCheckForCycleSourceCodeWithStaticNestedClass() throws Exception {
+        final Source src = InternalUtil.createSourceWithStaticNestedClass_ClippingEntireInnerClass();
+
+        final Context           context = CodeIntrospector.makeContext(src);
+        final MethodDeclaration method  = CodeIntrospector.getMethod("main", context);
+
+
+        final CodeIntrospector.BlockVisitor visitor = new CodeIntrospector.BlockVisitor();
+        method.accept(visitor);
+
+        assertThat(GraphUtils.findCycles(visitor.graph()).length, is(0));
+    }
 }

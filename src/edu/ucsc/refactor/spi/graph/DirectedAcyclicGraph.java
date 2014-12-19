@@ -95,26 +95,6 @@ public class DirectedAcyclicGraph<T> implements DirectedGraph <T> {
         return match;
     }
 
-    /**
-     * Search the vertices for one with data.
-     *
-     * @param data the vertex data to match
-     * @param compare the comparator to perform the match
-     * @return the first vertex with a matching data, null if no matches are found
-     */
-    public static <T> Vertex<T> findVertexByData(DirectedGraph<T> graph, T data, Comparator<T>
-            compare) {
-        Vertex<T> match = null;
-        for (Vertex<T> v : graph.getVertices()) {
-            if (compare.compare(data, v.getData()) == 0) {
-                match = v;
-                break;
-            }
-        }
-        return match;
-    }
-
-
     @Override public Vertex<T> getRootVertex() {
         return rootVertex;
     }

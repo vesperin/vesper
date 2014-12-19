@@ -3,6 +3,7 @@ package edu.ucsc.refactor.internal;
 import edu.ucsc.refactor.Location;
 import edu.ucsc.refactor.Source;
 import edu.ucsc.refactor.util.Locations;
+import edu.ucsc.refactor.util.SourceFormatter;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -296,7 +297,7 @@ public class InternalUtil {
                 "\n" +
                 "}\n";
 
-        return createSource("Quicksort.java", new StringBuilder(content));
+        return createSource("Quicksort.java", new StringBuilder(new SourceFormatter().format(content)));
     }
 
 

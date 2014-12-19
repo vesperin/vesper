@@ -1,5 +1,6 @@
 package edu.ucsc.refactor.internal.changers;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import edu.ucsc.refactor.*;
@@ -12,7 +13,6 @@ import edu.ucsc.refactor.locators.*;
 import edu.ucsc.refactor.spi.JavaParser;
 import edu.ucsc.refactor.spi.JavaSnippetParser;
 import edu.ucsc.refactor.spi.SourceChanger;
-import edu.ucsc.refactor.Commit;
 import edu.ucsc.refactor.util.Locations;
 import edu.ucsc.refactor.util.Parameters;
 import edu.ucsc.refactor.util.Syncer;
@@ -1700,7 +1700,8 @@ public class ChangersTest {
 
         final Introspector introspector = Vesper.createIntrospector();
         final List<Clip> clipSpace = makeClipSpace(src, introspector);
-        final List<Clip> clipOneToBaseClip  = clipSpace.subList(0, 2);
+        final List<Clip> clipOneToBaseClip  = ImmutableList.of(clipSpace.get(clipSpace.size() -
+                1), clipSpace.get(1));
 
         final Diff diff = introspector.differences(
                 clipOneToBaseClip.get(0).getSource(),
@@ -1733,8 +1734,8 @@ public class ChangersTest {
         final Introspector introspector = Vesper.createIntrospector();
         final List<Clip> clipSpace = makeClipSpace(src, introspector);
 
-        final Source a = clipSpace.get(1).getSource();
-        final Source b = clipSpace.get(2).getSource();
+        final Source a = clipSpace.get(0).getSource();
+        final Source b = clipSpace.get(1).getSource();
 
         final Source c = Source.from(b, b.getContents().replaceAll("swap", "exchange"));
 
@@ -1788,6 +1789,24 @@ public class ChangersTest {
         assertThat(foldingLocations.isEmpty(), is(false));
     }
 
+    @Test public void testSummarizeSingleMethodAndLongSourceCode() throws Exception {
+        final Source src = InternalUtil.createSourceWithShortNameMembers();
+
+        final Introspector introspector = Vesper.createIntrospector();
+        List<Location> foldingLocations = introspector.summarize("qsort", src);
+        assertThat(foldingLocations.isEmpty(), is(false));
+
+    }
+
+
+    @Test public void testSummarizeSourceCodeWithStaticNestedClass() throws Exception {
+        final Source src = InternalUtil.createSourceWithStaticNestedClass_ClippingEntireInnerClass();
+
+        final Introspector introspector = Vesper.createIntrospector();
+        List<Location> foldingLocations = introspector.summarize("main", src);
+        assertThat(foldingLocations.isEmpty(), is(false));
+
+    }
 
     @Test public void testSummarizeAllPossibleClips() throws Exception {
         final Source src = InternalUtil.createQuickSortSource();
@@ -1795,6 +1814,18 @@ public class ChangersTest {
         final Introspector introspector = Vesper.createIntrospector();
         Map<Clip, List<Location>> allSummaries = introspector.summarize(introspector.multiStage(src));
         assertThat(allSummaries.isEmpty(), is(false));
+    }
+
+
+    @Test public void testSummarizeClipByRanking() throws Exception {
+        final Source src = InternalUtil.createQuickSortSource();
+
+        final Introspector introspector = Vesper.createIntrospector();
+        List<Clip> clips = introspector.multiStage(src);
+
+        final Clip clip = Clip.find(src, clips);
+        assertNotNull(clip);
+
     }
 
 

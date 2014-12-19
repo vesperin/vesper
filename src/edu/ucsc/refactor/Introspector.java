@@ -139,7 +139,7 @@ public interface Introspector {
 
     /**
      * Multi stage a source code by generating all possible clips that can be extracted from the
-     * code example.
+     * code example. It goes from simple to more complex. The last clip is the found code example.
      *
      * @param code The code example used to created the clip space.
      * @return The clip space.
@@ -155,6 +155,16 @@ public interface Introspector {
      *      the summary of a code example.
      */
     Map<Clip, List<Location>> summarize(List<Clip> clipSpace);
+
+    /**
+     * Summarizes a clip by detecting block nodes that can be
+     * automatically folded.
+     *
+     * @param clip a clip extracted from a code example.
+     * @return a map between clips and foldable code areas; together they represent
+     *      the summary of a code example.
+     */
+    List<Location> summarize(Clip clip);
 
     /**
      * Summarizes a code example by detecting those areas that can be automatically folded. The

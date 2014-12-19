@@ -1,5 +1,6 @@
 package edu.ucsc.refactor;
 
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -28,6 +29,12 @@ import static edu.ucsc.refactor.Context.throwCompilationErrorIfExist;
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public class CodeIntrospector implements Introspector {
+
+    private static final Function<Clip, Integer> LINES_OF_CODE = new Function<Clip, Integer>() {
+        @Override public Integer apply(Clip obj) {
+            return obj.getSource().getContents().split(System.getProperty("line.separator")).length;
+        }
+    };
 
     private static Map<String, Set<String>> PACKAGES_OF_INTEREST;
     static {
@@ -156,7 +163,11 @@ public class CodeIntrospector implements Introspector {
         // where each chunk increases the complexity of the code example.
         final Set<Clip> clipSpace = spaceGeneration.generateSpace(code);
 
-        return ImmutableList.copyOf(clipSpace).reverse();
+        Ordering<Clip> byLinesOfCode =
+                Ordering.natural()
+                        .onResultOf(LINES_OF_CODE);
+
+        return byLinesOfCode.sortedCopy(ImmutableList.copyOf(clipSpace));
     }
 
     @Override public Map<Clip, List<Location>> summarize(List<Clip> clipSpace) {
@@ -164,17 +175,23 @@ public class CodeIntrospector implements Introspector {
 
         for(Clip each : clipSpace){ /// starts from smallest to larger code example
 
-            result.put(each, summarize(each.getMethodName(), each.getSource()));
+            result.put(each, summarize(each));
 
         }
 
         return result;
     }
 
+    @Override public List<Location> summarize(Clip clip) {
+        return summarize(clip.getMethodName(), clip.getSource());
+    }
+
     @Override public List<Location> summarize(String startingMethod, Source code) {
 
         final Context           context = makeContext(code);
         final MethodDeclaration method  = getMethod(startingMethod, context);
+
+        if(method == null) return Lists.newLinkedList();
 
         final BlockVisitor visitor = new BlockVisitor();
         method.accept(visitor);
@@ -206,7 +223,6 @@ public class CodeIntrospector implements Introspector {
 
         return !selection.isEmpty() ? selection.toLocation() : null;
     }
-
 
     private static List<Location> summarizeCodeBySolvingTreeKnapsack(DirectedGraph<Item> graph, int capacity){
 
@@ -285,6 +301,9 @@ public class CodeIntrospector implements Introspector {
     static MethodDeclaration getMethod(String name, Context context){
         final ProgramUnitLocator    locator     = new ProgramUnitLocator(context);
         final List<NamedLocation>   locations   = locator.locate(new MethodUnit(name));
+
+        if(locations.isEmpty()) return null;
+
         final ProgramUnitLocation   target      = (ProgramUnitLocation)locations.get(0);
         return (MethodDeclaration)target.getNode();
     }
@@ -502,6 +521,7 @@ public class CodeIntrospector implements Introspector {
         }
 
         static void sink(Block parent, ASTNode node, Set<ASTNode> visited, DirectedGraph<Item> graph){
+           if(node == null) return;
 
            final Deque<ASTNode> Q = new LinkedList<ASTNode>();
            Q.offer(node);
@@ -527,8 +547,16 @@ public class CodeIntrospector implements Introspector {
                                    AstUtil.parent(CompilationUnit.class, invoke)
                            );
 
+                           if(visited.contains(method)) return;
                            sink(parent, method, visited, graph);
                            Q.offer(method);
+                         } else if (isTypeDeclarationStatement(child)){
+                           final SimpleType type = (SimpleType) child;
+                           final ASTNode declaration =  AstUtil.findDeclaration(type
+                                   .resolveBinding(), type);
+                           if(visited.contains(declaration)) return;
+                           sink(parent, declaration, visited, graph);
+                           Q.offer(declaration);
                          } else {
                            sink(parent, child, visited, graph);
                            Q.offer(child);
@@ -541,6 +569,20 @@ public class CodeIntrospector implements Introspector {
 
            }
 
+        }
+
+        private static boolean isTypeDeclarationStatement(ASTNode node){
+            if(!SimpleType.class.isInstance(node)) return false;
+
+            final SimpleType type = (SimpleType) node;
+            final ASTNode declaration =  AstUtil.findDeclaration(type
+                    .resolveBinding(), type);
+
+            if(!TypeDeclaration.class.isInstance(declaration)) return false;
+
+            final TypeDeclaration found = (TypeDeclaration) declaration;
+            // todo(Huascar) test whether we handle anonymous class declarations
+            return !found.isPackageMemberTypeDeclaration() || found.isMemberTypeDeclaration();
         }
 
 
