@@ -227,7 +227,7 @@ public class CodeIntrospector implements Introspector {
     private static List<Location> summarizeCodeBySolvingTreeKnapsack(DirectedGraph<Item> graph, int capacity){
 
         final LinkedList<Vertex<Item>> Q = Lists.newLinkedList(graph.getVertices());
-        Q.addFirst(new Vertex<Item>()); // required to move the idx to 1
+        Q.addFirst(new Vertex<Item>()); // sentinel required to move the idx to 1
 
 
         final int N = Q.size();
@@ -495,32 +495,32 @@ public class CodeIntrospector implements Introspector {
 
     static class BlockVisitor extends SourceVisitor {
 
+        static final Set<ASTNode>   VISITED = Sets.newLinkedHashSet();
+
         final DirectedGraph<Item> G;
-        final Set<ASTNode>   V;
 
 
         BlockVisitor(){
             G = new DirectedAcyclicGraph<Item>();
-            V = Sets.newLinkedHashSet();
         }
 
         @Override public boolean visit(Block node) {
+
+            buildTree(node, G);
+
+            return false;
+        }
+
+        static void buildTree(ASTNode node, DirectedGraph<Item> G){
             final Vertex<Item> root  = new Vertex<Item>(node.toString(), Item.of(node));
             if(G.getRootVertex() == null){ G.addRootVertex(root); } else {
                 G.addVertex(root);
             }
 
-            buildDirectedAcyclicGraph(node, V, G);
-
-            return false;
+            buildSubtree(null, node, G);
         }
 
-        static void buildDirectedAcyclicGraph(ASTNode node,
-               Set<ASTNode> visited, DirectedGraph<Item> graph){
-            sink(null, node, visited, graph);
-        }
-
-        static void sink(Block parent, ASTNode node, Set<ASTNode> visited, DirectedGraph<Item> graph){
+        static void buildSubtree(Block parent, ASTNode node, DirectedGraph<Item> G){
            if(node == null) return;
 
            final Deque<ASTNode> Q = new LinkedList<ASTNode>();
@@ -528,45 +528,46 @@ public class CodeIntrospector implements Introspector {
 
            while(!Q.isEmpty()){
               final ASTNode c = Q.poll();
-              visited.add(c);
+              VISITED.add(c);
 
                for(ASTNode child : AstUtil.getChildren(c)){
-                   if(!visited.contains(child)){
-                       if(skipNode(child)) continue;
+                   if(!VISITED.contains(child)){
+                     if(skipNode(child)) continue;
 
-                       if(Block.class.isInstance(child)){
-                         update(graph, parent, child);
-                         sink((Block) child, child, visited, graph);
-                         Q.offer(child);
+                     if(Block.class.isInstance(child)){
+                       connect(G, parent, child);
+                       buildSubtree((Block) child, child, G);
+                       Q.offer(child);
+                     } else {
+                       parent = parent == null ? (Block) node : parent;
+                       if(MethodInvocation.class.isInstance(child)){
+                         final MethodInvocation invoke = (MethodInvocation) child;
+                         final ASTNode method = AstUtil.findDeclaration(
+                               invoke.resolveMethodBinding(),
+                               AstUtil.parent(CompilationUnit.class, invoke)
+                         );
+
+                         if(VISITED.contains(method)) return;
+                         buildSubtree(parent, method, G);
+                         Q.offer(method);
+                       } else if (isTypeDeclarationStatement(child)){
+                         final SimpleType type = (SimpleType) child;
+                         final ASTNode declaration =  AstUtil.findDeclaration(
+                                 type.resolveBinding(),
+                                 type
+                         );
+
+                         if(VISITED.contains(declaration)) return;
+                         buildSubtree(parent, declaration, G);
+                         Q.offer(declaration);
                        } else {
-                         parent = parent == null ? (Block) node : parent;
-                         if(MethodInvocation.class.isInstance(child)){
-                           final MethodInvocation invoke = (MethodInvocation) child;
-                           final ASTNode method = AstUtil.findDeclaration(
-                                   invoke.resolveMethodBinding(),
-                                   AstUtil.parent(CompilationUnit.class, invoke)
-                           );
-
-                           if(visited.contains(method)) return;
-                           sink(parent, method, visited, graph);
-                           Q.offer(method);
-                         } else if (isTypeDeclarationStatement(child)){
-                           final SimpleType type = (SimpleType) child;
-                           final ASTNode declaration =  AstUtil.findDeclaration(type
-                                   .resolveBinding(), type);
-                           if(visited.contains(declaration)) return;
-                           sink(parent, declaration, visited, graph);
-                           Q.offer(declaration);
-                         } else {
-                           sink(parent, child, visited, graph);
-                           Q.offer(child);
-                         }
-
+                         buildSubtree(parent, child, G);
+                         Q.offer(child);
                        }
+
+                     }
                    }
-
                }
-
            }
 
         }
@@ -614,7 +615,7 @@ public class CodeIntrospector implements Introspector {
         }
 
 
-        private static void update(DirectedGraph<Item> graph, ASTNode parent, ASTNode child){
+        private static void connect(DirectedGraph<Item> graph, ASTNode parent, ASTNode child){
             final Vertex<Item> n = graph.getVertex(parent.toString());
 
             final Block  b = (Block) child;

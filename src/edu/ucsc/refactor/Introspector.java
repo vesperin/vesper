@@ -138,8 +138,9 @@ public interface Introspector {
     Diff differences(Source original, Source revised);
 
     /**
-     * Multi stage a source code by generating all possible clips that can be extracted from the
-     * code example. It goes from simple to more complex. The last clip is the found code example.
+     * Multi stage (dissect) a source code by generating all possible clips that can be extracted
+     * from the code example. It goes from simple to more complex. The last clip is the found
+     * code example.
      *
      * @param code The code example used to created the clip space.
      * @return The clip space.
