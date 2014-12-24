@@ -16,24 +16,6 @@ import java.util.Set;
  */
 public interface Introspector {
     /**
-     * Verifies whether this {@code Source} is valid; purely a syntax checking.
-     *
-     * More specifically, this method checks for:
-     *
-     * <ol>
-     *     <li>Field related problems; e.g., undefined field</li>
-     *     <li>Method related problems; e.g., undefined methods</li>
-     *     <li>Internal related problems; e.g., two classes in same file</li>
-     *     <li>Constructor related problems; e.g., undefined constructor</li>
-     * </ol>
-     *
-     *
-     * @param code The {@code Source} to be verified.
-     * @return a list of error messages or []
-     */
-    List<String> checkCodeSyntax(Source code);
-
-    /**
      * Scans a {@link Source} tracked by the {@code Refactorer}, looking for any {@link Issue}s
      * in it.
      *
@@ -122,6 +104,26 @@ public interface Introspector {
      * @throws java.lang.NullPointerException if {@code Source} null.
      */
     List<Change> detectImprovements(Set<Issue> issues);
+
+    /**
+     * Checks if this {@code Source} is syntactically correct. That is, the Java compiler
+     * returned no syntax errors.
+     *
+     * Typical `syntax errors` types include:
+     *
+     * <ol>
+     *     <li>Field related problems; e.g., undefined field</li>
+     *     <li>Method related problems; e.g., undefined methods</li>
+     *     <li>Internal related problems; e.g., two classes in same file</li>
+     *     <li>Constructor related problems; e.g., undefined constructor</li>
+     * </ol>
+     *
+     *
+     * @param code The {@code Source} to be verified.
+     * @return a list of error messages returned by the Java compiler or an empty array if
+     *      no errors were found.
+     */
+    List<String> detectSyntaxErrors(Source code);
 
     /**
      * Compares two source and return their differences; i.e., insertions, changes, or deletions.

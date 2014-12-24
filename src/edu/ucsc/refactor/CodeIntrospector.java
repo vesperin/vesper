@@ -82,12 +82,6 @@ public class CodeIntrospector implements Introspector {
     }
 
 
-    @Override public List<String> checkCodeSyntax(Source code) {
-        return ImmutableList.copyOf(
-                this.host.createContext(code).getSyntaxRelatedProblems()
-        );
-    }
-
     @Override public Set<Issue> detectIssues(Source code) {
         final Context context = this.host.createContext(code);
         return detectIssues(context);
@@ -150,6 +144,12 @@ public class CodeIntrospector implements Introspector {
         }
 
         return recommendations;
+    }
+
+    @Override public List<String> detectSyntaxErrors(Source code) {
+        return ImmutableList.copyOf(
+                this.host.createContext(code).getSyntaxRelatedProblems()
+        );
     }
 
     @Override public Diff differences(Source original, Source revised) {

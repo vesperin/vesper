@@ -699,9 +699,9 @@ public class ChangersTest {
         final Context context = new Context(src);
         parser.parseJava(context);
 
-        final List<Location>    spots     = Locations.locateWord(context.getSource(), "Quicksort");
-          final SourceSelection   selection = new SourceSelection(SourceLocation.createLocation(src, src.getContents(), 72, 74));
-//        final SourceSelection   selection = new SourceSelection(SourceLocation.createLocation(src, src.getContents(), 6, 15));
+
+        final SourceSelection   selection = new SourceSelection(SourceLocation.createLocation(src, src.getContents(), 72, 74));
+//      final SourceSelection   selection = new SourceSelection(SourceLocation.createLocation(src, src.getContents(), 6, 15));
 
 
         final ProgramUnitLocator    locator    = new ProgramUnitLocator(context);
@@ -1419,7 +1419,7 @@ public class ChangersTest {
         final Source  code    = InternalUtil.createGeneralSourceWithInvalidSelection();
 
         final Introspector introspector = Vesper.createIntrospector();
-        final List<String> problems     = introspector.checkCodeSyntax(code);
+        final List<String> problems     = introspector.detectSyntaxErrors(code);
 
         assertThat(problems.isEmpty(), is(false));
     }
