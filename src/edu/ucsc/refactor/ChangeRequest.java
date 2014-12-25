@@ -17,7 +17,7 @@ public class ChangeRequest {
      */
     static final Map<String, Parameter> DEFAULT_PARAMETERS = new HashMap<String, Parameter>();
 
-    private final CauseOfChange             cause;
+    private final Cause                     cause;
     private final SourceSelection           selection;
     private final Map<String, Parameter>    parameters;
 
@@ -29,7 +29,7 @@ public class ChangeRequest {
      * @param selection The code area selected by the user.
      * @param parameters The change-supporting data, e.g., new name (in rename refactoring)
      */
-    public ChangeRequest(CauseOfChange cause, SourceSelection selection,
+    public ChangeRequest(Cause cause, SourceSelection selection,
                          Map<String, Parameter> parameters){
         this.cause      = cause;
         this.selection  = selection;
@@ -302,15 +302,15 @@ public class ChangeRequest {
      * @return {@code true} if it is an issue. {@code false} otherwise.
      */
     public boolean isIssue(){
-        return getCauseOfChange().getContextScanner() != null;
+        return Issue.class.isInstance(getCause());
     }
 
     /**
      * Returns the reason why a {@code Source} must be changed.
      *
-     * @return The {@link CauseOfChange}.
+     * @return The {@link Cause}.
      */
-    public CauseOfChange getCauseOfChange(){
+    public Cause getCause(){
         return cause;
     }
 
@@ -335,7 +335,7 @@ public class ChangeRequest {
 
     @Override public String toString() {
         return "ChangeRequest (" + getSelection() + ")"
-                + " for " + getCauseOfChange().getName()
+                + " for " + getCause().getName()
                 + (isIssue() ? " issue." : " edit.");
     }
 }

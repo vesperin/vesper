@@ -27,9 +27,9 @@ public class DeduplicateCommand extends VesperCommand {
         }
 
         for(Issue each : issues){
-            final Smell name = each.getName();
+            final Smell name = (Smell) each.getName();
             if(Names.hasAvailableResponse(name)){
-                if(Names.from(each.getName()).isSame(Refactoring.DEDUPLICATE)){
+                if(Names.from(name).isSame(Refactoring.DEDUPLICATE)){
                     commitChange(environment, ChangeRequest.forIssue(each));
                 }
             }

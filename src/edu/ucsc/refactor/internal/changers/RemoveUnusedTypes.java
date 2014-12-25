@@ -1,6 +1,6 @@
 package edu.ucsc.refactor.internal.changers;
 
-import edu.ucsc.refactor.CauseOfChange;
+import edu.ucsc.refactor.Cause;
 import edu.ucsc.refactor.Change;
 import edu.ucsc.refactor.Parameter;
 import edu.ucsc.refactor.internal.Delta;
@@ -30,12 +30,12 @@ public class RemoveUnusedTypes extends SourceChanger {
         super();
     }
 
-    @Override public boolean canHandle(CauseOfChange cause) {
-        return cause.getName().isSame(Smell.UNUSED_TYPE)
+    @Override public boolean canHandle(Cause cause) {
+        return cause.isSame(Smell.UNUSED_TYPE)
                 || Names.from(Smell.UNUSED_TYPE).isSame(cause.getName());
     }
 
-    @Override protected Change initChanger(CauseOfChange cause, Map<String, Parameter> parameters) {
+    @Override protected Change initChanger(Cause cause, Map<String, Parameter> parameters) {
 
         final SourceChange change   = new SourceChange(cause, this, parameters);
         try {
@@ -53,7 +53,7 @@ public class RemoveUnusedTypes extends SourceChanger {
     }
 
 
-    private Delta removeUnusedTypeDeclarations(CompilationUnit root, ASTRewrite rewrite, CauseOfChange cause){
+    private Delta removeUnusedTypeDeclarations(CompilationUnit root, ASTRewrite rewrite, Cause cause){
 
         // if it came from the detector, then there is not need for looking for references
         // why? because there are none! If it came from the SingleEdit, then we must take these

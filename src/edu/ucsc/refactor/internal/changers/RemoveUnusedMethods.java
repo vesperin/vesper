@@ -1,6 +1,6 @@
 package edu.ucsc.refactor.internal.changers;
 
-import edu.ucsc.refactor.CauseOfChange;
+import edu.ucsc.refactor.Cause;
 import edu.ucsc.refactor.Change;
 import edu.ucsc.refactor.Parameter;
 import edu.ucsc.refactor.internal.Delta;
@@ -29,12 +29,12 @@ public class RemoveUnusedMethods extends SourceChanger {
         super();
     }
 
-    @Override public boolean canHandle(CauseOfChange cause) {
-        return cause.getName().isSame(Smell.UNUSED_METHOD)
+    @Override public boolean canHandle(Cause cause) {
+        return cause.isSame(Smell.UNUSED_METHOD)
                 || Names.from(Smell.UNUSED_METHOD).isSame(cause.getName());
     }
 
-    @Override protected Change initChanger(CauseOfChange cause,
+    @Override protected Change initChanger(Cause cause,
                                            Map<String, Parameter> parameters) {
 
         final SourceChange      change      = new SourceChange(cause, this, parameters);
@@ -53,7 +53,7 @@ public class RemoveUnusedMethods extends SourceChanger {
     }
 
 
-    private Delta removeUnusedMethods(CompilationUnit root, ASTRewrite rewrite, CauseOfChange cause){
+    private Delta removeUnusedMethods(CompilationUnit root, ASTRewrite rewrite, Cause cause){
         // todo FIX, it can also come from
         final boolean cameFromDetector = cause.getName().isSame(Smell.UNUSED_METHOD);
 

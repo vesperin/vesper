@@ -45,7 +45,7 @@ public abstract class SourceChanger implements Changer {
         return request;
     }
 
-    @Override public Change createChange(CauseOfChange cause, Map<String, Parameter> parameters){
+    @Override public Change createChange(Cause cause, Map<String, Parameter> parameters){
         if (!canHandle(cause) ) {
             throw new IllegalArgumentException(
                     "Cannot handle cause. This changer does not know " +
@@ -76,7 +76,7 @@ public abstract class SourceChanger implements Changer {
      * @param parameters Supporting data for the solver.
      * @return a new {@link Change solution}.
      */
-    protected abstract Change initChanger(CauseOfChange cause, Map<String, Parameter> parameters);
+    protected abstract Change initChanger(Cause cause, Map<String, Parameter> parameters);
 
     /**
      * Tracks the changes made to a {@link Source file} by storing them
@@ -137,7 +137,7 @@ public abstract class SourceChanger implements Changer {
         return new HashMap<String, Parameter>();
     }
 
-    @Override public List<Location> locate(CauseOfChange cause) {
+    @Override public List<Location> locate(Cause cause) {
         final List<Location> locations = new ArrayList<Location>();
 
         for(ASTNode each : cause.getAffectedNodes()){
@@ -147,7 +147,7 @@ public abstract class SourceChanger implements Changer {
         return locations;
     }
 
-    protected static CompilationUnit getCompilationUnit(CauseOfChange cause){
+    protected static CompilationUnit getCompilationUnit(Cause cause){
         return AstUtil.parent(CompilationUnit.class, cause.getAffectedNodes().get(0));
     }
 

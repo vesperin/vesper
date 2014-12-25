@@ -1,6 +1,6 @@
 package edu.ucsc.refactor.internal;
 
-import edu.ucsc.refactor.CauseOfChange;
+import edu.ucsc.refactor.Cause;
 import edu.ucsc.refactor.Change;
 import edu.ucsc.refactor.spi.CommitRequest;
 import edu.ucsc.refactor.Parameter;
@@ -16,7 +16,7 @@ import java.util.Map;
  */
 public class SourceChange extends Change {
 
-    private final CauseOfChange cause;
+    private final Cause cause;
     private final SourceChanger changer;
 
     /**
@@ -26,13 +26,13 @@ public class SourceChange extends Change {
      * @param changer The source changer that created this {@code Change} or {@code Refactoring}.
      * @param parameters  The parameters that the changer needs to apply the {@code Refactoring}.
      */
-    public SourceChange(CauseOfChange cause, Changer changer, Map<String, Parameter> parameters){
+    public SourceChange(Cause cause, Changer changer, Map<String, Parameter> parameters){
         super(parameters);
         this.cause   = cause;
         this.changer = (SourceChanger) changer;
     }
 
-    @Override public CauseOfChange getCause() {
+    @Override public Cause getCause() {
         return cause;
     }
 

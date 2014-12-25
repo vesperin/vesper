@@ -4,7 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import edu.ucsc.refactor.CauseOfChange;
+import edu.ucsc.refactor.Cause;
 import edu.ucsc.refactor.Change;
 import edu.ucsc.refactor.Parameter;
 import edu.ucsc.refactor.internal.Delta;
@@ -21,11 +21,11 @@ import java.util.*;
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public class ClipSelection extends SourceChanger {
-    @Override public boolean canHandle(CauseOfChange cause) {
-        return cause.getName().isSame(Refactoring.CLIP_SELECTION);
+    @Override public boolean canHandle(Cause cause) {
+        return cause.isSame(Refactoring.CLIP_SELECTION);
     }
 
-    @Override protected Change initChanger(CauseOfChange cause, Map<String, Parameter> parameters) {
+    @Override protected Change initChanger(Cause cause, Map<String, Parameter> parameters) {
         final SourceChange change = new SourceChange(cause, this, parameters);
 
         try {
@@ -45,7 +45,7 @@ public class ClipSelection extends SourceChanger {
         return change;
     }
 
-    protected static TypeDeclaration getTypeDeclaration(CauseOfChange cause){
+    protected static TypeDeclaration getTypeDeclaration(Cause cause){
         return AstUtil.parent(TypeDeclaration.class, cause.getAffectedNodes().get(0));
     }
 
@@ -78,7 +78,7 @@ public class ClipSelection extends SourceChanger {
     }
 
 
-    private Delta cropCodeRegionNotInClippedRegion(TypeDeclaration unit, ASTRewrite rewrite, CauseOfChange cause){
+    private Delta cropCodeRegionNotInClippedRegion(TypeDeclaration unit, ASTRewrite rewrite, Cause cause){
         final List<ASTNode> affectedNodes = cause.getAffectedNodes();
         ensureNoWholeClassSelection(affectedNodes);
         return cropCodeRegionNotInClippedRegion(unit, rewrite, affectedNodes);

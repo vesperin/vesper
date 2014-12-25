@@ -1,6 +1,6 @@
 package edu.ucsc.refactor.internal.changers;
 
-import edu.ucsc.refactor.CauseOfChange;
+import edu.ucsc.refactor.Cause;
 import edu.ucsc.refactor.Change;
 import edu.ucsc.refactor.Parameter;
 import edu.ucsc.refactor.Source;
@@ -17,11 +17,11 @@ import java.util.Map;
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public class ReformatSourceCode extends SourceChanger {
-    @Override public boolean canHandle(CauseOfChange cause) {
-        return cause.getName().isSame(Refactoring.REFORMAT_CODE);
+    @Override public boolean canHandle(Cause cause) {
+        return cause.isSame(Refactoring.REFORMAT_CODE);
     }
 
-    @Override protected Change initChanger(CauseOfChange cause,
+    @Override protected Change initChanger(Cause cause,
                                            Map<String, Parameter> parameters) {
 
         final Change change = new SourceChange(cause, this, parameters);

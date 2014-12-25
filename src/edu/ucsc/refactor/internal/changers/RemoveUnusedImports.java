@@ -1,6 +1,6 @@
 package edu.ucsc.refactor.internal.changers;
 
-import edu.ucsc.refactor.CauseOfChange;
+import edu.ucsc.refactor.Cause;
 import edu.ucsc.refactor.Change;
 import edu.ucsc.refactor.Parameter;
 import edu.ucsc.refactor.internal.Delta;
@@ -22,12 +22,12 @@ import java.util.Set;
  */
 public class RemoveUnusedImports extends SourceChanger {
 
-    @Override public boolean canHandle(CauseOfChange cause) {
-        return cause.getName().isSame(Smell.UNUSED_IMPORTS)
+    @Override public boolean canHandle(Cause cause) {
+        return cause.isSame(Smell.UNUSED_IMPORTS)
                 || Names.from(Smell.UNUSED_IMPORTS).isSame(cause.getName());
     }
 
-    @Override protected Change initChanger(CauseOfChange cause,
+    @Override protected Change initChanger(Cause cause,
                                            Map<String, Parameter> parameters) {
 
         final SourceChange  change           = new SourceChange(cause, this, parameters);
@@ -49,7 +49,7 @@ public class RemoveUnusedImports extends SourceChanger {
     }
 
 
-    private static CompilationUnit getCompilationUnitFromTypeDeclaration(CauseOfChange cause){
+    private static CompilationUnit getCompilationUnitFromTypeDeclaration(Cause cause){
         CompilationUnit unit = AstUtil.parent(CompilationUnit.class, cause.getAffectedNodes().get(0));
         if(unit == null){
             return AstUtil.exactCast(CompilationUnit.class, cause.getAffectedNodes().get(0));
@@ -59,7 +59,7 @@ public class RemoveUnusedImports extends SourceChanger {
     }
 
 
-    private Delta removeUnusedImports(CompilationUnit root, ASTRewrite rewrite, CauseOfChange cause){
+    private Delta removeUnusedImports(CompilationUnit root, ASTRewrite rewrite, Cause cause){
         final boolean cameFromDetector = cause.getName().isSame(Smell.UNUSED_IMPORTS);
 
         if(cameFromDetector){

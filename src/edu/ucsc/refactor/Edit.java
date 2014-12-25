@@ -2,13 +2,14 @@ package edu.ucsc.refactor;
 
 import com.google.common.base.Objects;
 import edu.ucsc.refactor.spi.Refactoring;
+import edu.ucsc.refactor.spi.Name;
 
 /**
  * A user-triggered change
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public class Edit extends AbstractCauseOfChange {
-    private final Refactoring       name;         // name of operation
+public abstract class Edit extends AbstractCause {
+    private final Name              name;         // name of operation
     private final SourceSelection   selection;    // source range
 
     /**
@@ -16,7 +17,7 @@ public class Edit extends AbstractCauseOfChange {
      * @param name The name or description of this edit.
      * @param selection The scope of this edit.
      */
-    public Edit(Refactoring name, SourceSelection selection){
+    Edit(Refactoring name, SourceSelection selection){
         super();
         this.name       = name;
         this.selection  = selection;
@@ -29,7 +30,7 @@ public class Edit extends AbstractCauseOfChange {
      * @return The {@code SingleEdit}.
      */
     public static Edit reformatCode(Source code){
-        return new Edit(
+        return Edit.make(
                 Refactoring.REFORMAT_CODE,
                 new SourceSelection(code, 0, code.getLength())
         );
@@ -53,7 +54,7 @@ public class Edit extends AbstractCauseOfChange {
      * @return The {@code SingleEdit}.
      */
     public static Edit clipSelection(SourceSelection selection){
-        return new Edit(Refactoring.CLIP_SELECTION, selection);
+        return Edit.make(Refactoring.CLIP_SELECTION, selection);
     }
 
 
@@ -67,7 +68,7 @@ public class Edit extends AbstractCauseOfChange {
      * @return The {@code SingleEdit}.
      */
     public static Edit deleteClass(SourceSelection selection){
-        return new Edit(Refactoring.DELETE_TYPE, selection);
+        return Edit.make(Refactoring.DELETE_TYPE, selection);
     }
 
     /**
@@ -77,7 +78,7 @@ public class Edit extends AbstractCauseOfChange {
      * @return The {@code SingleEdit}.
      */
     public static Edit deleteMethod(SourceSelection selection){
-        return new Edit(Refactoring.DELETE_METHOD, selection);
+        return Edit.make(Refactoring.DELETE_METHOD, selection);
     }
 
 
@@ -88,7 +89,7 @@ public class Edit extends AbstractCauseOfChange {
      * @return The {@code SingleEdit}.
      */
     public static Edit deleteField(SourceSelection selection){
-        return new Edit(Refactoring.DELETE_FIELD, selection);
+        return Edit.make(Refactoring.DELETE_FIELD, selection);
     }
 
 
@@ -99,7 +100,7 @@ public class Edit extends AbstractCauseOfChange {
      * @return The {@code SingleEdit}.
      */
     public static Edit deleteLocalVariable(SourceSelection selection){
-        return new Edit(Refactoring.DELETE_VARIABLE, selection);
+        return Edit.make(Refactoring.DELETE_VARIABLE, selection);
     }
 
 
@@ -110,7 +111,7 @@ public class Edit extends AbstractCauseOfChange {
      * @return The {@code SingleEdit}.
      */
     public static Edit deleteParameter(SourceSelection selection){
-        return new Edit(Refactoring.DELETE_PARAMETER, selection);
+        return Edit.make(Refactoring.DELETE_PARAMETER, selection);
     }
 
 
@@ -121,7 +122,7 @@ public class Edit extends AbstractCauseOfChange {
      * @return The {@code SingleEdit}.
      */
     public static Edit deleteRegion(SourceSelection selection){
-        return new Edit(Refactoring.DELETE_REGION, selection);
+        return Edit.make(Refactoring.DELETE_REGION, selection);
     }
 
     /**
@@ -132,7 +133,7 @@ public class Edit extends AbstractCauseOfChange {
      * @return The {@code SingleEdit}.
      */
     public static Edit renameSelectedMember(SourceSelection selection){
-        return new Edit(Refactoring.RENAME_SELECTION, selection);
+        return Edit.make(Refactoring.RENAME_SELECTION, selection);
     }
 
     /**
@@ -142,7 +143,7 @@ public class Edit extends AbstractCauseOfChange {
      * @return The {@code SingleEdit}.
      */
     public static Edit optimizeImports(Source code) {
-        return new Edit(
+        return Edit.make(
                 Refactoring.DELETE_UNUSED_IMPORTS,
                 new SourceSelection(code, 0, code.getLength())
         );
@@ -156,7 +157,7 @@ public class Edit extends AbstractCauseOfChange {
      * @return The {@code SingleEdit}.
      */
     public static Edit renameClassOrInterface(SourceSelection selection){
-        return new Edit(Refactoring.RENAME_TYPE, selection);
+        return Edit.make(Refactoring.RENAME_TYPE, selection);
     }
 
     /**
@@ -166,7 +167,7 @@ public class Edit extends AbstractCauseOfChange {
      * @return The {@code SingleEdit}.
      */
     public static Edit renameMethod(SourceSelection selection){
-        return new Edit(Refactoring.RENAME_METHOD, selection);
+        return Edit.make(Refactoring.RENAME_METHOD, selection);
     }
 
     /**
@@ -177,7 +178,7 @@ public class Edit extends AbstractCauseOfChange {
      * @return The {@code SingleEdit}.
      */
     public static Edit renameParameter(SourceSelection selection){
-        return new Edit(Refactoring.RENAME_PARAMETER, selection);
+        return Edit.make(Refactoring.RENAME_PARAMETER, selection);
     }
 
 
@@ -189,7 +190,7 @@ public class Edit extends AbstractCauseOfChange {
      * @return The {@code SingleEdit}.
      */
     public static Edit renameField(SourceSelection selection){
-        return new Edit(Refactoring.RENAME_FIELD, selection);
+        return Edit.make(Refactoring.RENAME_FIELD, selection);
     }
 
 
@@ -201,10 +202,20 @@ public class Edit extends AbstractCauseOfChange {
      * @return The {@code SingleEdit}.
      */
     public static Edit renameLocalVariable(SourceSelection selection){
-        return new Edit(Refactoring.RENAME_VARIABLE, selection);
+        return Edit.make(Refactoring.RENAME_VARIABLE, selection);
     }
 
-    @Override public Refactoring getName() {
+    /**
+     * Makes a new Edit object using a name and a selection as data.
+     * @param name the name of the edit
+     * @param selection the code selection where the edit is to be applied.
+     * @return a new Edit object.
+     */
+    public static Edit make(Refactoring name, SourceSelection selection){
+        return new SingleEdit(name, selection);
+    }
+
+    @Override public Name getName() {
         return name;
     }
 
@@ -226,5 +237,20 @@ public class Edit extends AbstractCauseOfChange {
         }
 
         return builder.toString();
+    }
+
+
+    static class SingleEdit extends Edit {
+        SingleEdit(Refactoring name, SourceSelection selection){
+            super(name, selection);
+        }
+
+        @Override public boolean isSame(Name otherName) {
+            return getName().isSame(otherName);
+        }
+
+        @Override public String toString() {
+            return more();
+        }
     }
 }

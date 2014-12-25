@@ -33,11 +33,11 @@ public class RemoveCodeRegion extends SourceChanger {
     );
 
 
-    @Override public boolean canHandle(CauseOfChange cause) {
-        return cause.getName().isSame(Refactoring.DELETE_REGION);
+    @Override public boolean canHandle(Cause cause) {
+        return cause.isSame(Refactoring.DELETE_REGION);
     }
 
-    @Override protected Change initChanger(CauseOfChange cause, Map<String, Parameter> parameters) {
+    @Override protected Change initChanger(Cause cause, Map<String, Parameter> parameters) {
         final SourceChange change = new SourceChange(cause, this, parameters);
 
         try {
@@ -56,12 +56,12 @@ public class RemoveCodeRegion extends SourceChanger {
         return change;
     }
 
-    protected static TypeDeclaration getTypeDeclaration(CauseOfChange cause){
+    protected static TypeDeclaration getTypeDeclaration(Cause cause){
         return AstUtil.parent(TypeDeclaration.class, cause.getAffectedNodes().get(0));
     }
 
 
-    private Delta removeCodeRegion(TypeDeclaration unit, ASTRewrite rewrite, CauseOfChange cause){
+    private Delta removeCodeRegion(TypeDeclaration unit, ASTRewrite rewrite, Cause cause){
         // check dependencies wrt Root
         final Set<IBinding> S = expectNoInterDependenciesViolations(unit, cause);
 
@@ -76,7 +76,7 @@ public class RemoveCodeRegion extends SourceChanger {
         return createDelta(unit, rewrite);
     }
 
-    private static Set<IBinding> expectNoInterDependenciesViolations(TypeDeclaration unit, CauseOfChange cause) {
+    private static Set<IBinding> expectNoInterDependenciesViolations(TypeDeclaration unit, Cause cause) {
         final Set<IBinding> F = generateFieldsUniverse(unit);
         final Set<IBinding> M = generateMethodsUniverse(unit, cause);
         final Set<IBinding> T = generateTypesUniverse(unit);
@@ -98,7 +98,7 @@ public class RemoveCodeRegion extends SourceChanger {
         return S;
     }
 
-    private static void expectNoIntraDependenciesViolation(CauseOfChange cause, Set<IBinding> s) {
+    private static void expectNoIntraDependenciesViolation(Cause cause, Set<IBinding> s) {
 
         final SourceSelection selection = new SourceSelection(null);
         for( ASTNode eachNode : cause.getAffectedNodes()){
@@ -168,7 +168,7 @@ public class RemoveCodeRegion extends SourceChanger {
     }
 
 
-    private static Set<IBinding> generateMethodsUniverse(TypeDeclaration unit, CauseOfChange cause){
+    private static Set<IBinding> generateMethodsUniverse(TypeDeclaration unit, Cause cause){
         final Set<MethodDeclaration> filtered = Sets.newHashSet();
         for(ASTNode eachNode : cause.getAffectedNodes()){
             if(AstUtil.isMethod(eachNode)){
@@ -213,7 +213,7 @@ public class RemoveCodeRegion extends SourceChanger {
     }
 
 
-    private static Set<IBinding> collectBindingsInSelection(TypeDeclaration unit, CauseOfChange cause){
+    private static Set<IBinding> collectBindingsInSelection(TypeDeclaration unit, Cause cause){
 
         final Set<IBinding> F  = Sets.newHashSet();
 

@@ -1,7 +1,7 @@
 package edu.ucsc.refactor.internal.changers;
 
 import com.google.common.collect.Iterables;
-import edu.ucsc.refactor.CauseOfChange;
+import edu.ucsc.refactor.Cause;
 import edu.ucsc.refactor.Change;
 import edu.ucsc.refactor.Parameter;
 import edu.ucsc.refactor.internal.Delta;
@@ -33,12 +33,12 @@ public class DeduplicateCode extends SourceChanger {
         super();
     }
 
-    @Override public boolean canHandle(CauseOfChange cause) {
-        return cause.getName().isSame(Smell.DUPLICATED_CODE)
+    @Override public boolean canHandle(Cause cause) {
+        return cause.isSame(Smell.DUPLICATED_CODE)
                 || Names.from(Smell.DUPLICATED_CODE).isSame(cause.getName());
     }
 
-    @Override protected Change initChanger(CauseOfChange cause, Map<String, Parameter> parameters) {
+    @Override protected Change initChanger(Cause cause, Map<String, Parameter> parameters) {
         final SourceChange change   = new SourceChange(cause, this, parameters);
         try {
 
@@ -55,7 +55,7 @@ public class DeduplicateCode extends SourceChanger {
     }
 
 
-    private Delta deduplicate(CompilationUnit root, ASTRewrite rewrite, CauseOfChange cause){
+    private Delta deduplicate(CompilationUnit root, ASTRewrite rewrite, Cause cause){
 
         final List<ASTNode> nodes         = cause.getAffectedNodes();
         final int           size          = nodes.size();
