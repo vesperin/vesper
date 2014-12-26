@@ -34,13 +34,4 @@ public interface Changer {
      * @return The Commit Request.
      */
     CommitRequest commitChange(Change change);
-
-    /**
-     * getContext().locate(ASTNode): Location
-     *
-     * @param cause The cause to be located.
-     * @return The list of locations corresponding to
-     *      this cause.
-     */
-    List<Location> locate(Cause cause);
 }
