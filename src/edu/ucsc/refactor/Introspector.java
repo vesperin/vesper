@@ -154,20 +154,22 @@ public interface Introspector {
      * automatically folded.
      *
      * @param clipSpace the list of clips (stages) extracted from a code example.
+     * @param bound tuning parameter (lines of code) for summarization.
      * @return a map between clips and foldable code areas; together they represent
      *      the summary of a code example.
      */
-    Map<Clip, List<Location>> summarize(List<Clip> clipSpace);
+    Map<Clip, List<Location>> summarize(List<Clip> clipSpace, int bound);
 
     /**
      * Summarizes a clip by detecting block nodes that can be
      * automatically folded.
      *
      * @param clip a clip extracted from a code example.
+     * @param bound tuning parameter (lines of code) for summarization.
      * @return a map between clips and foldable code areas; together they represent
      *      the summary of a code example.
      */
-    List<Location> summarize(Clip clip);
+    List<Location> summarize(Clip clip, int bound);
 
     /**
      * Summarizes a code example by detecting those areas that can be automatically folded. The
@@ -176,7 +178,8 @@ public interface Introspector {
      *
      * @param startingMethod the method that we need to examine first.
      * @param code The code example.
+     * @param bound tuning parameter (lines of code) for summarization.
      * @return a list of foldable locations
      */
-    List<Location> summarize(String startingMethod, Source code);
+    List<Location> summarize(String startingMethod, Source code, int bound);
 }

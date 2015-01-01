@@ -1785,7 +1785,7 @@ public class ChangersTest {
         final Source src = InternalUtil.createQuickSortSource();
 
         final Introspector introspector = Vesper.createIntrospector();
-        List<Location> foldingLocations = introspector.summarize("quicksort", src);
+        List<Location> foldingLocations = introspector.summarize("quicksort", src, 17);
         assertThat(foldingLocations.isEmpty(), is(false));
     }
 
@@ -1793,7 +1793,7 @@ public class ChangersTest {
         final Source src = InternalUtil.createSourceWithShortNameMembers();
 
         final Introspector introspector = Vesper.createIntrospector();
-        List<Location> foldingLocations = introspector.summarize("qsort", src);
+        List<Location> foldingLocations = introspector.summarize("qsort", src, 17);
         assertThat(foldingLocations.isEmpty(), is(false));
 
     }
@@ -1803,7 +1803,7 @@ public class ChangersTest {
         final Source src = InternalUtil.createSourceWithStaticNestedClass_ClippingEntireInnerClass();
 
         final Introspector introspector = Vesper.createIntrospector();
-        List<Location> foldingLocations = introspector.summarize("main", src);
+        List<Location> foldingLocations = introspector.summarize("main", src, 17);
         assertThat(foldingLocations.isEmpty(), is(false));
 
     }
@@ -1812,7 +1812,8 @@ public class ChangersTest {
         final Source src = InternalUtil.createQuickSortSource();
 
         final Introspector introspector = Vesper.createIntrospector();
-        Map<Clip, List<Location>> allSummaries = introspector.summarize(introspector.multiStage(src));
+        Map<Clip, List<Location>> allSummaries = introspector.summarize(introspector.multiStage
+                (src), 17);
         assertThat(allSummaries.isEmpty(), is(false));
     }
 
@@ -1826,7 +1827,7 @@ public class ChangersTest {
         final Clip clip = Clip.find(src, clips);
         assertNotNull(clip);
 
-        List<Location> foldingLocations = introspector.summarize(clip);
+        List<Location> foldingLocations = introspector.summarize(clip, 17);
         assertThat(foldingLocations.isEmpty(), is(false));
     }
 

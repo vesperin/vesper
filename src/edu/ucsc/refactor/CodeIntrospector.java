@@ -170,23 +170,23 @@ public class CodeIntrospector implements Introspector {
         return byLinesOfCode.sortedCopy(ImmutableList.copyOf(clipSpace));
     }
 
-    @Override public Map<Clip, List<Location>> summarize(List<Clip> clipSpace) {
+    @Override public Map<Clip, List<Location>> summarize(List<Clip> clipSpace, int bound) {
         Map<Clip, List<Location>> result = Maps.newLinkedHashMap();
 
         for(Clip each : clipSpace){ /// starts from smallest to larger code example
 
-            result.put(each, summarize(each));
+            result.put(each, summarize(each, bound));
 
         }
 
         return result;
     }
 
-    @Override public List<Location> summarize(Clip clip) {
-        return summarize(clip.getMethodName(), clip.getSource());
+    @Override public List<Location> summarize(Clip clip, int bound) {
+        return summarize(clip.getMethodName(), clip.getSource(), bound);
     }
 
-    @Override public List<Location> summarize(String startingMethod, Source code) {
+    @Override public List<Location> summarize(String startingMethod, Source code, int bound) {
 
         final Context           context = makeContext(code);
         final MethodDeclaration method  = getMethod(startingMethod, context);
@@ -198,7 +198,7 @@ public class CodeIntrospector implements Introspector {
 
         final List<Location> foldableLocations = summarizeCodeBySolvingTreeKnapsack(
                 visitor.graph(),
-                17/*lines of code*/
+                bound/*lines of code*/
         );
 
         // Imports are folded regardless of the previous computation
