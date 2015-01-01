@@ -123,7 +123,8 @@ public final class Vesper {
      */
     public static UnitLocator createUnitLocator(Context context){
         Preconditions.checkNotNull(context);
-        Preconditions.checkArgument(!context.isMalformedContext());
+        // Note: disable this temporarily: not all code examples are syntactically correct
+        // Preconditions.checkArgument(!context.isMalformedContext());
         return new ProgramUnitLocator(context);
     }
 

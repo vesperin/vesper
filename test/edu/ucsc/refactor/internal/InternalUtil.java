@@ -973,6 +973,21 @@ public class InternalUtil {
     }
 
 
+    public static Source createGeneralBrokenSource(){
+        final String content = "import java.util.List; \n"
+                + "import java.util.Collection; \n"
+                + "class Name {\n"
+                + "String msg = ...\n"
+                + "\tString boom(String msg){ if(null != msg) { return boom(null);} "
+                + "return \"Hi!\";}\n"
+                + "\t/** {@link Name#boom(String)}**/String baam(String msg){ "
+                + " return msg; }\n"
+                + "}";
+
+        return new Source("Name.java", content);
+    }
+
+
 
     public static Source createSource(String name, StringBuilder builder){
         return new Source(name, builder.toString());

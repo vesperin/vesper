@@ -1826,6 +1826,19 @@ public class ChangersTest {
         final Clip clip = Clip.find(src, clips);
         assertNotNull(clip);
 
+        List<Location> foldingLocations = introspector.summarize(clip);
+        assertThat(foldingLocations.isEmpty(), is(false));
+    }
+
+
+
+    @Test public void testMultiStageBrokenCode() throws Exception {
+        final Source src = InternalUtil.createGeneralBrokenSource();
+
+        final Introspector introspector = Vesper.createIntrospector();
+        List<Clip> clips = introspector.multiStage(src);
+
+        assertThat(clips.isEmpty(), is(false));
     }
 
 
