@@ -4,6 +4,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import difflib.*;
 import edu.ucsc.refactor.util.SourceFormatter;
+import edu.ucsc.refactor.util.StringUtil;
 
 import java.util.Iterator;
 import java.util.List;
@@ -170,10 +171,9 @@ public class Diff {
      * @return a List of all lines in the content string.
      */
     private static List<String> contentToLines(String content) {
-        return Lists.newLinkedList(
-                Splitter.on(
-                        System.getProperty("line.separator")
-                ).split(content)
+
+        return StringUtil.normalize(
+                Splitter.on(System.getProperty("line.separator")).split(content)
         );
     }
 

@@ -15,12 +15,16 @@ import edu.ucsc.refactor.spi.JavaSnippetParser;
 import edu.ucsc.refactor.spi.SourceChanger;
 import edu.ucsc.refactor.util.Locations;
 import edu.ucsc.refactor.util.Parameters;
-import edu.ucsc.refactor.util.Syncer;
 import org.eclipse.jdt.core.dom.*;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -1748,16 +1752,194 @@ public class ChangersTest {
         assertThat(diff.getInsertsFromOriginal().isEmpty(), is(true));
     }
 
+
+    @Test public void testWrappingOfIncompleteExample() throws Exception {
+        final Source a = InternalUtil.createMethodOnlyCodeExample();
+        final Source b = InternalUtil.createMethodWithShellCodeExample();
+
+        final Introspector introspector = Vesper.createIntrospector();
+
+        final Diff diff = introspector.differences(b, a);
+        final Source c  = diff.resolve();
+        assertThat(c != null, is(true));
+
+        final Diff diff1 = introspector.differences(a, b);
+        final Source d   = diff1.resolve();
+        assertThat(d != null, is(true));
+    }
+
+    @Test public void testContentAdjustmentOfIncompleteCodeExample() throws Exception {
+        final Source a = InternalUtil.createMethodOnlyCodeExample();
+        final Source b = InternalUtil.createMethodWithShellCodeExample();
+        final Introspector introspector = Vesper.createIntrospector();
+
+        final Source patched = Source.complete(a, "WellManners", introspector
+                .detectMissingImports(a));
+
+        assertThat(patched.getName(), is("WellManners.java"));
+        assertThat(patched.equals(b), is(true));
+
+    }
+
+    @Test public void testCompileIncompleteCodeExample() throws Exception {
+        final Introspector introspector = Vesper.createIntrospector();
+        final Source a = InternalUtil.createMethodOnlyCodeExample();
+        final Source b = Source.complete(a, "WellManners", introspector
+                .detectMissingImports(a));
+
+
+        final Context context = new Context(b);
+        parser.parseJava(context);
+
+        Context.throwCompilationErrorIfExist(context);
+
+        assertNotNull(context);
+        assertNotNull(context.getCompilationUnit());
+
+        final Context flawedContext = new Context(a);
+        try {
+            parser.parseJava(flawedContext);
+            Context.throwCompilationErrorIfExist(flawedContext);
+            fail("Error if we got here");
+        } catch (Exception e){
+            // good
+        }
+    }
+
+
+    @Test public void testCropContentFromSource() throws Exception {
+        final Introspector introspector = Vesper.createIntrospector();
+
+        final Source a = InternalUtil.createMethodOnlyCodeExample();
+        final Source b = InternalUtil.createMethodWithShellCodeExample();
+        final Source c = Source.complete(a, "WellManners", introspector
+                .detectMissingImports(a));
+
+        assertThat(c.equals(b), is(true));
+
+        final Source d = renameMethod(c, "greet", "hello");
+
+        final Source f = Source.crop(d);
+        assertNotNull(f);
+        assertThat(d.equals(f), is(false));
+    }
+
+
+    @Test public void testCropContentFromMoreComplexSource() throws Exception {
+        // todo(Huascar) implement
+        final Introspector introspector = Vesper.createIntrospector();
+        final Source a = InternalUtil.createIncompleteQuickSortCodeExample();
+        final Source b = Source.complete(a, "Quicksort", introspector
+                .detectMissingImports(a));
+
+        final Context context = new Context(b);
+        parser.parseJava(context);
+
+        final Source c = renameMethod(
+                deleteMethod(context, "main"),
+                "randomizedPartition",
+                "randomPartition"
+        );
+
+        final Source d = Source.crop(c);
+        assertNotNull(d);
+        assertThat(d.equals(InternalUtil.updatedIncompleteQuickSortCodeExample()), is(true));
+    }
+
+    private static Source deleteMethod(Context context, String methodName){
+        final ProgramUnitLocator locator   = new ProgramUnitLocator(context);
+        final List<NamedLocation>     locations = locator.locate(new MethodUnit(methodName));
+
+        final ProgramUnitLocation target      = (ProgramUnitLocation)locations.get(0);
+        final MethodDeclaration declaration   = (MethodDeclaration)target.getNode();
+
+        final Location            loc    = Locations.locate(declaration);
+        final RemoveUnusedMethods remove = new RemoveUnusedMethods();
+
+        final Edit edit        = Edit.deleteMethod(new SourceSelection(loc));
+        edit.addNode(declaration);
+        final Change            change      = remove.createChange(edit, Maps.<String, Parameter>newHashMap());
+
+        final Commit commit = change.perform().commit();
+        if(commit != null && commit.isValidCommit()){
+            return commit.getSourceAfterChange();
+        } else {
+            return context.getSource(); // unable to make change
+        }
+    }
+
+    private static Source renameMethod(Source src, String targetMethod, String name){
+        final JavaParser    parser  = new EclipseJavaParser();
+        final Context       context = new Context(src);
+
+        parser.parseJava(context);
+
+        final List<Location>    spots     = Locations.locateWord(src, targetMethod);
+        final Location          spot      = spots.get(0);
+
+        final SourceSelection   selection = new SourceSelection(spot);
+
+
+        final ProgramUnitLocator    locator    = new ProgramUnitLocator(context);
+        final List<NamedLocation>   locations  = locator.locate(new SelectedUnit(selection));
+
+
+        final Edit edit   = Edit.renameSelectedMember(selection);
+
+        for(NamedLocation eachLocation : locations){
+            final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
+            edit.addNode(target.getNode());
+        }
+
+
+        final RenameMethod  rename      = new RenameMethod();
+        final Edit          resolved    = Edits.resolve(edit);
+
+        final Change  change  = rename.createChange(resolved, Parameters.newMemberName(name));
+
+        final Commit commit = change.perform().commit();
+        if(commit != null && commit.isValidCommit()){
+            return commit.getSourceAfterChange();
+        } else {
+            return src; // unable to make change
+        }
+    }
+
+
+    @Ignore @Test public void testCallingFindJarSearchEngine() throws Exception {
+        //http://www.findjar.com/index.jsp?query=
+        String address = "http://www.findjar.com/index.x?query=";
+        String query = "ImmutableList";
+        String charset = "UTF-8";
+
+        URL url = new URL(address + URLEncoder.encode(query, charset));
+
+        BufferedReader in = new BufferedReader(new InputStreamReader(
+                url.openStream()));
+        String str;
+
+        while ((str = in.readLine()) != null) {
+            System.out.println(str);
+        }
+
+        in.close();
+    }
+
     @Test public void testClipSpaceForwardPatching() throws Exception {
         final Source src = InternalUtil.createQuickSortSource();
 
         final Introspector introspector = Vesper.createIntrospector();
         final List<Clip> clipSpace = makeClipSpace(src, introspector);
 
-        final Source patched = Syncer.sync(
+        final Clip clip = Clip.sync(
                 introspector,
                 clipSpace.subList(1, clipSpace.size())
         );
+
+        assertThat(clip != null, is(true));
+
+        assert clip != null;
+        final Source patched = clip.getSource();
 
         final String expected  = clipSpace.get(clipSpace.size() - 1).getSource().getContents();
         final String revised   = patched.getContents();
@@ -1773,8 +1955,10 @@ public class ChangersTest {
         final List<Clip> clipSpace = makeClipSpace(src, introspector);
         final List<Clip> clipOneToBaseClip  = clipSpace.subList(0, 2);
 
-        final Source patched = Syncer.sync(introspector, clipOneToBaseClip);
+        final Clip   clip      = Clip.sync(introspector, clipOneToBaseClip);
 
+        assert clip != null;
+        final Source patched   = clip.getSource();
         final String expected  = clipOneToBaseClip.get(clipOneToBaseClip.size() - 1).getSource().getContents();
         final String revised   = patched.getContents();
         assertThat(revised.equals(expected), is(true));

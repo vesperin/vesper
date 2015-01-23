@@ -1,15 +1,17 @@
 package edu.ucsc.refactor;
 
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import edu.ucsc.refactor.util.Note;
-import edu.ucsc.refactor.util.Notes;
-import edu.ucsc.refactor.util.StringUtil;
-import edu.ucsc.refactor.util.UniqueIdentifierGenerator;
+import com.google.common.collect.Lists;
+import edu.ucsc.refactor.util.*;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -104,6 +106,84 @@ public class Source {
      */
     public static Source from(ASTNode node){
        return (Source) node.getRoot().getProperty(Source.SOURCE_FILE_PROPERTY);
+    }
+
+    /**
+     * Performs a quick patching, for refactoring purposes.
+     *
+     * @param incomplete the incomplete code example to patch.
+     * @param withName the withName of code example.
+     * @param withImports a set consisting of import directives, class signature, etc.
+     *
+     * @return the patched code example.
+     */
+    public static Source complete(Source incomplete, String withName, Set<String> withImports){
+        final List<String> addons = prependPrefix("import", withImports);
+        addons.add("\nclass " + withName + " {\n");
+
+        final String start = Joiner.on('\n').join(addons);
+        final String end   = "}";
+
+        final String content  = new SourceFormatter().format(
+                start + incomplete.getContents() + end
+        );
+
+        final Source revised = from(incomplete, content);
+        if(!revised.getName().equals(withName)){
+            revised.setName(withName + ".java");
+        }
+
+        return revised;
+    }
+
+    /**
+     * Crops a complete code example (e.g., class A {...}) by removing its class signature
+     * (class ..) and its ending curly brace (e.g., `}`).
+     *
+     * This method abstracts out the parts of the code example, which for bookkeeping, produced by
+     * {@link Source#complete} when trying to transform incomplete code examples.
+     *
+     * This method should be used only for cases when trying to refactor an incomplete code
+     * example. Having written that, Violette should send information on whether this method
+     * can be invoked or not.
+     *
+     * @param a the Source to be cropped.
+     * @return the cropped Source.
+     */
+    public static Source crop(Source a){
+        final Context context = CodeIntrospector.makeContext(a);
+
+        final String withName = StringUtil.extractFileName(a.getName());
+        final Set<String> withImports = CodeIntrospector.findImports(
+                CodeIntrospector.findImports(context)
+        );
+
+        withImports.add("\nclass " + withName + " {\n");
+
+        final String start = Joiner.on('\n').join(withImports);
+        final String end   = "}";
+
+        final String currentContent = a.getContents();
+        final String updatedContent = StringUtil.trim(
+                StringUtil.removeEnd(
+                        StringUtil.removeStart(currentContent, start),
+                        end
+                )
+        );
+
+        final Source cropped = Source.from(a, updatedContent);
+        cropped.setName("Scratched.java");
+        return cropped;
+    }
+
+    private static List<String> prependPrefix(final String prefix, Set<String> toElements){
+        final List<String> addons = Lists.transform(Lists.newArrayList(toElements), new Function<String, String>(){
+            @Override public String apply(String s) {
+                return StringUtil.trim(prefix) + " " + s;
+            }}
+        );
+
+        return Lists.newArrayList(addons);
     }
 
     /**

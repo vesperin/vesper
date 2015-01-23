@@ -988,6 +988,142 @@ public class InternalUtil {
     }
 
 
+    public static Source createMethodOnlyCodeExample(){
+        final String content = "public void greet(){\n" +
+                "\tSystem.out.println(\"Hello, world!\");\n" +
+                "}";
+
+        return  new Source("EditMe.java", content);
+    }
+
+
+    public static Source createMethodWithShellCodeExample(){
+        final String content = "class WellManners {\n" +
+                "  public void greet() {\n" +
+                "    System.out.println(\"Hello, world!\");\n" +
+                "  }\n" +
+                "}";
+
+        return  new Source("WellManners.java", content);
+    }
+
+    public static Source createIncompleteQuickSortCodeExample(){
+        final String content = "private static Random rand = new Random();\n" +
+                "\n" +
+                "public static void quicksort(int[] arr, int left, int right)\n" +
+                "{\n" +
+                "\t\t\tif (left < right)\n" +
+                "\t\t\t{\n" +
+                "\t\t\t\t\tint pivot = randomizedPartition(arr, left, right);\n" +
+                "\t\t\t\t\tquicksort(arr, left, pivot);\n" +
+                "\t\t\t\t\tquicksort(arr, pivot + 1, right);\n" +
+                "\t\t\t}\n" +
+                "}\n" +
+                "\n" +
+                "private static int randomizedPartition(int[] arr, int left, int right)\n" +
+                "{\n" +
+                "\t\t\tint swapIndex = left + rand.nextInt(right - left) + 1;\n" +
+                "\t\t\tswap(arr, left, swapIndex);\n" +
+                "\t\t\treturn partition(arr, left, right);\n" +
+                "}\n" +
+                "\n" +
+                "private static int partition(int[] arr, int left, int right)\n" +
+                "{\n" +
+                "\t\t\tint pivot = arr[left];\n" +
+                "\t\t\tint i = left - 1;\n" +
+                "\t\t\tint j = right + 1;\n" +
+                "\t\t\twhile (true)\n" +
+                "\t\t\t{\n" +
+                "\t\t\t\t\tdo\n" +
+                "\t\t\t\t\t\t\t\tj--;\n" +
+                "\t\t\t\t\twhile (arr[j] > pivot);\n" +
+                "\n" +
+                "\t\t\t\t\tdo\n" +
+                "\t\t\t\t\t\t\t\ti++;\n" +
+                "\t\t\t\t\twhile (arr[i] < pivot);\n" +
+                "\n" +
+                "\t\t\t\t\tif (i < j)\n" +
+                "\t\t\t\t\t\t\t\tswap(arr, i, j);\n" +
+                "\t\t\t\t\telse\n" +
+                "\t\t\t\t\t\t\t\treturn j;\n" +
+                "\t\t\t}\n" +
+                "}\n" +
+                "\n" +
+                "private static void swap(int[] arr, int i, int j)\n" +
+                "{\n" +
+                "\t\t\tint tmp = arr[i];\n" +
+                "\t\t\tarr[i] = arr[j];\n" +
+                "\t\t\tarr[j] = tmp;\n" +
+                "}\n" +
+                "\n" +
+                "\n" +
+                "public static void main(String[] args)\n" +
+                "{\n" +
+                "\t\t\tint arr[] = new int[100000];\n" +
+                "\t\t\tfor (int i = 0; i < arr.length; i++)\n" +
+                "\t\t\t\t\tarr[i] = arr.length - i;\n" +
+                "\n" +
+                "\t\t\tSystem.out.println(\"First 20 elements\");\n" +
+                "\t\t\tSystem.out.print(\"Before sort: \");\n" +
+                "\t\t\tfor (int i = 0; i < 20; i++)\n" +
+                "\t\t\t\t\tSystem.out.print(arr[i] + \" \");\n" +
+                "\t\t\tSystem.out.println();\n" +
+                "\n" +
+                "\t\t\tquicksort(arr, 0, arr.length - 1);\n" +
+                "\t\t\tSystem.out.print(\"After sort: \");\n" +
+                "\t\t\tfor (int i = 0; i < 20; i++)\n" +
+                "\t\t\t\t\tSystem.out.print(arr[i] + \" \");\n" +
+                "\t\t\tSystem.out.println();\n" +
+                "}";
+
+        return new Source("Scratched.java", content);
+    }
+
+    public static Source updatedIncompleteQuickSortCodeExample(){
+        final String content = "private static Random rand = new Random();\n" +
+                "\n" +
+                "  public static void quicksort(int[] arr, int left, int right) {\n" +
+                "\tif (left < right) {\n" +
+                "\t\tint pivot = randomPartition(arr, left, right);\n" +
+                "\t\tquicksort(arr, left, pivot);\n" +
+                "\t\tquicksort(arr, pivot + 1, right);\n" +
+                "\t}\n" +
+                "}\n" +
+                "\n" +
+                "  private static int randomPartition(int[] arr, int left, int right) {\n" +
+                "\tint swapIndex = left + rand.nextInt(right - left) + 1;\n" +
+                "\tswap(arr, left, swapIndex);\n" +
+                "\treturn partition(arr, left, right);\n" +
+                "}\n" +
+                "\n" +
+                "  private static int partition(int[] arr, int left, int right) {\n" +
+                "\tint pivot = arr[left];\n" +
+                "\tint i = left - 1;\n" +
+                "\tint j = right + 1;\n" +
+                "\twhile (true) {\n" +
+                "\t\tdo\n" +
+                "\t\t\tj--;\n" +
+                "\t\twhile (arr[j] > pivot);\n" +
+                "\t\tdo\n" +
+                "\t\t\ti++;\n" +
+                "\t\twhile (arr[i] < pivot);\n" +
+                "\t\tif (i < j)\n" +
+                "\t\t\tswap(arr, i, j);\n" +
+                "\t\telse\n" +
+                "\t\t\treturn j;\n" +
+                "\t}\n" +
+                "}\n" +
+                "\n" +
+                "  private static void swap(int[] arr, int i, int j) {\n" +
+                "\tint tmp = arr[i];\n" +
+                "\tarr[i] = arr[j];\n" +
+                "\tarr[j] = tmp;\n" +
+                "}";
+
+        return new Source("Scratched.java", content);
+    }
+
+
 
     public static Source createSource(String name, StringBuilder builder){
         return new Source(name, builder.toString());

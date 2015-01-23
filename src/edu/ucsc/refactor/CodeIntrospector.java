@@ -202,7 +202,7 @@ public class CodeIntrospector implements Introspector {
         );
 
         // Imports are folded regardless of the previous computation
-        final Location foldedImports = foldImportDeclaration(context.getCompilationUnit());
+        final Location foldedImports = foldImportDeclaration(context);
 
         if(foldedImports != null){
             foldableLocations.add(foldedImports);
@@ -212,16 +212,30 @@ public class CodeIntrospector implements Introspector {
 
     }
 
-    private static Location foldImportDeclaration(CompilationUnit unit){
+    private static Location foldImportDeclaration(Context context){
         SourceSelection selection = new SourceSelection();
         // TODO(Huascar) maybe this method should be promoted to main util package; please
         // investigate
-        final Set<ImportDeclaration> imports = AstUtil.getUsedImports(unit);
+        final Set<ImportDeclaration> imports = findImports(context);
         for( ImportDeclaration each : imports){
           selection.add(Locations.locate(each));
         }
 
         return !selection.isEmpty() ? selection.toLocation() : null;
+    }
+
+    static Set<ImportDeclaration> findImports(Context context){
+        return AstUtil.getUsedImports(context.getCompilationUnit());
+    }
+
+
+    static Set<String> findImports(Set<ImportDeclaration> declarations){
+        final Set<String> result = Sets.newLinkedHashSet();
+        for(ImportDeclaration each : declarations){
+            result.add("import " + each.getName().getFullyQualifiedName() + ";");
+        }
+
+        return result;
     }
 
     private static List<Location> summarizeCodeBySolvingTreeKnapsack(DirectedGraph<Item> graph, int capacity){
@@ -334,7 +348,7 @@ public class CodeIntrospector implements Introspector {
 
         final Set<String>           types     = AstUtil.getUsedTypesInCode(context.getCompilationUnit());
         final Set<String>           packages  = getJdkPackages();
-        final Map<String, Tuple>  freq      = Maps.newHashMap();
+        final Map<String, Tuple>    freq      = Maps.newHashMap();
 
         final Set<String> result = Sets.newHashSet();
 
