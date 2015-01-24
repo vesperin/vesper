@@ -1,5 +1,7 @@
 package edu.ucsc.refactor.util;
 
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
@@ -201,5 +203,45 @@ public class StringUtil {
         return str == null || str.length() == 0;
     }
 
+    private static List<String> prependPrefix(final String prefix, List<String> toElements){
+        final List<String> addons = Lists.transform(toElements, new Function<String, String>(){
+                    @Override public String apply(String s) {
+                        return StringUtil.trim(prefix) + " " + s;
+                    }}
+        );
 
+        return Lists.newArrayList(addons);
+    }
+
+    /**
+     * Builds the content to be prepended to an incomplete code example.
+     *
+     * @param withName the name to use
+     * @param withPrefix with prefix to prepend
+     * @param withImports the imports to use
+     * @return the content to be prepended.
+     */
+    public static String concat(String withName, boolean withPrefix, List<String> withImports){
+        final List<String> addons = withPrefix ? prependPrefix("import", withImports) : withImports;
+        addons.add("\nclass " + withName + " {\n");
+
+        return Joiner.on('\n').join(addons);
+    }
+
+
+    /**
+     * Returns the offset of a string
+     * @param string the string of interest
+     * @return the total offset
+     */
+    public static int offsetOf(String string){
+       final String[] split = string.split("(?!^)");
+
+       int offset = -1;
+       for (String each : split){
+           offset = string.indexOf(each, offset + 1); // avoid duplicates
+       }
+
+       return offset;
+    }
 }

@@ -1,17 +1,13 @@
 package edu.ucsc.refactor;
 
-import com.google.common.base.Function;
-import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import edu.ucsc.refactor.util.*;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -112,20 +108,16 @@ public class Source {
      * Performs a quick patching, for refactoring purposes.
      *
      * @param incomplete the incomplete code example to patch.
-     * @param withName the withName of code example.
-     * @param withImports a set consisting of import directives, class signature, etc.
+     * @param withName the name of the complete code
+     * @param withContent the content to be prepended
      *
      * @return the patched code example.
      */
-    public static Source complete(Source incomplete, String withName, Set<String> withImports){
-        final List<String> addons = prependPrefix("import", withImports);
-        addons.add("\nclass " + withName + " {\n");
-
-        final String start = Joiner.on('\n').join(addons);
+    public static Source complete(Source incomplete, String withName, String withContent){
         final String end   = "}";
 
         final String content  = new SourceFormatter().format(
-                start + incomplete.getContents() + end
+                withContent + incomplete.getContents() + end
         );
 
         final Source revised = from(incomplete, content);
@@ -135,6 +127,7 @@ public class Source {
 
         return revised;
     }
+
 
     /**
      * Crops a complete code example (e.g., class A {...}) by removing its class signature
@@ -154,13 +147,11 @@ public class Source {
         final Context context = CodeIntrospector.makeContext(a);
 
         final String withName = StringUtil.extractFileName(a.getName());
-        final Set<String> withImports = CodeIntrospector.findImports(
+        final List<String> withImports = CodeIntrospector.findImports(
                 CodeIntrospector.findImports(context)
         );
 
-        withImports.add("\nclass " + withName + " {\n");
-
-        final String start = Joiner.on('\n').join(withImports);
+        final String start = StringUtil.concat(withName, false, withImports);
         final String end   = "}";
 
         final String currentContent = a.getContents();
@@ -176,15 +167,6 @@ public class Source {
         return cropped;
     }
 
-    private static List<String> prependPrefix(final String prefix, Set<String> toElements){
-        final List<String> addons = Lists.transform(Lists.newArrayList(toElements), new Function<String, String>(){
-            @Override public String apply(String s) {
-                return StringUtil.trim(prefix) + " " + s;
-            }}
-        );
-
-        return Lists.newArrayList(addons);
-    }
 
     /**
      * Adds a note or mark describing the {@code Source}

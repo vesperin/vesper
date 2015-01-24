@@ -2,6 +2,7 @@ package edu.ucsc.refactor.internal.changers;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.*;
@@ -15,6 +16,7 @@ import edu.ucsc.refactor.spi.JavaSnippetParser;
 import edu.ucsc.refactor.spi.SourceChanger;
 import edu.ucsc.refactor.util.Locations;
 import edu.ucsc.refactor.util.Parameters;
+import edu.ucsc.refactor.util.StringUtil;
 import org.eclipse.jdt.core.dom.*;
 import org.junit.After;
 import org.junit.Before;
@@ -1773,8 +1775,17 @@ public class ChangersTest {
         final Source b = InternalUtil.createMethodWithShellCodeExample();
         final Introspector introspector = Vesper.createIntrospector();
 
-        final Source patched = Source.complete(a, "WellManners", introspector
-                .detectMissingImports(a));
+        final List<String> directives = Lists.newLinkedList(introspector.detectMissingImports(a));
+
+        final Source patched = Source.complete(
+                a,
+                "WellManners",
+                StringUtil.concat(
+                        "WellManners",
+                        true,
+                        directives
+                )
+        );
 
         assertThat(patched.getName(), is("WellManners.java"));
         assertThat(patched.equals(b), is(true));
@@ -1784,8 +1795,17 @@ public class ChangersTest {
     @Test public void testCompileIncompleteCodeExample() throws Exception {
         final Introspector introspector = Vesper.createIntrospector();
         final Source a = InternalUtil.createMethodOnlyCodeExample();
-        final Source b = Source.complete(a, "WellManners", introspector
-                .detectMissingImports(a));
+
+        final List<String> directives = Lists.newLinkedList(introspector.detectMissingImports(a));
+        final Source b = Source.complete(
+                a,
+                "WellManners",
+                StringUtil.concat(
+                        "WellManners",
+                        true,
+                        directives
+                )
+        );
 
 
         final Context context = new Context(b);
@@ -1812,8 +1832,17 @@ public class ChangersTest {
 
         final Source a = InternalUtil.createMethodOnlyCodeExample();
         final Source b = InternalUtil.createMethodWithShellCodeExample();
-        final Source c = Source.complete(a, "WellManners", introspector
-                .detectMissingImports(a));
+
+        final List<String> directives = Lists.newLinkedList(introspector.detectMissingImports(a));
+        final Source c = Source.complete(
+                a,
+                "WellManners",
+                StringUtil.concat(
+                        "WellManners",
+                        true,
+                        directives
+                )
+        );
 
         assertThat(c.equals(b), is(true));
 
@@ -1826,11 +1855,18 @@ public class ChangersTest {
 
 
     @Test public void testCropContentFromMoreComplexSource() throws Exception {
-        // todo(Huascar) implement
         final Introspector introspector = Vesper.createIntrospector();
         final Source a = InternalUtil.createIncompleteQuickSortCodeExample();
-        final Source b = Source.complete(a, "Quicksort", introspector
-                .detectMissingImports(a));
+        final List<String> directives = Lists.newLinkedList(introspector.detectMissingImports(a));
+        final Source b = Source.complete(
+                a,
+                "Quicksort",
+                StringUtil.concat(
+                        "Quicksort",
+                        true,
+                        directives
+                )
+        );
 
         final Context context = new Context(b);
         parser.parseJava(context);
@@ -1844,6 +1880,58 @@ public class ChangersTest {
         final Source d = Source.crop(c);
         assertNotNull(d);
         assertThat(d.equals(InternalUtil.updatedIncompleteQuickSortCodeExample()), is(true));
+    }
+
+
+    @Test public void testCropContentWithOffsetAdjustment() throws Exception {
+        final Introspector introspector = Vesper.createIntrospector();
+        final Source a = InternalUtil.createIncompleteQuickSortCodeExample();
+
+        final int startOffset = 300;
+        final int endOffset   = 319;
+
+        final List<String> directives = Lists.newLinkedList(introspector.detectMissingImports(a));
+
+        final String addon = StringUtil.concat("Quicksort", true, directives);
+
+        final int adjustFactor = StringUtil.offsetOf(addon);
+        final Source b = Source.complete(a, "Quicksort", addon);
+
+        final SourceSelection selection = new SourceSelection(
+                a, startOffset + adjustFactor, endOffset + adjustFactor
+        );
+
+
+        final Context context = new Context(b);
+        parser.parseJava(context);
+
+        final ProgramUnitLocator locator   = new ProgramUnitLocator(context);
+        final List<NamedLocation>   locations  = locator.locate(new SelectedUnit(selection));
+
+        assertThat(locations.isEmpty(), is(false));
+
+        final Edit edit   = Edit.renameSelectedMember(selection);
+
+        for(NamedLocation eachLocation : locations){
+            final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
+            edit.addNode(target.getNode());
+        }
+
+
+        final RenameMethod  rename      = new RenameMethod();
+        final Edit          resolved    = Edits.resolve(edit);
+
+        final Change  change  = rename.createChange(resolved, Parameters.newMemberName
+                ("randomPartition"));
+
+        final Commit commit = change.perform().commit();
+
+        assertNotNull(commit);
+        assertThat(commit.isValidCommit(), is(true));
+
+        final Source result = commit.getSourceAfterChange();
+        final Source cropped = Source.crop(result);
+        assertNotNull(cropped);
     }
 
     private static Source deleteMethod(Context context, String methodName){

@@ -229,8 +229,8 @@ public class CodeIntrospector implements Introspector {
     }
 
 
-    static Set<String> findImports(Set<ImportDeclaration> declarations){
-        final Set<String> result = Sets.newLinkedHashSet();
+    static List<String> findImports(Set<ImportDeclaration> declarations){
+        final List<String> result = Lists.newArrayList();
         for(ImportDeclaration each : declarations){
             result.add("import " + each.getName().getFullyQualifiedName() + ";");
         }
