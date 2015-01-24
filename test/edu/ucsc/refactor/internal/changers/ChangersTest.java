@@ -1777,7 +1777,7 @@ public class ChangersTest {
 
         final List<String> directives = Lists.newLinkedList(introspector.detectMissingImports(a));
 
-        final Source patched = Source.complete(
+        final Source patched = Source.wrap(
                 a,
                 "WellManners",
                 StringUtil.concat(
@@ -1797,7 +1797,7 @@ public class ChangersTest {
         final Source a = InternalUtil.createMethodOnlyCodeExample();
 
         final List<String> directives = Lists.newLinkedList(introspector.detectMissingImports(a));
-        final Source b = Source.complete(
+        final Source b = Source.wrap(
                 a,
                 "WellManners",
                 StringUtil.concat(
@@ -1834,7 +1834,7 @@ public class ChangersTest {
         final Source b = InternalUtil.createMethodWithShellCodeExample();
 
         final List<String> directives = Lists.newLinkedList(introspector.detectMissingImports(a));
-        final Source c = Source.complete(
+        final Source c = Source.wrap(
                 a,
                 "WellManners",
                 StringUtil.concat(
@@ -1848,7 +1848,7 @@ public class ChangersTest {
 
         final Source d = renameMethod(c, "greet", "hello");
 
-        final Source f = Source.crop(d);
+        final Source f = Source.unwrap(d);
         assertNotNull(f);
         assertThat(d.equals(f), is(false));
     }
@@ -1858,7 +1858,7 @@ public class ChangersTest {
         final Introspector introspector = Vesper.createIntrospector();
         final Source a = InternalUtil.createIncompleteQuickSortCodeExample();
         final List<String> directives = Lists.newLinkedList(introspector.detectMissingImports(a));
-        final Source b = Source.complete(
+        final Source b = Source.wrap(
                 a,
                 "Quicksort",
                 StringUtil.concat(
@@ -1877,7 +1877,7 @@ public class ChangersTest {
                 "randomPartition"
         );
 
-        final Source d = Source.crop(c);
+        final Source d = Source.unwrap(c);
         assertNotNull(d);
         assertThat(d.equals(InternalUtil.updatedIncompleteQuickSortCodeExample()), is(true));
     }
@@ -1895,7 +1895,7 @@ public class ChangersTest {
         final String addon = StringUtil.concat("Quicksort", true, directives);
 
         final int adjustFactor = StringUtil.offsetOf(addon);
-        final Source b = Source.complete(a, "Quicksort", addon);
+        final Source b = Source.wrap(a, "Quicksort", addon);
 
         final SourceSelection selection = new SourceSelection(
                 a, startOffset + adjustFactor, endOffset + adjustFactor
@@ -1930,7 +1930,7 @@ public class ChangersTest {
         assertThat(commit.isValidCommit(), is(true));
 
         final Source result = commit.getSourceAfterChange();
-        final Source cropped = Source.crop(result);
+        final Source cropped = Source.unwrap(result);
         assertNotNull(cropped);
     }
 

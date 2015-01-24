@@ -113,7 +113,7 @@ public class Source {
      *
      * @return the patched code example.
      */
-    public static Source complete(Source incomplete, String withName, String withContent){
+    public static Source wrap(Source incomplete, String withName, String withContent){
         final String end   = "}";
 
         final String content  = new SourceFormatter().format(
@@ -134,7 +134,7 @@ public class Source {
      * (class ..) and its ending curly brace (e.g., `}`).
      *
      * This method abstracts out the parts of the code example, which for bookkeeping, produced by
-     * {@link Source#complete} when trying to transform incomplete code examples.
+     * {@link Source#wrap} when trying to transform incomplete code examples.
      *
      * This method should be used only for cases when trying to refactor an incomplete code
      * example. Having written that, Violette should send information on whether this method
@@ -143,7 +143,7 @@ public class Source {
      * @param a the Source to be cropped.
      * @return the cropped Source.
      */
-    public static Source crop(Source a){
+    public static Source unwrap(Source a){
         final Context context = CodeIntrospector.makeContext(a);
 
         final String withName = StringUtil.extractFileName(a.getName());
