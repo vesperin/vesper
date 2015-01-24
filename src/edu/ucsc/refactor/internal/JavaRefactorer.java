@@ -56,7 +56,7 @@ public class JavaRefactorer implements Refactorer {
 
     @Override public Change createChange(ChangeRequest request) {
         Preconditions.checkNotNull(request, "createChange() method has received a null request");
-        final boolean                isIssue    = request.isIssue();
+        final boolean          isIssue    = request.isIssue();
         final Cause cause      = request.getCause();
         final Map<String, Parameter> parameters = request.getParameters();
 
@@ -73,10 +73,11 @@ public class JavaRefactorer implements Refactorer {
     private Edit prepSingleEdit(Cause cause, ChangeRequest request){
         final Edit edit    = (Edit) cause;
         final SourceSelection select  = request.getSelection();
-        final Source          code    = select.first().getSource();
-        final Context         context = validContext(code);
+        final Source          code    = select.getSource();
 
-        final UnitLocator           inferredUnitLocator = createUnitLocator(context);
+        select.setContext(validContext(code));
+
+        final UnitLocator           inferredUnitLocator = createUnitLocator(select.getContext());
         final List<NamedLocation>   namedLocations      = inferredUnitLocator.locate(
                 new SelectedUnit(select)
         );

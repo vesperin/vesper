@@ -1,8 +1,10 @@
 package edu.ucsc.refactor;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import edu.ucsc.refactor.internal.HostImpl;
 import edu.ucsc.refactor.internal.InternalRefactorerCreator;
+import edu.ucsc.refactor.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -81,6 +83,33 @@ public final class Vesper {
      * Private constructor to prevent instantiation.
      */
     private Vesper(){}
+
+    /**
+     * Adjust the selection values of an incomplete code example to match the adjusted (complete)
+     * code example.
+     *
+     * @param startOffset current start offset
+     * @param endOffset   current end offset
+     * @param toAdjust    the incomplete code example (to be adjusted)
+     * @return the adjusted source selection.
+     */
+    public static SourceSelection createAdjustedSelection(int startOffset, int endOffset, Source toAdjust){
+        final Introspector introspector = Vesper.createIntrospector();
+        final String       withName     = "Scratched";
+
+        final List<String> directives = Lists.newLinkedList(
+                introspector.detectMissingImports(toAdjust)
+        );
+
+        final String addon = StringUtil.concat(withName, true, directives);
+
+        final int adjustFactor = StringUtil.offsetOf(addon);
+        final Source adjusted  = Source.wrap(toAdjust, withName, addon);
+
+        return new SourceSelection(
+                adjusted, startOffset + adjustFactor, endOffset + adjustFactor
+        );
+    }
 
     /**
      * Creates a refactorer for the given set of sources.

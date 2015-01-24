@@ -1884,33 +1884,24 @@ public class ChangersTest {
 
 
     @Test public void testCropContentWithOffsetAdjustment() throws Exception {
-        final Introspector introspector = Vesper.createIntrospector();
         final Source a = InternalUtil.createIncompleteQuickSortCodeExample();
 
         final int startOffset = 300;
         final int endOffset   = 319;
 
-        final List<String> directives = Lists.newLinkedList(introspector.detectMissingImports(a));
+        final SourceSelection adjusted = Vesper.createAdjustedSelection(startOffset, endOffset, a);
 
-        final String addon = StringUtil.concat("Quicksort", true, directives);
-
-        final int adjustFactor = StringUtil.offsetOf(addon);
-        final Source b = Source.wrap(a, "Quicksort", addon);
-
-        final SourceSelection selection = new SourceSelection(
-                a, startOffset + adjustFactor, endOffset + adjustFactor
-        );
-
-
-        final Context context = new Context(b);
+        final Context context = new Context(adjusted.getSource());
         parser.parseJava(context);
 
+        adjusted.setContext(context);
+
         final ProgramUnitLocator locator   = new ProgramUnitLocator(context);
-        final List<NamedLocation>   locations  = locator.locate(new SelectedUnit(selection));
+        final List<NamedLocation>   locations  = locator.locate(new SelectedUnit(adjusted));
 
         assertThat(locations.isEmpty(), is(false));
 
-        final Edit edit   = Edit.renameSelectedMember(selection);
+        final Edit edit   = Edit.renameSelectedMember(adjusted);
 
         for(NamedLocation eachLocation : locations){
             final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
