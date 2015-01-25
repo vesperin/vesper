@@ -1,5 +1,6 @@
 package edu.ucsc.refactor.util;
 
+import com.google.common.collect.Lists;
 import edu.ucsc.refactor.Location;
 import edu.ucsc.refactor.Position;
 import edu.ucsc.refactor.Source;
@@ -254,5 +255,54 @@ public class Locations {
         return !Locations.isBeforeBaseLocation(base, other)     // !before
                 && !(covers(base, other))                       // !within
                 && !Locations.isAfterBaseLocation(base, other); // !after
+    }
+
+    /**
+     * Adjusts the offsets of a location by some offset value.
+     * @param location current location to be adjusted.
+     * @param adjusted adjusted source.
+     * @param byOffset offset value (adjustment value)
+     * @return adjusted location, or null if the location cannot be adjusted
+     */
+    public static Location adjustLocation(Location location, Source adjusted, int byOffset){
+
+       final int startOffset    = location.getStart().getOffset() - byOffset;
+       final int endOffset      = location.getEnd().getOffset()   - byOffset;
+
+       if(startOffset < 0 || endOffset < 0) { // this location may be from an import directive
+           return null;
+
+       }
+
+       return SourceLocation.createLocation(
+               adjusted,
+               adjusted.getContents(),
+               startOffset,
+               endOffset
+       );
+    }
+
+    /**
+     * Adjust a list of location to match a unwrapped code example (shopped off) offset values.
+     * @param locations the list of locations to be adjusted
+     * @param adjusted  the already adjusted source code
+     * @param byOffset  the offset value to be subtracted from current locations' offsets.
+     * @return the list of adjusted locations
+     */
+    public static List<Location> adjustLocations(List<Location> locations, Source adjusted, int byOffset){
+      final List<Location> adjustedLocations = Lists.newLinkedList();
+      for(Location each : locations){
+          final Location adjustedLoc = Locations.adjustLocation(
+                  each,
+                  adjusted,
+                  byOffset
+          );
+
+          if(adjustedLoc != null){
+              adjustedLocations.add(adjustedLoc);
+          }
+      }
+
+      return adjustedLocations;
     }
 }

@@ -212,6 +212,39 @@ public class CodeIntrospector implements Introspector {
 
     }
 
+    /**
+     * Adjusts a clip space's shared source and the appropriate folding locations.
+     *
+     * @param space The summarized clip space.
+     * @param offset The offset or adjustment value.
+     * @return adjusted summarized clip space.
+     */
+    public static Map<Clip, List<Location>> adjustClipspace(Map<Clip, List<Location>> space, int offset) {
+
+        final Map<Clip, List<Location>> result = Maps.newLinkedHashMap();
+        for(Clip each : space.keySet()){
+            final List<Location> folds          = space.get(each);
+            final Source         adjustedSrc    = Source.unwrap(each.getSource());
+            final List<Location> adjustedLocs   = Locations.adjustLocations(
+                    folds,
+                    adjustedSrc,
+                    offset
+            );
+
+            final Clip adjustedClip    = Clip.makeClip(
+                    each.getMethodName(),
+                    each.getLabel(),
+                    adjustedSrc,
+                    each.isBaseClip()
+            );
+
+            result.put(adjustedClip, adjustedLocs);
+        }
+
+        return result;
+    }
+
+
     private static Location foldImportDeclaration(Context context){
         SourceSelection selection = new SourceSelection();
         // TODO(Huascar) maybe this method should be promoted to main util package; please

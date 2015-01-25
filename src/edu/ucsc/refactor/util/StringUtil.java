@@ -223,7 +223,8 @@ public class StringUtil {
      */
     public static String concat(String withName, boolean withPrefix, List<String> withImports){
         final List<String> addons = withPrefix ? prependPrefix("import", withImports) : withImports;
-        addons.add("\nclass " + withName + " {\n");
+        final String extraLine = addons.isEmpty() ? "" : "\n";
+        addons.add(extraLine + "class " + withName + " {\n");
 
         return Joiner.on('\n').join(addons);
     }
