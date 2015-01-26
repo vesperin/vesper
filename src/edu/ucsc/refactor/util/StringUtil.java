@@ -226,7 +226,7 @@ public class StringUtil {
         final String extraLine = addons.isEmpty() ? "" : "\n";
         addons.add(extraLine + "class " + withName + " {\n");
 
-        return Joiner.on('\n').join(addons);
+        return new SourceFormatter().format(Joiner.on('\n').join(addons));
     }
 
 

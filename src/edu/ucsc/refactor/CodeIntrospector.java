@@ -19,6 +19,7 @@ import edu.ucsc.refactor.spi.graph.DirectedGraph;
 import edu.ucsc.refactor.spi.graph.GraphUtils;
 import edu.ucsc.refactor.spi.graph.Vertex;
 import edu.ucsc.refactor.util.Locations;
+import edu.ucsc.refactor.util.StringUtil;
 import org.eclipse.jdt.core.dom.*;
 
 import java.util.*;
@@ -216,15 +217,21 @@ public class CodeIntrospector implements Introspector {
      * Adjusts a clip space's shared source and the appropriate folding locations.
      *
      * @param space The summarized clip space.
-     * @param offset The offset or adjustment value.
      * @return adjusted summarized clip space.
      */
-    public static Map<Clip, List<Location>> adjustClipspace(Map<Clip, List<Location>> space, int offset) {
+    public static Map<Clip, List<Location>> adjustClipspace(Map<Clip, List<Location>> space) {
 
         final Map<Clip, List<Location>> result = Maps.newLinkedHashMap();
         for(Clip each : space.keySet()){
             final List<Location> folds          = space.get(each);
-            final Source         adjustedSrc    = Source.unwrap(each.getSource());
+
+            final String header = Source.currentHeader(each.getSource(), StringUtil
+                    .extractFileName(each.getSource().getName()));
+
+            // HACK: for some reason the adjustment missed 3 characters
+            final int            HACK           = 3;
+            final int            offset         = StringUtil.offsetOf(header) + HACK;
+            final Source         adjustedSrc    = Source.unwrap(each.getSource(), header);
             final List<Location> adjustedLocs   = Locations.adjustLocations(
                     folds,
                     adjustedSrc,

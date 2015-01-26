@@ -1,7 +1,6 @@
 package edu.ucsc.refactor.internal.changers;
 
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.*;
@@ -1713,16 +1712,10 @@ public class ChangersTest {
         final Source b = InternalUtil.createMethodWithShellCodeExample();
         final Introspector introspector = Vesper.createIntrospector();
 
-        final List<String> directives = Lists.newLinkedList(introspector.detectMissingImports(a));
-
         final Source patched = Source.wrap(
                 a,
                 "WellManners",
-                StringUtil.concat(
-                        "WellManners",
-                        true,
-                        directives
-                )
+                Source.missingHeader(introspector, a, "WellManners")
         );
 
         assertThat(patched.getName(), is("WellManners.java"));
@@ -1734,15 +1727,10 @@ public class ChangersTest {
         final Introspector introspector = Vesper.createIntrospector();
         final Source a = InternalUtil.createMethodOnlyCodeExample();
 
-        final List<String> directives = Lists.newLinkedList(introspector.detectMissingImports(a));
         final Source b = Source.wrap(
                 a,
                 "WellManners",
-                StringUtil.concat(
-                        "WellManners",
-                        true,
-                        directives
-                )
+                Source.missingHeader(introspector, a, "WellManners")
         );
 
 
@@ -1771,22 +1759,17 @@ public class ChangersTest {
         final Source a = InternalUtil.createMethodOnlyCodeExample();
         final Source b = InternalUtil.createMethodWithShellCodeExample();
 
-        final List<String> directives = Lists.newLinkedList(introspector.detectMissingImports(a));
         final Source c = Source.wrap(
                 a,
                 "WellManners",
-                StringUtil.concat(
-                        "WellManners",
-                        true,
-                        directives
-                )
+                Source.missingHeader(introspector, a, "WellManners")
         );
 
         assertThat(c.equals(b), is(true));
 
         final Source d = renameMethod(c, "greet", "hello");
 
-        final Source f = Source.unwrap(d);
+        final Source f = Source.unwrap(d, Source.currentHeader(d, StringUtil.extractFileName(d.getName())));
         assertNotNull(f);
         assertThat(d.equals(f), is(false));
     }
@@ -1795,15 +1778,10 @@ public class ChangersTest {
     @Test public void testCropContentFromMoreComplexSource() throws Exception {
         final Introspector introspector = Vesper.createIntrospector();
         final Source a = InternalUtil.createIncompleteQuickSortCodeExample();
-        final List<String> directives = Lists.newLinkedList(introspector.detectMissingImports(a));
         final Source b = Source.wrap(
                 a,
                 "Quicksort",
-                StringUtil.concat(
-                        "Quicksort",
-                        true,
-                        directives
-                )
+                Source.missingHeader(introspector, a, "WellManners")
         );
 
         final Context context = new Context(b);
@@ -1815,7 +1793,8 @@ public class ChangersTest {
                 "randomPartition"
         );
 
-        final Source d = Source.unwrap(c);
+        final Source d = Source.unwrap(c, Source.currentHeader(c, StringUtil.extractFileName(c.getName())));
+
         assertNotNull(d);
         assertThat(d.equals(InternalUtil.updatedIncompleteQuickSortCodeExample()), is(true));
     }
@@ -1859,7 +1838,7 @@ public class ChangersTest {
         assertThat(commit.isValidCommit(), is(true));
 
         final Source result = commit.getSourceAfterChange();
-        final Source cropped = Source.unwrap(result);
+        final Source cropped = Source.unwrap(result, Source.currentHeader(result, StringUtil.extractFileName(result.getName())));
         assertNotNull(cropped);
     }
 

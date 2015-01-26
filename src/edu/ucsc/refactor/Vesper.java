@@ -1,7 +1,6 @@
 package edu.ucsc.refactor;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import edu.ucsc.refactor.internal.HostImpl;
 import edu.ucsc.refactor.internal.InternalRefactorerCreator;
 import edu.ucsc.refactor.util.StringUtil;
@@ -97,14 +96,12 @@ public final class Vesper {
         final Introspector introspector = Vesper.createIntrospector();
         final String       withName     = "Scratched";
 
-        final List<String> directives = Lists.newLinkedList(
-                introspector.detectMissingImports(toAdjust)
-        );
-
-        final String addon = StringUtil.concat(withName, true, directives);
+        final String addon = Source.header(introspector,
+                toAdjust, withName, false);
 
         final int adjustFactor = StringUtil.offsetOf(addon);
-        final Source adjusted  = Source.wrap(toAdjust, withName, addon);
+        final Source adjusted  = Source.wrap(toAdjust, withName, Source.header(introspector,
+                toAdjust, withName, false));
 
         return new SourceSelection(
                 adjusted, startOffset + adjustFactor, endOffset + adjustFactor

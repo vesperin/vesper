@@ -266,13 +266,23 @@ public class Locations {
      */
     public static Location adjustLocation(Location location, Source adjusted, int byOffset){
 
-       final int startOffset    = location.getStart().getOffset() - byOffset;
-       final int endOffset      = location.getEnd().getOffset()   - byOffset;
+       int startOffset    = location.getStart().getOffset() - byOffset;
+       int endOffset      = location.getEnd().getOffset()   - byOffset;
 
        if(startOffset < 0 || endOffset < 0) { // this location may be from an import directive
            return null;
 
        }
+
+       // HACK...just in case
+       while(true){
+           final char ch = adjusted.getContents().charAt(startOffset);
+
+           if(ch == '{') break;
+           startOffset--;
+           if(startOffset < 0) return null;
+       }
+
 
        return SourceLocation.createLocation(
                adjusted,

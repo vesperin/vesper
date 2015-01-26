@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
@@ -188,21 +189,135 @@ public class IntrospectorTest {
 
         final List<String> directives = Lists.newLinkedList(introspector.detectMissingImports(a));
         final String addon = StringUtil.concat("Quicksort", true, directives);
-        final int offset = StringUtil.offsetOf(addon);
 
-        final Source b = Source.wrap(a, "Quicksort", addon);
 
-        final List<Clip> clips = introspector.multiStage(b);
-
-        final Map<Clip, List<Location>> summarized = introspector.summarize(clips, 17);
-        final Map<Clip, List<Location>> adjusted   = CodeIntrospector.adjustClipspace(
-                summarized,
-                offset
-        );
+        final Map<Clip, List<Location>> adjusted   = summarizedSpace(introspector, a, addon);
 
         assertThat(adjusted.isEmpty(), is(false));
-        assertThat(adjusted.size() == clips.size(), is(true));
 
+    }
+
+    @Test public void testSummarizedMultistageOfCodeExample() throws Exception {
+        final Introspector introspector = Vesper.createIntrospector();
+        final Source a = InternalUtil.createIncompleteQuickSortCodeExample();
+
+        final String addon = Source.missingHeader(introspector, a, "Quicksort");
+
+        final Map<Clip, List<Location>> summarized = summarizedSpace(introspector, a, addon);
+        for(Clip each : summarized.keySet()){
+            final String content = each.getSource().getContents();
+            final List<Location> locations = summarized.get(each);
+            for(Location eachLocation : locations){
+                final String extracted = content.substring(
+                        eachLocation.getStart().getOffset(),
+                        eachLocation.getEnd().getOffset()
+                );
+
+                assertThat(StringUtil.isEmpty(extracted), is(false));
+
+            }
+        }
+
+    }
+
+    @Test public void testAdjustedSummarizedMultistageOfCodeExample() throws Exception {
+
+        final Introspector introspector = Vesper.createIntrospector();
+        final Source a = InternalUtil.createIncompleteQuickSortCodeExample();
+
+        final List<String> directives = Lists.newLinkedList(introspector.detectMissingImports(a));
+        final String addon = StringUtil.concat("Quicksort", true, directives);
+
+        final Map<Clip, List<Location>> adjusted   = adjustSummarizedSpace(introspector, a, addon);
+
+        for(Clip each : adjusted.keySet()){
+            final String content = each.getSource().getContents();
+            final List<Location> locations = adjusted.get(each);
+            for(Location eachLocation : locations){
+                final String extracted = content.substring(
+                        eachLocation.getStart().getOffset(),
+                        eachLocation.getEnd().getOffset()
+                );
+
+                assertThat(StringUtil.isEmpty(extracted), is(false));
+            }
+        }
+    }
+
+    @Test public void testMultistageVsAdjustedMultistageOfCodeExample() throws Exception {
+        final Introspector introspector = Vesper.createIntrospector();
+        final Source a = InternalUtil.createIncompleteQuickSortCodeExample();
+
+        final String addon = Source.missingHeader(introspector, a, "Quicksort");
+
+        final Map<Clip, List<Location>> summarized = summarizedSpace(introspector, a, addon);
+        final List<String> blocks = Lists.newLinkedList();
+
+        for(Clip each : summarized.keySet()){
+            final String content = each.getSource().getContents();
+            final List<Location> locations = summarized.get(each);
+            for(Location eachLocation : locations){
+                final String extracted = content.substring(
+                        eachLocation.getStart().getOffset(),
+                        eachLocation.getEnd().getOffset()
+                );
+
+                if(!"import java.util.Random;".equals(extracted)){
+                    blocks.add(extracted);
+                }
+
+
+            }
+        }
+
+
+        final Map<Clip, List<Location>> adjusted   = adjustSummarizedSpace(introspector, a, addon);
+        final List<String> blocks1 = Lists.newLinkedList();
+        for(Clip each : adjusted.keySet()){
+            final String content = each.getSource().getContents();
+            final List<Location> locations = adjusted.get(each);
+            for(Location eachLocation : locations){
+                final String extracted = content.substring(
+                        eachLocation.getStart().getOffset(),
+                        eachLocation.getEnd().getOffset()
+                );
+
+                blocks1.add(extracted);
+            }
+        }
+
+        final int N = Math.max(blocks.size(), blocks1.size());
+        for(int idx = 0; idx < N; idx++){
+            final String e  = blocks.get(idx);
+            final String e1 = blocks1.get(idx);
+
+            assertEquals(e, e1);
+        }
+
+    }
+
+    private static Map<Clip, List<Location>> summarizedSpace(
+            Introspector introspector,
+            Source a,
+            String addon
+    ){
+
+
+        final Source b = Source.wrap(a, "Quicksort", addon);
+        final List<Clip> clips = introspector.multiStage(b);
+
+        return introspector.summarize(clips, 17);
+    }
+
+    private static Map<Clip, List<Location>> adjustSummarizedSpace(Introspector introspector,
+                                                                   Source a, String addon){
+        final Map<Clip, List<Location>> summarized = summarizedSpace(introspector, a, addon);
+
+        Map<Clip, List<Location>> adjusted = CodeIntrospector.adjustClipspace(summarized);
+
+        assertThat(summarized.size() == adjusted.size(), is(true));
+
+        return adjusted;
     }
 
 

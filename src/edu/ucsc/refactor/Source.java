@@ -2,6 +2,7 @@ package edu.ucsc.refactor;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import edu.ucsc.refactor.util.*;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jface.text.Document;
@@ -143,29 +144,51 @@ public class Source {
      * @param a the Source to be cropped.
      * @return the cropped Source.
      */
-    public static Source unwrap(Source a){
-        final Context context = CodeIntrospector.makeContext(a);
+    public static Source unwrap(Source a, String addon){
 
-        final String withName = StringUtil.extractFileName(a.getName());
-        final List<String> withImports = CodeIntrospector.findImports(
-                CodeIntrospector.findImports(context)
-        );
-
-        final String start = StringUtil.concat(withName, false, withImports);
         final String end   = "}";
 
         final String currentContent = a.getContents();
         final String updatedContent = StringUtil.trim(
                 StringUtil.removeEnd(
-                        StringUtil.removeStart(currentContent, start),
+                        StringUtil.removeStart(currentContent, addon),
                         end
                 )
         );
 
-        final Source cropped = Source.from(a, updatedContent);
+        final String formatted = new SourceFormatter().format(updatedContent);
+
+        final Source cropped = Source.from(a, formatted);
         cropped.setName("Scratched.java");
         return cropped;
     }
+
+    public static String missingHeader(Introspector introspector, Source a, String name){
+        return header(introspector, a, name, false);
+    }
+
+    public static String currentHeader(Source a, String name){
+        return header(null, a, name, true);
+    }
+
+    static String header(Introspector introspector, Source a, String name, boolean parsed){
+
+        if(parsed){
+            final Context context = CodeIntrospector.makeContext(a);
+
+            final String withName = StringUtil.extractFileName(a.getName());
+            final List<String> withImports = CodeIntrospector.findImports(
+                    CodeIntrospector.findImports(context)
+            );
+
+            return StringUtil.concat(withName, false, withImports);
+        } else {
+            final List<String> directives = Lists.newLinkedList(introspector.detectMissingImports(a));
+            return StringUtil.concat(name, true, directives);
+        }
+    }
+
+
 
 
     /**
