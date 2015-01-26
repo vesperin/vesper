@@ -1,18 +1,20 @@
 package edu.ucsc.refactor;
 
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import edu.ucsc.refactor.internal.EclipseJavaParser;
 import edu.ucsc.refactor.internal.InternalUtil;
 import edu.ucsc.refactor.util.StringUtil;
 import org.junit.Test;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -217,6 +219,54 @@ public class IntrospectorTest {
 
             }
         }
+
+    }
+
+
+
+    @Test public void testDetectIssuesOnIncompleteCodeExample() throws Exception {
+        final Introspector introspector = Vesper.createIntrospector();
+        // TODO(Huascar) WARNING: always trim an incomplete code example before wrapping it
+        final Source a = InternalUtil.createIncompleteCodeExampleWithUnusedNestedClass();
+
+        final String addon = Source.missingHeader(introspector, a, "Greeter");
+        final List<String> split = StringUtil.normalize(Splitter.on("\n").split(addon));
+        final Source wrapped = Source.wrap(a, "Greeter", addon);
+
+        final Context context = new Context(wrapped);
+
+        new EclipseJavaParser().parseJava(context);
+
+        final Set<Issue> issues = introspector.detectIssues(context);
+
+        final Set<String> toCheck = Sets.newHashSet(
+                "SingleIssue{name=Unused field, summary=Vesper has detected one or more unused fields in code!, from(line)=5, to(line)=5}",
+                "SingleIssue{name=Unused type, summary=Vesper has detected one or more unused type declarations!, from(line)=4, to(line)=6}"
+        );
+
+        final List<Issue> reversed = Lists.reverse(Lists.newLinkedList(issues));
+        for(Issue each : reversed){
+            assertThat(toCheck.contains(each.more(split.size() - 1)), is(true));
+        }
+
+    }
+
+
+    @Test public void testZeroDetectIssuesOnIncompleteCodeExample() throws Exception {
+        final Introspector introspector = Vesper.createIntrospector();
+        final Source a = InternalUtil.createIncompleteCodeExampleWithUsedNestedClass();
+
+        final String addon = Source.missingHeader(introspector, a, "Greeter");
+        final Source wrapped = Source.wrap(a, "Greeter", addon);
+
+        final Context context = new Context(wrapped);
+
+        new EclipseJavaParser().parseJava(context);
+
+        final Set<Issue> issues = introspector.detectIssues(context);
+
+        assertThat(issues.isEmpty(), is(true));
+
 
     }
 

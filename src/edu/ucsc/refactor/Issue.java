@@ -49,19 +49,29 @@ public abstract class Issue extends AbstractCause {
 
 
     @Override public String more() {
+        return more(0);
+    }
+
+    /**
+     * Adjust the locations (lines) where the issue was found. This is a companion method to the
+     * functionality dealing with incomplete code examples.
+     *
+     * @param noLinesToSubtract lines to subtract from current line.
+     * @return adjusted to String
+     */
+    public String more(int noLinesToSubtract) {
         final Objects.ToStringHelper builder = Objects.toStringHelper(getClass());
         builder.add("name", getName().getKey());
         builder.add("summary", getName().getSummary());
         if(!getAffectedNodes().isEmpty()){
             final Location location = Locations.locate(getAffectedNodes().get(0));
-            int from = location.getStart().getLine();
-            int to   = location.getEnd().getLine();
+            int from = location.getStart().getLine() - noLinesToSubtract;
+            int to   = location.getEnd().getLine()  - noLinesToSubtract;
             builder.add("from(line)", from);
             builder.add("to(line)", to);
         }
         return builder.toString();
     }
-
 
     static class SingleIssue extends Issue {
         SingleIssue(IssueDetector detector){

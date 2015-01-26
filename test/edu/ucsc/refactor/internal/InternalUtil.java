@@ -1124,6 +1124,34 @@ public class InternalUtil {
     }
 
 
+    public static Source createIncompleteCodeExampleWithUnusedNestedClass(){
+       String content = "public static void greet(String message) {\n" +
+               "  System.out.println(message);\n" +
+               "}\n" +
+               "\n" +
+               "static class Wow {\n" +
+               "\tString statement = null;\n" +
+               "}";
+
+        return new Source("Scratched.java", content);
+    }
+
+
+    public static Source createIncompleteCodeExampleWithUsedNestedClass(){
+        String content = "public static void greet(String message) {\n" +
+                "  Wow wow = new Wow();\n" +
+                "\twow.statement = message;\n" +
+                "  System.out.println(wow.statement);\n" +
+                "}\n" +
+                "\n" +
+                "static class Wow {\n" +
+                "\tString statement = null;\n" +
+                "}";
+
+        return new Source("Scratched.java", content);
+    }
+
+
 
     public static Source createSource(String name, StringBuilder builder){
         return new Source(name, builder.toString());
