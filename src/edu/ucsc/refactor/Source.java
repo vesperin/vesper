@@ -17,6 +17,8 @@ import java.util.concurrent.atomic.AtomicReference;
 public class Source {
     public static final String SOURCE_FILE_PROPERTY = "vesper.source_file.source_file_property";
 
+    private static final String END = "}";
+
     private final String        contents;
     private final String        description;
     private final Notes         notes;
@@ -115,10 +117,9 @@ public class Source {
      * @return the patched code example.
      */
     public static Source wrap(Source incomplete, String withName, String withContent){
-        final String end   = "}";
 
         final String content  = new SourceFormatter().format(
-                withContent + incomplete.getContents() + end
+                withContent + incomplete.getContents() + END
         );
 
         final Source revised = from(incomplete, content);
@@ -146,13 +147,11 @@ public class Source {
      */
     public static Source unwrap(Source a, String addon){
 
-        final String end   = "}";
-
         final String currentContent = a.getContents();
         final String updatedContent = StringUtil.trim(
                 StringUtil.removeEnd(
                         StringUtil.removeStart(currentContent, addon),
-                        end
+                        END
                 )
         );
 
