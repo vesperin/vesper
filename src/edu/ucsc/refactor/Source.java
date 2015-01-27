@@ -10,6 +10,8 @@ import org.eclipse.jface.text.IDocument;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
@@ -18,6 +20,7 @@ public class Source {
     public static final String SOURCE_FILE_PROPERTY = "vesper.source_file.source_file_property";
 
     private static final String END = "}";
+    private static final String REGEX = "class[^;=\\n]*\\s[\\S\\s]*?";
 
     private final String        contents;
     private final String        description;
@@ -75,7 +78,11 @@ public class Source {
      * @return The {@code Source}
      */
     public static Source from(Source seed, String newContent){
-        final String tentativeName      = StringUtil.extractClassName(newContent);
+        final Pattern pattern = Pattern.compile(REGEX);
+        final Matcher matcher   = pattern.matcher(newContent);
+
+        final String tentativeName      = matcher.find() ? StringUtil.extractClassName
+                (newContent) : StringUtil.extractFileName(seed.getName());
         final String nameWithoutJavaExt = StringUtil.extractFileName(seed.getName());
 
         final String name          = StringUtil.equals(nameWithoutJavaExt, tentativeName) ? nameWithoutJavaExt : tentativeName;
@@ -118,9 +125,11 @@ public class Source {
      */
     public static Source wrap(Source incomplete, String withName, String withContent){
 
-        final String content  = new SourceFormatter().format(
-                withContent + incomplete.getContents() + END
-        );
+//        final String content  = new SourceFormatter().format(
+//                withContent + incomplete.getContents() + END
+//        );
+
+        final String content = withContent + incomplete.getContents() + END;
 
         final Source revised = from(incomplete, content);
         if(!revised.getName().equals(withName)){
@@ -155,9 +164,7 @@ public class Source {
                 )
         );
 
-        final String formatted = new SourceFormatter().format(updatedContent);
-
-        final Source cropped = Source.from(a, formatted);
+        final Source cropped = Source.from(a, updatedContent);
         cropped.setName("Scratched.java");
         return cropped;
     }

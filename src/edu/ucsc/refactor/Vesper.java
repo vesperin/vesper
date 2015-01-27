@@ -96,10 +96,10 @@ public final class Vesper {
         final Introspector introspector = Vesper.createIntrospector();
         final String       withName     = "Scratched";
 
-        final String addon = Source.header(introspector,
-                toAdjust, withName, false);
+        final String addon = Source.missingHeader(introspector, toAdjust, withName);
 
-        final int adjustFactor = StringUtil.offsetOf(addon);
+        final int adjustFactor = StringUtil.offsetOf(addon) + 1/* bc of \n char*/;
+
         final Source adjusted  = Source.wrap(toAdjust, withName, Source.header(introspector,
                 toAdjust, withName, false));
 

@@ -228,14 +228,10 @@ public class CodeIntrospector implements Introspector {
             final String header = Source.currentHeader(each.getSource(), StringUtil
                     .extractFileName(each.getSource().getName()));
 
-            // HACK: for some reason the adjustment missed 3 characters
-            final int            HACK           = 3;
-            final int            offset         = StringUtil.offsetOf(header) + HACK;
             final Source         adjustedSrc    = Source.unwrap(each.getSource(), header);
             final List<Location> adjustedLocs   = Locations.adjustLocations(
                     folds,
-                    adjustedSrc,
-                    offset
+                    adjustedSrc
             );
 
             final Clip adjustedClip    = Clip.makeClip(
@@ -461,10 +457,6 @@ public class CodeIntrospector implements Introspector {
         return transform(that, ChangeRequest.optimizeImports(that.getSource()), that.isBaseClip());
     }
 
-    static Clip format(Clip that){
-        return transform(that, ChangeRequest.reformatSource(that.getSource()), that.isBaseClip());
-    }
-
     static String capitalize(Iterable<String> words){
         final StringBuilder builder = new StringBuilder();
         for(String each : words){
@@ -529,14 +521,14 @@ public class CodeIntrospector implements Introspector {
 
                     final String capitalized = capitalize(Splitter.on(' ').split(label));
 
-                    final Clip clip = format(cleanup(
+                    final Clip clip = cleanup(
                             Clip.makeClip(
                                     eachMethod.getName().getIdentifier(),
                                     capitalized,
                                     commit.getSourceAfterChange(),
                                     !itr.hasNext()
                             )
-                    ));
+                    );
 
                     space.add(clip);
                 }

@@ -14,6 +14,7 @@ import edu.ucsc.refactor.spi.JavaSnippetParser;
 import edu.ucsc.refactor.spi.SourceChanger;
 import edu.ucsc.refactor.util.Locations;
 import edu.ucsc.refactor.util.Parameters;
+import edu.ucsc.refactor.util.SourceFormatter;
 import edu.ucsc.refactor.util.StringUtil;
 import org.eclipse.jdt.core.dom.*;
 import org.junit.After;
@@ -1718,8 +1719,11 @@ public class ChangersTest {
                 Source.missingHeader(introspector, a, "WellManners")
         );
 
-        assertThat(patched.getName(), is("WellManners.java"));
-        assertThat(patched.equals(b), is(true));
+        final Source formatted = Source.from(patched, new SourceFormatter().format(patched
+                .getContents()));
+
+        assertThat(formatted.getName(), is("WellManners.java"));
+        assertThat(formatted.equals(b), is(true));
 
     }
 
@@ -1765,7 +1769,10 @@ public class ChangersTest {
                 Source.missingHeader(introspector, a, "WellManners")
         );
 
-        assertThat(c.equals(b), is(true));
+        final Source formatted = Source.from(c, new SourceFormatter().format(c
+                .getContents()));
+
+        assertThat(formatted.equals(b), is(true));
 
         final Source d = renameMethod(c, "greet", "hello");
 
@@ -1781,7 +1788,7 @@ public class ChangersTest {
         final Source b = Source.wrap(
                 a,
                 "Quicksort",
-                Source.missingHeader(introspector, a, "WellManners")
+                Source.missingHeader(introspector, a, "Quicksort")
         );
 
         final Context context = new Context(b);
@@ -1794,17 +1801,41 @@ public class ChangersTest {
         );
 
         final Source d = Source.unwrap(c, Source.currentHeader(c, StringUtil.extractFileName(c.getName())));
+        final Source f = Source.from(d, new SourceFormatter().format(d.getContents()));
 
-        assertNotNull(d);
-        assertThat(d.equals(InternalUtil.updatedIncompleteQuickSortCodeExample()), is(true));
+        assertNotNull(f);
+        assertThat(f.equals(InternalUtil.updatedIncompleteQuickSortCodeExample()), is(true));
+    }
+
+
+    @Test public void testDeleteMethodIncompleteCodeExample() throws Exception {
+        final Source a = InternalUtil.createIncompleteQuickSortCodeExample();
+        final Location mainLocation = Locations.locateWord(a, "main").get(0);
+
+        final int startOffset = mainLocation.getStart().getOffset();
+        final int endOffset   = mainLocation.getEnd().getOffset();
+
+        final SourceSelection adjusted = Vesper.createAdjustedSelection(startOffset, endOffset, a);
+
+
+        final Refactorer refactorer = Vesper.createRefactorer();
+        final Change change = refactorer.createChange(ChangeRequest.deleteMethod(adjusted));
+
+        final Commit commit = refactorer.apply(change);
+        assertThat(commit.isValidCommit(), is(true));
+
+        final Source result = commit.getSourceAfterChange();
+        final Source cropped = Source.unwrap(result, Source.currentHeader(result, StringUtil.extractFileName(result.getName())));
+        assertNotNull(cropped);
+
     }
 
 
     @Test public void testCropContentWithOffsetAdjustment() throws Exception {
         final Source a = InternalUtil.createIncompleteQuickSortCodeExample();
 
-        final int startOffset = 300;
-        final int endOffset   = 319;
+        final int startOffset = 150;
+        final int endOffset   = 169;
 
         final SourceSelection adjusted = Vesper.createAdjustedSelection(startOffset, endOffset, a);
 

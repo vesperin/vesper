@@ -74,9 +74,9 @@ public class StringUtil {
     }
 
 
-    public static String trimStart(final String value, char ch){
-        return trimStart(value, new char[] {ch});
-    }
+//    public static String trimStart(final String value, char ch){
+//        return trimStart(value, new char[] {ch});
+//    }
 
     /**
      * Trims a value's beginning of all the given chars. Does so repeatedly until no more matches are found.
@@ -223,10 +223,10 @@ public class StringUtil {
      */
     public static String concat(String withName, boolean withPrefix, List<String> withImports){
         final List<String> addons = withPrefix ? prependPrefix("import", withImports) : withImports;
-        final String extraLine = addons.isEmpty() ? "" : "\n";
-        addons.add(extraLine + "class " + withName + " {\n");
+        final String extraLine = addons.isEmpty() ? "" : "";
+        addons.add(extraLine + "class " + withName + " {");
 
-        return new SourceFormatter().format(Joiner.on('\n').join(addons));
+        return Joiner.on("\n").join(addons);
     }
 
 

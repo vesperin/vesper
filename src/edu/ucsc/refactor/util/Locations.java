@@ -258,54 +258,27 @@ public class Locations {
     }
 
     /**
-     * Adjusts the offsets of a location by some offset value.
-     * @param location current location to be adjusted.
-     * @param adjusted adjusted source.
-     * @param byOffset offset value (adjustment value)
-     * @return adjusted location, or null if the location cannot be adjusted
-     */
-    public static Location adjustLocation(Location location, Source adjusted, int byOffset){
-
-       int startOffset    = location.getStart().getOffset() - byOffset;
-       int endOffset      = location.getEnd().getOffset()   - byOffset;
-
-       if(startOffset < 0 || endOffset < 0) { // this location may be from an import directive
-           return null;
-
-       }
-
-       // HACK...just in case
-       while(true){
-           final char ch = adjusted.getContents().charAt(startOffset);
-
-           if(ch == '{') break;
-           startOffset--;
-           if(startOffset < 0) return null;
-       }
-
-
-       return SourceLocation.createLocation(
-               adjusted,
-               adjusted.getContents(),
-               startOffset,
-               endOffset
-       );
-    }
-
-    /**
      * Adjust a list of location to match a unwrapped code example (shopped off) offset values.
      * @param locations the list of locations to be adjusted
      * @param adjusted  the already adjusted source code
-     * @param byOffset  the offset value to be subtracted from current locations' offsets.
      * @return the list of adjusted locations
      */
-    public static List<Location> adjustLocations(List<Location> locations, Source adjusted, int byOffset){
+    public static List<Location> adjustLocations(List<Location> locations, Source adjusted){
       final List<Location> adjustedLocations = Lists.newLinkedList();
       for(Location each : locations){
-          final Location adjustedLoc = Locations.adjustLocation(
-                  each,
+
+          final int currentStart = each.getStart().getOffset();
+          final int currentEnd   = each.getEnd().getOffset();
+
+          final String locating = each.getSource().getContents().substring(currentStart, currentEnd);
+          final int newStart = adjusted.getContents().indexOf(locating);
+          final int newEnd   = newStart + locating.length();
+
+          final Location adjustedLoc = (newStart < 0 || newEnd < 0) ? null : SourceLocation.createLocation(
                   adjusted,
-                  byOffset
+                  adjusted.getContents(),
+                  newStart,
+                  newEnd
           );
 
           if(adjustedLoc != null){

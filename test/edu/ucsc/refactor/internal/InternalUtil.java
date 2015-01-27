@@ -1082,7 +1082,7 @@ public class InternalUtil {
     public static Source updatedIncompleteQuickSortCodeExample(){
         final String content = "private static Random rand = new Random();\n" +
                 "\n" +
-                "  public static void quicksort(int[] arr, int left, int right) {\n" +
+                "public static void quicksort(int[] arr, int left, int right) {\n" +
                 "\tif (left < right) {\n" +
                 "\t\tint pivot = randomPartition(arr, left, right);\n" +
                 "\t\tquicksort(arr, left, pivot);\n" +
@@ -1090,13 +1090,13 @@ public class InternalUtil {
                 "\t}\n" +
                 "}\n" +
                 "\n" +
-                "  private static int randomPartition(int[] arr, int left, int right) {\n" +
+                "private static int randomPartition(int[] arr, int left, int right) {\n" +
                 "\tint swapIndex = left + rand.nextInt(right - left) + 1;\n" +
                 "\tswap(arr, left, swapIndex);\n" +
                 "\treturn partition(arr, left, right);\n" +
                 "}\n" +
                 "\n" +
-                "  private static int partition(int[] arr, int left, int right) {\n" +
+                "private static int partition(int[] arr, int left, int right) {\n" +
                 "\tint pivot = arr[left];\n" +
                 "\tint i = left - 1;\n" +
                 "\tint j = right + 1;\n" +
@@ -1114,7 +1114,7 @@ public class InternalUtil {
                 "\t}\n" +
                 "}\n" +
                 "\n" +
-                "  private static void swap(int[] arr, int i, int j) {\n" +
+                "private static void swap(int[] arr, int i, int j) {\n" +
                 "\tint tmp = arr[i];\n" +
                 "\tarr[i] = arr[j];\n" +
                 "\tarr[j] = tmp;\n" +
