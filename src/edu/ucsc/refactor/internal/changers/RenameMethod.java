@@ -24,11 +24,11 @@ import java.util.Map;
  */
 public class RenameMethod extends SourceChanger {
 
-    @Override public boolean canHandle(CauseOfChange cause) {
-        return cause.getName().isSame(Refactoring.RENAME_METHOD);
+    @Override public boolean canHandle(Cause cause) {
+        return cause.isSame(Refactoring.RENAME_METHOD);
     }
 
-    @Override protected Change initChanger(CauseOfChange cause,
+    @Override protected Change initChanger(Cause cause,
                                            Map<String, Parameter> parameters) {
 
         final Change change  = new SourceChange(cause, this, parameters);

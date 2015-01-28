@@ -1,6 +1,6 @@
 package edu.ucsc.refactor.internal.changers;
 
-import edu.ucsc.refactor.CauseOfChange;
+import edu.ucsc.refactor.Cause;
 import edu.ucsc.refactor.Change;
 import edu.ucsc.refactor.Parameter;
 import edu.ucsc.refactor.internal.Delta;
@@ -27,12 +27,12 @@ public class RemoveUnusedFields extends SourceChanger {
         super();
     }
 
-    @Override public boolean canHandle(CauseOfChange cause) {
-        return cause.getName().isSame(Smell.UNUSED_FIELD)
+    @Override public boolean canHandle(Cause cause) {
+        return cause.isSame(Smell.UNUSED_FIELD)
                 || Names.from(Smell.UNUSED_FIELD).isSame(cause.getName());
     }
 
-    @Override protected Change initChanger(CauseOfChange cause, Map<String, Parameter> parameters) {
+    @Override protected Change initChanger(Cause cause, Map<String, Parameter> parameters) {
         final SourceChange change   = new SourceChange(cause, this, parameters);
         try {
 
@@ -48,7 +48,7 @@ public class RemoveUnusedFields extends SourceChanger {
         return change;
     }
 
-    private Delta removeUnusedFields(CompilationUnit root, ASTRewrite rewrite, CauseOfChange cause){
+    private Delta removeUnusedFields(CompilationUnit root, ASTRewrite rewrite, Cause cause){
         final boolean cameFromDetector = cause.getName().isSame(Smell.UNUSED_FIELD);
 
         for(ASTNode affected : cause.getAffectedNodes()){

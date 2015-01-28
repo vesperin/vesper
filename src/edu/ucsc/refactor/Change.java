@@ -73,7 +73,7 @@ public abstract class Change {
      *
      * @return The cause this change addresses.
      */
-    public abstract CauseOfChange getCause();
+    public abstract Cause getCause();
 
 
     /**

@@ -185,7 +185,7 @@ public class SourceSelection implements Iterable<Location> {
     }
 
     /**
-     * @return The {@code Source} from a user is selecting a block of code.
+     * @return The {@code Source} where a user is selecting a block of code.
      */
     public Source getSource(){
         final Context context = getContext();

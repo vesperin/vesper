@@ -85,7 +85,7 @@ public class RefactorersTest {
         final List<Change> changes = introspector.detectImprovements(SRC);
 
         assertThat(changes.isEmpty(), is(false));
-        assertThat(changes.size(), is(3));
+        assertThat(changes.size(), is(2));
     }
 
     @Test public void testRefactorerUnitLocator() {

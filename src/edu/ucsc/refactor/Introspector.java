@@ -16,24 +16,6 @@ import java.util.Set;
  */
 public interface Introspector {
     /**
-     * Verifies whether this {@code Source} is valid; purely a syntax checking.
-     *
-     * More specifically, this method checks for:
-     *
-     * <ol>
-     *     <li>Field related problems; e.g., undefined field</li>
-     *     <li>Method related problems; e.g., undefined methods</li>
-     *     <li>Internal related problems; e.g., two classes in same file</li>
-     *     <li>Constructor related problems; e.g., undefined constructor</li>
-     * </ol>
-     *
-     *
-     * @param code The {@code Source} to be verified.
-     * @return a list of error messages or []
-     */
-    List<String> checkCodeSyntax(Source code);
-
-    /**
      * Scans a {@link Source} tracked by the {@code Refactorer}, looking for any {@link Issue}s
      * in it.
      *
@@ -124,6 +106,26 @@ public interface Introspector {
     List<Change> detectImprovements(Set<Issue> issues);
 
     /**
+     * Checks if this {@code Source} is syntactically correct. That is, the Java compiler
+     * returned no syntax errors.
+     *
+     * Typical `syntax errors` types include:
+     *
+     * <ol>
+     *     <li>Field related problems; e.g., undefined field</li>
+     *     <li>Method related problems; e.g., undefined methods</li>
+     *     <li>Internal related problems; e.g., two classes in same file</li>
+     *     <li>Constructor related problems; e.g., undefined constructor</li>
+     * </ol>
+     *
+     *
+     * @param code The {@code Source} to be verified.
+     * @return a list of error messages returned by the Java compiler or an empty array if
+     *      no errors were found.
+     */
+    List<String> detectSyntaxErrors(Source code);
+
+    /**
      * Compares two source and return their differences; i.e., insertions, changes, or deletions.
      *
      * Due to multi stage code examples goes from less to more complexity, we assume that
@@ -138,8 +140,9 @@ public interface Introspector {
     Diff differences(Source original, Source revised);
 
     /**
-     * Multi stage a source code by generating all possible clips that can be extracted from the
-     * code example. It goes from simple to more complex. The last clip is the found code example.
+     * Multi stage (dissect) a source code by generating all possible clips that can be extracted
+     * from the code example. It goes from simple to more complex. The last clip is the found
+     * code example.
      *
      * @param code The code example used to created the clip space.
      * @return The clip space.
@@ -151,20 +154,22 @@ public interface Introspector {
      * automatically folded.
      *
      * @param clipSpace the list of clips (stages) extracted from a code example.
+     * @param bound tuning parameter (lines of code) for summarization.
      * @return a map between clips and foldable code areas; together they represent
      *      the summary of a code example.
      */
-    Map<Clip, List<Location>> summarize(List<Clip> clipSpace);
+    Map<Clip, List<Location>> summarize(List<Clip> clipSpace, int bound);
 
     /**
      * Summarizes a clip by detecting block nodes that can be
      * automatically folded.
      *
      * @param clip a clip extracted from a code example.
+     * @param bound tuning parameter (lines of code) for summarization.
      * @return a map between clips and foldable code areas; together they represent
      *      the summary of a code example.
      */
-    List<Location> summarize(Clip clip);
+    List<Location> summarize(Clip clip, int bound);
 
     /**
      * Summarizes a code example by detecting those areas that can be automatically folded. The
@@ -173,7 +178,8 @@ public interface Introspector {
      *
      * @param startingMethod the method that we need to examine first.
      * @param code The code example.
+     * @param bound tuning parameter (lines of code) for summarization.
      * @return a list of foldable locations
      */
-    List<Location> summarize(String startingMethod, Source code);
+    List<Location> summarize(String startingMethod, Source code, int bound);
 }

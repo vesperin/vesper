@@ -1,11 +1,13 @@
 package edu.ucsc.refactor.util;
 
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
+import com.google.common.collect.Lists;
 
-import java.util.Set;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -71,9 +73,10 @@ public class StringUtil {
         return a == null ? b == null : a.equals(b);
     }
 
-    public static String trimStart(final String value, char ch){
-        return trimStart(value, new char[] {ch});
-    }
+
+//    public static String trimStart(final String value, char ch){
+//        return trimStart(value, new char[] {ch});
+//    }
 
     /**
      * Trims a value's beginning of all the given chars. Does so repeatedly until no more matches are found.
@@ -115,8 +118,8 @@ public class StringUtil {
     }
 
 
-    public static Set<String> normalize(Set<String> docs){
-        final Set<String> n = Sets.newHashSet();
+    public static List<String> normalize(Iterable<String> docs){
+        final List<String> n = Lists.newArrayList();
         for(String each : docs){
             // normalize line endings
             n.add(each.replaceAll("\r\n", "\n"));
@@ -144,5 +147,102 @@ public class StringUtil {
         return trimEnd(trimStart(value, chars), chars);
     }
 
+    /**
+     * <p>Removes a substring only if it is at the start of a source string,
+     * otherwise returns the source string.</p>
+     *
+     * <p>A <code>null</code> source string will return <code>null</code>.
+     * An empty ("") source string will return the empty string.
+     * A <code>null</code> search string will return the source string.</p>
+     *
+     * @param str  the source String to search, may be null
+     * @param remove  the String to search for and remove, may be null
+     * @return the substring with the string removed if found,
+     *  <code>null</code> if null String input
+     */
+    public static String removeStart(String str, String remove) {
+        if (isEmpty(str) || isEmpty(remove)) {
+            return str;
+        }
+        if (str.startsWith(remove)){
+            return str.substring(remove.length());
+        }
+        return str;
+    }
 
+    /**
+     * <p>Removes a substring only if it is at the end of a source string,
+     * otherwise returns the source string.</p>
+     *
+     * <p>A <code>null</code> source string will return <code>null</code>.
+     * An empty ("") source string will return the empty string.
+     * A <code>null</code> search string will return the source string.</p>
+     *
+     * @param str  the source String to search, may be null
+     * @param remove  the String to search for and remove, may be null
+     * @return the substring with the string removed if found,
+     *  <code>null</code> if null String input
+     */
+    public static String removeEnd(String str, String remove) {
+        if (isEmpty(str) || isEmpty(remove)) {
+            return str;
+        }
+        if (str.endsWith(remove)) {
+            return str.substring(0, str.length() - remove.length());
+        }
+        return str;
+    }
+
+    /**
+     * <p>Checks if a String is empty ("") or null.</p>
+     *
+     * @param str  the String to check, may be null
+     * @return <code>true</code> if the String is empty or null
+     */
+    public static boolean isEmpty(String str) {
+        return str == null || str.length() == 0;
+    }
+
+    private static List<String> prependPrefix(final String prefix, List<String> toElements){
+        final List<String> addons = Lists.transform(toElements, new Function<String, String>(){
+                    @Override public String apply(String s) {
+                        return StringUtil.trim(prefix) + " " + s;
+                    }}
+        );
+
+        return Lists.newArrayList(addons);
+    }
+
+    /**
+     * Builds the content to be prepended to an incomplete code example.
+     *
+     * @param withName the name to use
+     * @param withPrefix with prefix to prepend
+     * @param withImports the imports to use
+     * @return the content to be prepended.
+     */
+    public static String concat(String withName, boolean withPrefix, List<String> withImports){
+        final List<String> addons = withPrefix ? prependPrefix("import", withImports) : withImports;
+        final String extraLine = addons.isEmpty() ? "" : "";
+        addons.add(extraLine + "class " + withName + " {");
+
+        return Joiner.on("\n").join(addons);
+    }
+
+
+    /**
+     * Returns the offset of a string
+     * @param string the string of interest
+     * @return the total offset
+     */
+    public static int offsetOf(String string){
+       final String[] split = string.split("(?!^)");
+
+       int offset = -1;
+       for (String each : split){
+           offset = string.indexOf(each, offset + 1); // avoid duplicates
+       }
+
+       return offset;
+    }
 }

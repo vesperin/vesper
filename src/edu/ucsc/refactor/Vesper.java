@@ -3,6 +3,7 @@ package edu.ucsc.refactor;
 import com.google.common.base.Preconditions;
 import edu.ucsc.refactor.internal.HostImpl;
 import edu.ucsc.refactor.internal.InternalRefactorerCreator;
+import edu.ucsc.refactor.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -83,6 +84,31 @@ public final class Vesper {
     private Vesper(){}
 
     /**
+     * Adjust the selection values of an incomplete code example to match the adjusted (complete)
+     * code example.
+     *
+     * @param startOffset current start offset
+     * @param endOffset   current end offset
+     * @param toAdjust    the incomplete code example (to be adjusted)
+     * @return the adjusted source selection.
+     */
+    public static SourceSelection createAdjustedSelection(int startOffset, int endOffset, Source toAdjust){
+        final Introspector introspector = Vesper.createIntrospector();
+        final String       withName     = "Scratched";
+
+        final String addon = Source.missingHeader(introspector, toAdjust, withName);
+
+        final int adjustFactor = StringUtil.offsetOf(addon) + 1/* bc of \n char*/;
+
+        final Source adjusted  = Source.wrap(toAdjust, withName, Source.header(introspector,
+                toAdjust, withName, false));
+
+        return new SourceSelection(
+                adjusted, startOffset + adjustFactor, endOffset + adjustFactor
+        );
+    }
+
+    /**
      * Creates a refactorer for the given set of sources.
      * @return a new Refactorer
      */
@@ -123,7 +149,8 @@ public final class Vesper {
      */
     public static UnitLocator createUnitLocator(Context context){
         Preconditions.checkNotNull(context);
-        Preconditions.checkArgument(!context.isMalformedContext());
+        // Note: disable this temporarily: not all code examples are syntactically correct
+        // Preconditions.checkArgument(!context.isMalformedContext());
         return new ProgramUnitLocator(context);
     }
 

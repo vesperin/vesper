@@ -56,8 +56,8 @@ public class JavaRefactorer implements Refactorer {
 
     @Override public Change createChange(ChangeRequest request) {
         Preconditions.checkNotNull(request, "createChange() method has received a null request");
-        final boolean                isIssue    = request.isIssue();
-        final CauseOfChange          cause      = request.getCauseOfChange();
+        final boolean          isIssue    = request.isIssue();
+        final Cause cause      = request.getCause();
         final Map<String, Parameter> parameters = request.getParameters();
 
         LOGGER.fine((isIssue
@@ -70,13 +70,14 @@ public class JavaRefactorer implements Refactorer {
     }
 
 
-    private Edit prepSingleEdit(CauseOfChange cause, ChangeRequest request){
+    private Edit prepSingleEdit(Cause cause, ChangeRequest request){
         final Edit edit    = (Edit) cause;
         final SourceSelection select  = request.getSelection();
-        final Source          code    = select.first().getSource();
-        final Context         context = validContext(code);
+        final Source          code    = select.getSource();
 
-        final UnitLocator           inferredUnitLocator = createUnitLocator(context);
+        select.setContext(validContext(code));
+
+        final UnitLocator           inferredUnitLocator = createUnitLocator(select.getContext());
         final List<NamedLocation>   namedLocations      = inferredUnitLocator.locate(
                 new SelectedUnit(select)
         );
@@ -145,7 +146,7 @@ public class JavaRefactorer implements Refactorer {
          * @param parameters The parameters to use in the solving process.
          * @return The solution to the issue.
          */
-        Change createChange(CauseOfChange issue, Map<String, Parameter> parameters) {
+        Change createChange(Cause issue, Map<String, Parameter> parameters) {
             LOGGER.fine("Creating change for " + issue);
             final SourceChanger changer = findSuitableChanger(issue);
 
@@ -163,7 +164,7 @@ public class JavaRefactorer implements Refactorer {
          * @param issue The issue to find an IssueSolver for.
          * @return The IssueSolver, or null in case no suitable solver could be found.
          */
-        SourceChanger findSuitableChanger(CauseOfChange issue) {
+        SourceChanger findSuitableChanger(Cause issue) {
             LOGGER.fine("Looking for suitable source changers");
             for (SourceChanger solver : getChangers()) {
                 if (solver.canHandle(issue)) {

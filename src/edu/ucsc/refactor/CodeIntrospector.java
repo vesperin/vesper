@@ -82,12 +82,6 @@ public class CodeIntrospector implements Introspector {
     }
 
 
-    @Override public List<String> checkCodeSyntax(Source code) {
-        return ImmutableList.copyOf(
-                this.host.createContext(code).getSyntaxRelatedProblems()
-        );
-    }
-
     @Override public Set<Issue> detectIssues(Source code) {
         final Context context = this.host.createContext(code);
         return detectIssues(context);
@@ -152,6 +146,12 @@ public class CodeIntrospector implements Introspector {
         return recommendations;
     }
 
+    @Override public List<String> detectSyntaxErrors(Source code) {
+        return ImmutableList.copyOf(
+                this.host.createContext(code).getSyntaxRelatedProblems()
+        );
+    }
+
     @Override public Diff differences(Source original, Source revised) {
         return new Diff(original, revised);
     }
@@ -170,23 +170,23 @@ public class CodeIntrospector implements Introspector {
         return byLinesOfCode.sortedCopy(ImmutableList.copyOf(clipSpace));
     }
 
-    @Override public Map<Clip, List<Location>> summarize(List<Clip> clipSpace) {
+    @Override public Map<Clip, List<Location>> summarize(List<Clip> clipSpace, int bound) {
         Map<Clip, List<Location>> result = Maps.newLinkedHashMap();
 
         for(Clip each : clipSpace){ /// starts from smallest to larger code example
 
-            result.put(each, summarize(each));
+            result.put(each, summarize(each, bound));
 
         }
 
         return result;
     }
 
-    @Override public List<Location> summarize(Clip clip) {
-        return summarize(clip.getMethodName(), clip.getSource());
+    @Override public List<Location> summarize(Clip clip, int bound) {
+        return summarize(clip.getMethodName(), clip.getSource(), bound);
     }
 
-    @Override public List<Location> summarize(String startingMethod, Source code) {
+    @Override public List<Location> summarize(String startingMethod, Source code, int bound) {
 
         final Context           context = makeContext(code);
         final MethodDeclaration method  = getMethod(startingMethod, context);
@@ -198,11 +198,11 @@ public class CodeIntrospector implements Introspector {
 
         final List<Location> foldableLocations = summarizeCodeBySolvingTreeKnapsack(
                 visitor.graph(),
-                17/*lines of code*/
+                bound/*lines of code*/
         );
 
         // Imports are folded regardless of the previous computation
-        final Location foldedImports = foldImportDeclaration(context.getCompilationUnit());
+        final Location foldedImports = foldImportDeclaration(context);
 
         if(foldedImports != null){
             foldableLocations.add(foldedImports);
@@ -212,11 +212,43 @@ public class CodeIntrospector implements Introspector {
 
     }
 
-    private static Location foldImportDeclaration(CompilationUnit unit){
+    /**
+     * Adjusts a clip space's shared source and the appropriate folding locations.
+     *
+     * @param space The summarized clip space.
+     * @return adjusted summarized clip space.
+     */
+    public static Map<Clip, List<Location>> adjustClipspace(Map<Clip, List<Location>> space) {
+
+        final Map<Clip, List<Location>> result = Maps.newLinkedHashMap();
+        for(Clip each : space.keySet()){
+            final List<Location> folds          = space.get(each);
+
+            final Source         adjustedSrc    = Source.unwrap(each.getSource());
+            final List<Location> adjustedLocs   = Locations.adjustLocations(
+                    folds,
+                    adjustedSrc
+            );
+
+            final Clip adjustedClip    = Clip.makeClip(
+                    each.getMethodName(),
+                    each.getLabel(),
+                    adjustedSrc,
+                    each.isBaseClip()
+            );
+
+            result.put(adjustedClip, adjustedLocs);
+        }
+
+        return result;
+    }
+
+
+    private static Location foldImportDeclaration(Context context){
         SourceSelection selection = new SourceSelection();
         // TODO(Huascar) maybe this method should be promoted to main util package; please
         // investigate
-        final Set<ImportDeclaration> imports = AstUtil.getUsedImports(unit);
+        final Set<ImportDeclaration> imports = findImports(context);
         for( ImportDeclaration each : imports){
           selection.add(Locations.locate(each));
         }
@@ -224,10 +256,24 @@ public class CodeIntrospector implements Introspector {
         return !selection.isEmpty() ? selection.toLocation() : null;
     }
 
+    static Set<ImportDeclaration> findImports(Context context){
+        return AstUtil.getUsedImports(context.getCompilationUnit());
+    }
+
+
+    static List<String> findImports(Set<ImportDeclaration> declarations){
+        final List<String> result = Lists.newArrayList();
+        for(ImportDeclaration each : declarations){
+            result.add("import " + each.getName().getFullyQualifiedName() + ";");
+        }
+
+        return result;
+    }
+
     private static List<Location> summarizeCodeBySolvingTreeKnapsack(DirectedGraph<Item> graph, int capacity){
 
         final LinkedList<Vertex<Item>> Q = Lists.newLinkedList(graph.getVertices());
-        Q.addFirst(new Vertex<Item>()); // required to move the idx to 1
+        Q.addFirst(new Vertex<Item>()); // sentinel required to move the idx to 1
 
 
         final int N = Q.size();
@@ -334,7 +380,7 @@ public class CodeIntrospector implements Introspector {
 
         final Set<String>           types     = AstUtil.getUsedTypesInCode(context.getCompilationUnit());
         final Set<String>           packages  = getJdkPackages();
-        final Map<String, Tuple>  freq      = Maps.newHashMap();
+        final Map<String, Tuple>    freq      = Maps.newHashMap();
 
         final Set<String> result = Sets.newHashSet();
 
@@ -407,10 +453,6 @@ public class CodeIntrospector implements Introspector {
         return transform(that, ChangeRequest.optimizeImports(that.getSource()), that.isBaseClip());
     }
 
-    static Clip format(Clip that){
-        return transform(that, ChangeRequest.reformatSource(that.getSource()), that.isBaseClip());
-    }
-
     static String capitalize(Iterable<String> words){
         final StringBuilder builder = new StringBuilder();
         for(String each : words){
@@ -475,14 +517,14 @@ public class CodeIntrospector implements Introspector {
 
                     final String capitalized = capitalize(Splitter.on(' ').split(label));
 
-                    final Clip clip = format(cleanup(
+                    final Clip clip = cleanup(
                             Clip.makeClip(
                                     eachMethod.getName().getIdentifier(),
                                     capitalized,
                                     commit.getSourceAfterChange(),
                                     !itr.hasNext()
                             )
-                    ));
+                    );
 
                     space.add(clip);
                 }
@@ -495,32 +537,32 @@ public class CodeIntrospector implements Introspector {
 
     static class BlockVisitor extends SourceVisitor {
 
+        static final Set<ASTNode>   VISITED = Sets.newLinkedHashSet();
+
         final DirectedGraph<Item> G;
-        final Set<ASTNode>   V;
 
 
         BlockVisitor(){
             G = new DirectedAcyclicGraph<Item>();
-            V = Sets.newLinkedHashSet();
         }
 
         @Override public boolean visit(Block node) {
+
+            buildTree(node, G);
+
+            return false;
+        }
+
+        static void buildTree(ASTNode node, DirectedGraph<Item> G){
             final Vertex<Item> root  = new Vertex<Item>(node.toString(), Item.of(node));
             if(G.getRootVertex() == null){ G.addRootVertex(root); } else {
                 G.addVertex(root);
             }
 
-            buildDirectedAcyclicGraph(node, V, G);
-
-            return false;
+            buildSubtree(null, node, G);
         }
 
-        static void buildDirectedAcyclicGraph(ASTNode node,
-               Set<ASTNode> visited, DirectedGraph<Item> graph){
-            sink(null, node, visited, graph);
-        }
-
-        static void sink(Block parent, ASTNode node, Set<ASTNode> visited, DirectedGraph<Item> graph){
+        static void buildSubtree(Block parent, ASTNode node, DirectedGraph<Item> G){
            if(node == null) return;
 
            final Deque<ASTNode> Q = new LinkedList<ASTNode>();
@@ -528,45 +570,46 @@ public class CodeIntrospector implements Introspector {
 
            while(!Q.isEmpty()){
               final ASTNode c = Q.poll();
-              visited.add(c);
+              VISITED.add(c);
 
                for(ASTNode child : AstUtil.getChildren(c)){
-                   if(!visited.contains(child)){
-                       if(skipNode(child)) continue;
+                   if(!VISITED.contains(child)){
+                     if(skipNode(child)) continue;
 
-                       if(Block.class.isInstance(child)){
-                         update(graph, parent, child);
-                         sink((Block) child, child, visited, graph);
-                         Q.offer(child);
+                     if(Block.class.isInstance(child)){
+                       connect(G, parent, child);
+                       buildSubtree((Block) child, child, G);
+                       Q.offer(child);
+                     } else {
+                       parent = parent == null ? (Block) node : parent;
+                       if(MethodInvocation.class.isInstance(child)){
+                         final MethodInvocation invoke = (MethodInvocation) child;
+                         final ASTNode method = AstUtil.findDeclaration(
+                               invoke.resolveMethodBinding(),
+                               AstUtil.parent(CompilationUnit.class, invoke)
+                         );
+
+                         if(VISITED.contains(method)) return;
+                         buildSubtree(parent, method, G);
+                         Q.offer(method);
+                       } else if (isTypeDeclarationStatement(child)){
+                         final SimpleType type = (SimpleType) child;
+                         final ASTNode declaration =  AstUtil.findDeclaration(
+                                 type.resolveBinding(),
+                                 type
+                         );
+
+                         if(VISITED.contains(declaration)) return;
+                         buildSubtree(parent, declaration, G);
+                         Q.offer(declaration);
                        } else {
-                         parent = parent == null ? (Block) node : parent;
-                         if(MethodInvocation.class.isInstance(child)){
-                           final MethodInvocation invoke = (MethodInvocation) child;
-                           final ASTNode method = AstUtil.findDeclaration(
-                                   invoke.resolveMethodBinding(),
-                                   AstUtil.parent(CompilationUnit.class, invoke)
-                           );
-
-                           if(visited.contains(method)) return;
-                           sink(parent, method, visited, graph);
-                           Q.offer(method);
-                         } else if (isTypeDeclarationStatement(child)){
-                           final SimpleType type = (SimpleType) child;
-                           final ASTNode declaration =  AstUtil.findDeclaration(type
-                                   .resolveBinding(), type);
-                           if(visited.contains(declaration)) return;
-                           sink(parent, declaration, visited, graph);
-                           Q.offer(declaration);
-                         } else {
-                           sink(parent, child, visited, graph);
-                           Q.offer(child);
-                         }
-
+                         buildSubtree(parent, child, G);
+                         Q.offer(child);
                        }
+
+                     }
                    }
-
                }
-
            }
 
         }
@@ -614,7 +657,7 @@ public class CodeIntrospector implements Introspector {
         }
 
 
-        private static void update(DirectedGraph<Item> graph, ASTNode parent, ASTNode child){
+        private static void connect(DirectedGraph<Item> graph, ASTNode parent, ASTNode child){
             final Vertex<Item> n = graph.getVertex(parent.toString());
 
             final Block  b = (Block) child;

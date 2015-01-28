@@ -1,6 +1,6 @@
 package edu.ucsc.refactor.internal.changers;
 
-import edu.ucsc.refactor.CauseOfChange;
+import edu.ucsc.refactor.Cause;
 import edu.ucsc.refactor.Change;
 import edu.ucsc.refactor.Parameter;
 import edu.ucsc.refactor.Source;
@@ -23,11 +23,11 @@ import java.util.Map;
  */
 public class RemoveMagicNumber  extends SourceChanger {
 
-    @Override public boolean canHandle(CauseOfChange cause) {
-        return cause.getName().isSame(Smell.MAGIC_NUMBER);
+    @Override public boolean canHandle(Cause cause) {
+        return cause.isSame(Smell.MAGIC_NUMBER);
     }
 
-    @Override protected Change initChanger(CauseOfChange cause,
+    @Override protected Change initChanger(Cause cause,
                                            Map<String, Parameter> parameters) {
         final SourceChange change = new SourceChange(cause, this, parameters);
 
@@ -45,10 +45,10 @@ public class RemoveMagicNumber  extends SourceChanger {
     }
 
     static class ChangeBuilder {
-        private final CauseOfChange cause;
+        private final Cause cause;
         private final Map<String, Parameter> parameters;
 
-        ChangeBuilder(CauseOfChange cause,
+        ChangeBuilder(Cause cause,
                       Map<String, Parameter> parameters){
 
             this.cause      = cause;

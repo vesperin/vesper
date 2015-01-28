@@ -1,6 +1,5 @@
 package edu.ucsc.refactor;
 
-import edu.ucsc.refactor.spi.SourceScanner;
 import edu.ucsc.refactor.spi.Name;
 import org.eclipse.jdt.core.dom.ASTNode;
 
@@ -11,13 +10,13 @@ import java.util.List;
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public abstract class AbstractCauseOfChange implements CauseOfChange {
+public abstract class AbstractCause implements Cause {
     private final List<ASTNode> nodes;
 
     /**
-     * Construct the {@link AbstractCauseOfChange}.
+     * Construct the {@link AbstractCause}.
      */
-    protected AbstractCauseOfChange(){
+    protected AbstractCause(){
         this.nodes  = new ArrayList<ASTNode>();
     }
 
@@ -44,13 +43,9 @@ public abstract class AbstractCauseOfChange implements CauseOfChange {
         }
     }
 
-
-    @Override public SourceScanner getContextScanner() {
-        return null;  //change is probably user-initiated
-    }
-
-
     @Override public abstract Name getName();
+
+    @Override public abstract boolean isSame(Name otherName);
 
     /**
      * Removes a no longer needed node.

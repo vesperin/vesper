@@ -1,6 +1,6 @@
 package edu.ucsc.refactor.internal.changers;
 
-import edu.ucsc.refactor.CauseOfChange;
+import edu.ucsc.refactor.Cause;
 import edu.ucsc.refactor.Change;
 import edu.ucsc.refactor.Parameter;
 import edu.ucsc.refactor.internal.Delta;
@@ -26,12 +26,12 @@ public class RemoveUnusedLocalVariable extends SourceChanger {
         super();
     }
 
-    @Override public boolean canHandle(CauseOfChange cause) {
-        return cause.getName().isSame(Smell.UNUSED_VARIABLE)
+    @Override public boolean canHandle(Cause cause) {
+        return cause.isSame(Smell.UNUSED_VARIABLE)
                 || Names.from(Smell.UNUSED_VARIABLE).isSame(cause.getName());
     }
 
-    @Override protected Change initChanger(CauseOfChange cause, Map<String, Parameter> parameters) {
+    @Override protected Change initChanger(Cause cause, Map<String, Parameter> parameters) {
         final SourceChange change   = new SourceChange(cause, this, parameters);
         try {
 
@@ -48,7 +48,7 @@ public class RemoveUnusedLocalVariable extends SourceChanger {
     }
 
 
-    private Delta removeUnusedLocalVariable(CompilationUnit root, ASTRewrite rewrite, CauseOfChange cause){
+    private Delta removeUnusedLocalVariable(CompilationUnit root, ASTRewrite rewrite, Cause cause){
         final boolean cameFromDetector = cause.getName().isSame(Smell.UNUSED_VARIABLE);
 
         for(ASTNode affected : cause.getAffectedNodes()){

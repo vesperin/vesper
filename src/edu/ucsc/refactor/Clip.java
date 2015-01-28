@@ -2,12 +2,16 @@ package edu.ucsc.refactor;
 
 import com.google.common.base.Preconditions;
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public class Clip {
+    private static final Logger LOGGER = Logger.getLogger(Clip.class.getName());
+
     private final Source        content;
     private final String        label;
     private final boolean       isBase;
@@ -92,6 +96,64 @@ public class Clip {
         return -1;
     }
 
+    /**
+     * Applies changes found in a `revised` clip to another clip (`original`).
+     *
+     * @param introspector Vesper's code introspector
+     * @param original the original Clip
+     * @param revised  the revision
+     *
+     * @return the patched Clip
+     */
+    public static Clip sync(Introspector introspector, Clip original, Clip revised){
+        try {
+            final Diff diff = introspector.differences(original.getSource(), revised.getSource());
+            return makeClip(revised.getMethodName(),
+                    original.getLabel() + " U " + revised.getLabel(),
+                    diff.resolve()
+            );
+        } catch (RuntimeException ex){
+            LOGGER.warning("Unable to change " + original.getSource().getName());
+            LOGGER.warning("Unable to resolve changes found in " + revised.getSource().getName());
+            return null;
+        }
+    }
+
+    /**
+     * Unwinds the differences between code examples (forward fashion); starting
+     * at the clip after the base.
+     *
+     * @param selectedClips the divided clip space.
+     * @return the patched {@link edu.ucsc.refactor.Source} object.
+     */
+    public static Clip sync(Introspector introspector, List<Clip> selectedClips){
+
+       // [1, 2, 3, 4] => [[1, 2] & 3] & 4
+       Clip  result  = null;
+       Clip  left    = null;
+
+        final Iterator<Clip> itr = selectedClips.iterator();
+       while(itr.hasNext()){
+        final Clip right = itr.next();
+        if(left == null) {
+           if(!right.isBaseClip()){
+               left = right;
+           }
+
+           if(itr.hasNext()){
+             continue;
+           }
+        }
+
+        final Clip patched = sync(introspector, left, right);
+        if(patched == null) return result;
+
+        result = patched;
+        left   = patched;
+       }
+
+       return result;
+    }
 
 
     /**

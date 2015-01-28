@@ -20,11 +20,11 @@ import java.util.Map;
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public class RenameLocalVariable extends SourceChanger {
-    @Override public boolean canHandle(CauseOfChange cause) {
-        return cause.getName().isSame(Refactoring.RENAME_VARIABLE);
+    @Override public boolean canHandle(Cause cause) {
+        return cause.isSame(Refactoring.RENAME_VARIABLE);
     }
 
-    @Override protected Change initChanger(CauseOfChange cause, Map<String, Parameter> parameters) {
+    @Override protected Change initChanger(Cause cause, Map<String, Parameter> parameters) {
         final Change change  = new SourceChange(cause, this, parameters);
         final String newName = (String) parameters.get(Parameters.MEMBER_NEW_NAME).getValue();
 

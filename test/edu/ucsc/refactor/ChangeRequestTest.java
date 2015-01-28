@@ -15,14 +15,14 @@ import static org.junit.Assert.assertThat;
 public class ChangeRequestTest {
 
     @Test public void testChangeRequestForIssueCreation(){
-        final Issue cause   = new Issue(new UnusedMethods());
+        final Issue cause   = Issue.make(new UnusedMethods());
         final ChangeRequest request = ChangeRequest.forIssue(
                 cause,
                 new Source("Test.java", "class Test {}")
         );
 
         assertNotNull(request);
-        assertSame(request.getCauseOfChange(), cause);
+        assertSame(request.getCause(), cause);
         assertThat(request.getParameters().isEmpty(), is(true));
         assertNotNull(request.getSelection());
     }
@@ -33,7 +33,7 @@ public class ChangeRequestTest {
         final ChangeRequest request = ChangeRequest.forEdit(cause);
 
         assertNotNull(request);
-        assertSame(request.getCauseOfChange(), cause);
+        assertSame(request.getCause(), cause);
         assertThat(request.getParameters().isEmpty(), is(true));
         assertNotNull(request.getSelection());
     }

@@ -2,25 +2,40 @@ package edu.ucsc.refactor;
 
 import com.google.common.base.Objects;
 import edu.ucsc.refactor.spi.IssueDetector;
+import edu.ucsc.refactor.spi.Name;
 import edu.ucsc.refactor.spi.Smell;
 import edu.ucsc.refactor.util.Locations;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
-public class Issue extends AbstractCauseOfChange {
-    private final Smell issueName;
+public abstract class Issue extends AbstractCause {
     private final IssueDetector detector;
+    private final Smell         issueName;
 
     /**
      * Instantiate a new Issue.
      *
      * @param detector The detector that detected this issue.
      */
-    public Issue(IssueDetector detector) {
+    Issue(IssueDetector detector) {
         super();
         this.detector  = detector;
-        this.issueName = Smell.from(this.detector.getName());
+        this.issueName = Smell.from(getContextScanner().getName());
+    }
+
+    /**
+     * Creates a new Issue object.
+     *
+     * @param detector the class which detected this issue.
+     * @return a new Issue
+     */
+    public static Issue make(IssueDetector detector){
+        return new SingleIssue(detector);
+    }
+
+    @Override public Name getName() {
+        return issueName;
     }
 
     /**
@@ -28,25 +43,47 @@ public class Issue extends AbstractCauseOfChange {
      *
      * @return The IssueDetector that detected this issue.
      */
-    @Override public IssueDetector getContextScanner() {
+    public IssueDetector getContextScanner() {
         return detector;
     }
 
-    @Override public Smell getName() {
-        return issueName;
-    }
 
     @Override public String more() {
+        return more(0);
+    }
+
+    /**
+     * Adjust the locations (lines) where the issue was found. This is a companion method to the
+     * functionality dealing with incomplete code examples.
+     *
+     * @param noLinesToSubtract lines to subtract from current line.
+     * @return adjusted to String
+     */
+    public String more(int noLinesToSubtract) {
         final Objects.ToStringHelper builder = Objects.toStringHelper(getClass());
         builder.add("name", getName().getKey());
         builder.add("summary", getName().getSummary());
         if(!getAffectedNodes().isEmpty()){
             final Location location = Locations.locate(getAffectedNodes().get(0));
-            int from = location.getStart().getLine();
-            int to   = location.getEnd().getLine();
+            int from = location.getStart().getLine() - noLinesToSubtract;
+            int to   = location.getEnd().getLine()  - noLinesToSubtract;
             builder.add("from(line)", from);
             builder.add("to(line)", to);
         }
         return builder.toString();
+    }
+
+    static class SingleIssue extends Issue {
+        SingleIssue(IssueDetector detector){
+          super(detector);
+        }
+
+        @Override public boolean isSame(Name otherName) {
+            return getName().isSame(otherName);
+        }
+
+        @Override public String toString() {
+            return more();
+        }
     }
 }

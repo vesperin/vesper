@@ -1,5 +1,6 @@
 package edu.ucsc.refactor.util;
 
+import com.google.common.collect.Lists;
 import edu.ucsc.refactor.Location;
 import edu.ucsc.refactor.Position;
 import edu.ucsc.refactor.Source;
@@ -254,5 +255,37 @@ public class Locations {
         return !Locations.isBeforeBaseLocation(base, other)     // !before
                 && !(covers(base, other))                       // !within
                 && !Locations.isAfterBaseLocation(base, other); // !after
+    }
+
+    /**
+     * Adjust a list of location to match a unwrapped code example (shopped off) offset values.
+     * @param locations the list of locations to be adjusted
+     * @param adjusted  the already adjusted source code
+     * @return the list of adjusted locations
+     */
+    public static List<Location> adjustLocations(List<Location> locations, Source adjusted){
+      final List<Location> adjustedLocations = Lists.newLinkedList();
+      for(Location each : locations){
+
+          final int currentStart = each.getStart().getOffset();
+          final int currentEnd   = each.getEnd().getOffset();
+
+          final String locating = each.getSource().getContents().substring(currentStart, currentEnd);
+          final int newStart = adjusted.getContents().indexOf(locating);
+          final int newEnd   = newStart + locating.length();
+
+          final Location adjustedLoc = (newStart < 0 || newEnd < 0) ? null : SourceLocation.createLocation(
+                  adjusted,
+                  adjusted.getContents(),
+                  newStart,
+                  newEnd
+          );
+
+          if(adjustedLoc != null){
+              adjustedLocations.add(adjustedLoc);
+          }
+      }
+
+      return adjustedLocations;
     }
 }

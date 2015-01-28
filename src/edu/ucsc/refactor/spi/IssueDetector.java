@@ -112,7 +112,7 @@ public abstract class IssueDetector implements SourceScanner {
      * @return The created issue.
      */
     protected Issue createIssue() {
-        Issue issue = new Issue(this);
+        Issue issue = Issue.make(this);
         issues.add(issue);
         return issue;
     }
