@@ -19,7 +19,6 @@ import edu.ucsc.refactor.spi.graph.DirectedGraph;
 import edu.ucsc.refactor.spi.graph.GraphUtils;
 import edu.ucsc.refactor.spi.graph.Vertex;
 import edu.ucsc.refactor.util.Locations;
-import edu.ucsc.refactor.util.StringUtil;
 import org.eclipse.jdt.core.dom.*;
 
 import java.util.*;
@@ -225,10 +224,7 @@ public class CodeIntrospector implements Introspector {
         for(Clip each : space.keySet()){
             final List<Location> folds          = space.get(each);
 
-            final String header = Source.currentHeader(each.getSource(), StringUtil
-                    .extractFileName(each.getSource().getName()));
-
-            final Source         adjustedSrc    = Source.unwrap(each.getSource(), header);
+            final Source         adjustedSrc    = Source.unwrap(each.getSource());
             final List<Location> adjustedLocs   = Locations.adjustLocations(
                     folds,
                     adjustedSrc

@@ -125,10 +125,6 @@ public class Source {
      */
     public static Source wrap(Source incomplete, String withName, String withContent){
 
-//        final String content  = new SourceFormatter().format(
-//                withContent + incomplete.getContents() + END
-//        );
-
         final String content = withContent + incomplete.getContents() + END;
 
         final Source revised = from(incomplete, content);
@@ -141,7 +137,7 @@ public class Source {
 
 
     /**
-     * Crops a complete code example (e.g., class A {...}) by removing its class signature
+     * Crops a complete code example (e.g., class A {...}) by removing its class definition header
      * (class ..) and its ending curly brace (e.g., `}`).
      *
      * This method abstracts out the parts of the code example, which for bookkeeping, produced by
@@ -152,6 +148,7 @@ public class Source {
      * can be invoked or not.
      *
      * @param a the Source to be cropped.
+     * @param addon class definition header string
      * @return the cropped Source.
      */
     public static Source unwrap(Source a, String addon){
@@ -167,6 +164,27 @@ public class Source {
         final Source cropped = Source.from(a, updatedContent);
         cropped.setName("Scratched.java");
         return cropped;
+    }
+
+    /**
+     * Crops a complete code example (e.g., class A {...}) by removing its class definition header
+     * (class .. {) and its ending curly brace (e.g., `}`).
+     *
+     * This method abstracts out the parts of the code example, which for bookkeeping, produced by
+     * {@link Source#wrap} when trying to transform incomplete code examples.
+     *
+     * This method should be used only for cases when trying to refactor an incomplete code
+     * example. Having written that, Violette should send information on whether this method
+     * can be invoked or not.
+     *
+     * @param toAdjust the Source to be cropped.
+     * @return the cropped Source.
+     */
+    public static Source unwrap(Source toAdjust){
+        final String header = Source.currentHeader(toAdjust, StringUtil
+                .extractFileName(toAdjust.getName()));
+
+        return unwrap(toAdjust, header);
     }
 
     public static String missingHeader(Introspector introspector, Source a, String name){

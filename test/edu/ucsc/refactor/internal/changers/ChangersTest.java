@@ -1873,6 +1873,49 @@ public class ChangersTest {
         assertNotNull(cropped);
     }
 
+
+
+    @Test public void testSliceContentWithOffsetAdjustment() throws Exception {
+        final Source a = InternalUtil.createIncompleteQuickSortCodeExample();
+
+        final int startOffset = 270;
+        final int endOffset   = 472;
+
+        final SourceSelection adjusted = Vesper.createAdjustedSelection(startOffset, endOffset, a);
+
+        final Context context = new Context(adjusted.getSource());
+        parser.parseJava(context);
+
+        adjusted.setContext(context);
+
+        final ProgramUnitLocator locator   = new ProgramUnitLocator(context);
+        final List<NamedLocation>   locations  = locator.locate(new SelectedUnit(adjusted));
+
+        assertThat(locations.isEmpty(), is(false));
+
+        final Edit edit   = Edit.clipSelection(adjusted);
+
+        for(NamedLocation eachLocation : locations){
+            final ProgramUnitLocation target  = (ProgramUnitLocation)eachLocation;
+            edit.addNode(target.getNode());
+        }
+
+
+        final ClipSelection clipped    = new ClipSelection();
+        final Edit          resolved   = Edits.resolve(edit);
+
+        final Change  change  = clipped.createChange(resolved, Maps.<String, Parameter>newHashMap());
+
+        final Commit commit = change.perform().commit();
+
+        assertNotNull(commit);
+        assertThat(commit.isValidCommit(), is(true));
+
+        final Source result = commit.getSourceAfterChange();
+        final Source cropped = Source.unwrap(result, Source.currentHeader(result, StringUtil.extractFileName(result.getName())));
+        assertNotNull(cropped);
+    }
+
     private static Source deleteMethod(Context context, String methodName){
         final ProgramUnitLocator locator   = new ProgramUnitLocator(context);
         final List<NamedLocation>     locations = locator.locate(new MethodUnit(methodName));
