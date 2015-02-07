@@ -126,6 +126,14 @@ public interface Introspector {
     List<String> detectSyntaxErrors(Source code);
 
     /**
+     * Detects whether a source is a partial snippet.
+     *
+     * @param code The source to be inspected.
+     * @return true if the source is a partial snippet; false otherwise.
+     */
+    boolean detectPartialSnippet(Source code);
+
+    /**
      * Compares two source and return their differences; i.e., insertions, changes, or deletions.
      *
      * Due to multi stage code examples goes from less to more complexity, we assume that

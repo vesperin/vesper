@@ -152,6 +152,15 @@ public class CodeIntrospector implements Introspector {
         );
     }
 
+    @Override public boolean detectPartialSnippet(Source code) {
+        final JavaSnippetParser parser  = new EclipseJavaSnippetParser();
+        final Context           context = new Context(code);
+        final ResultPackage     pkg     = parser.offer(context);
+        return pkg.isSnippet()
+                && EclipseJavaSnippetParser.isMissingTypeDeclarationUnit(pkg.getParsedNode()
+        );
+    }
+
     @Override public Diff differences(Source original, Source revised) {
         return new Diff(original, revised);
     }

@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import edu.ucsc.refactor.internal.EclipseJavaParser;
 import edu.ucsc.refactor.internal.InternalUtil;
+import edu.ucsc.refactor.util.SourceFormatter;
 import edu.ucsc.refactor.util.StringUtil;
 import org.junit.Test;
 
@@ -267,6 +268,52 @@ public class IntrospectorTest {
 
         assertThat(issues.isEmpty(), is(true));
 
+
+    }
+
+    @Test public void testMultistageQuicksort() throws Exception {
+        final Introspector introspector = Vesper.createIntrospector();
+        final Source a = InternalUtil.createCompleteQuickSortCodeExample();
+        // to use merely to test hypotheses
+        clipIt(introspector, a);
+    }
+
+    @Test public void testMultistageDisorganizedCode() throws Exception {
+        final Introspector introspector = Vesper.createIntrospector();
+        final Source a = InternalUtil.createDisorganizedCodeExample();
+        final String content = new SourceFormatter().format(a.getContents());
+        final Source f = Source.from(a, content);
+
+        // to use merely to test hypotheses
+        clipIt(introspector, f);
+    }
+
+    static void clipIt(Introspector introspector, Source toMultistage){
+        final List<Clip> clips = introspector.multiStage(toMultistage);
+        final Map<Clip, List<Location>> summaries = introspector.summarize(clips, 10);
+        // it seems Violette is the one with the bug.
+        for(Clip each : summaries.keySet()){
+            final List<Location> locations = summaries.get(each);
+            final String content = each.getSource().getContents();
+            for(Location eachLocation :  locations){
+                System.out.println(content.substring(eachLocation.getStart().getOffset(),
+                        eachLocation.getEnd().getOffset()));
+            }
+        }
+
+    }
+
+    @Test public void testCompilerErrorIncompleteCode() throws Exception {
+        final Introspector introspector = Vesper.createIntrospector();
+        final Source a = InternalUtil.createIncompleteQuickSortCodeExample();
+
+        assertThat(introspector.detectPartialSnippet(a), is(true));
+
+        final Source b = InternalUtil.createSourceWithOnlyStatements();
+        assertThat(introspector.detectPartialSnippet(b), is(true));
+
+        final Source c = InternalUtil.createCompleteQuickSortCodeExample();
+        assertThat(introspector.detectPartialSnippet(c), is(false));
 
     }
 

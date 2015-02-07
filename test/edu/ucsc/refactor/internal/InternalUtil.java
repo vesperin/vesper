@@ -1007,6 +1007,142 @@ public class InternalUtil {
         return  new Source("WellManners.java", content);
     }
 
+    public static Source createDisorganizedCodeExample() {
+        final String content = "package rajawali.tutorials;\n" +
+                "\n" +
+                "import javax.microedition.khronos.opengles.GL10;\n" +
+                "\n" +
+                "import android.content.Context;\n" +
+                "\n" +
+                "import rajawali.Camera;\n" +
+                "import rajawali.Object3D;\n" +
+                "import rajawali.lights.DirectionalLight;\n" +
+                "import rajawali.materials.Material;\n" +
+                "import rajawali.materials.textures.ATexture.TextureException;\n" +
+                "import rajawali.materials.textures.Texture;\n" +
+                "import rajawali.primitives.Sphere;\n" +
+                "import rajawali.renderer.RajawaliRenderer;\n" +
+                "\n" +
+                "public class RajawaliTutorialRenderer extends RajawaliRenderer {\n" +
+                "\n" +
+                "    public DirectionalLight light;\n" +
+                "    public Object3D sphere;\n" +
+                "    public Context context;\n" +
+                "    public Camera camera;\n" +
+                "\n" +
+                "    public RajawaliTutorialRenderer(Context context) {\n" +
+                "        super(context);\n" +
+                "        this.context = context;\n" +
+                "        setFrameRate(60);\n" +
+                "    }\n" +
+                "\n" +
+                "    public void initScene() {\n" +
+                "        light = new DirectionalLight(1f, 0.2f, -1.0f); // set the direction\n" +
+                "        light.setColor(1.0f, 1.0f, 1.0f);\n" +
+                "        light.setPower(2);\n" +
+                "\n" +
+                "        try{\n" +
+                "            Material material = new Material();\n" +
+                "            material.addTexture(new Texture(\"earthColors\", R.drawable.earthtruecolor_nasa_big));\n" +
+                "            material.setColorInfluence(0);\n" +
+                "            sphere = new Sphere(1, 24, 24);\n" +
+                "            sphere.setMaterial(material);\n" +
+                "            getCurrentScene().addLight(light);\n" +
+                "            super.addChild(sphere);\n" +
+                "        } catch (TextureException e){\n" +
+                "            e.printStackTrace();\n" +
+                "        }\n" +
+                "\n" +
+                "        getCurrentCamera().setZ(4.2f);\n" +
+                "    }\n" +
+                "\n" +
+                "    @Override\n" +
+                "    public void onDrawFrame(GL10 glUnused) {\n" +
+                "        super.onDrawFrame(glUnused);\n" +
+                "        sphere.setRotY(sphere.getRotY() + 1);\n" +
+                "    }\n" +
+                "}";
+
+        return new Source("RajawaliTutorialRenderer.java", content);
+    }
+
+    public static Source createCompleteQuickSortCodeExample(){
+        final String content = "import java.util.Random;\n" +
+                "\n" +
+                "public class Quicksort\n" +
+                "{\n" +
+                "     private static Random rand = new Random();\n" +
+                "\n" +
+                "     public static void quicksort(int[] arr, int left, int right)\n" +
+                "     {\n" +
+                "          if (left < right)\n" +
+                "          {\n" +
+                "               int pivot = randomizedPartition(arr, left, right);\n" +
+                "               quicksort(arr, left, pivot);\n" +
+                "               quicksort(arr, pivot + 1, right);\n" +
+                "          }\n" +
+                "     }\n" +
+                "\n" +
+                "     private static int randomizedPartition(int[] arr, int left, int right)\n" +
+                "     {\n" +
+                "          int swapIndex = left + rand.nextInt(right - left) + 1;\n" +
+                "          swap(arr, left, swapIndex);\n" +
+                "          return partition(arr, left, right);\n" +
+                "     }\n" +
+                "\n" +
+                "     private static int partition(int[] arr, int left, int right)\n" +
+                "     {\n" +
+                "          int pivot = arr[left];\n" +
+                "          int i = left - 1;\n" +
+                "          int j = right + 1;\n" +
+                "          while (true)\n" +
+                "          {\n" +
+                "               do\n" +
+                "                    j--;\n" +
+                "               while (arr[j] > pivot);\n" +
+                "\n" +
+                "               do\n" +
+                "                    i++;\n" +
+                "               while (arr[i] < pivot);\n" +
+                "\n" +
+                "               if (i < j)\n" +
+                "                    swap(arr, i, j);\n" +
+                "               else\n" +
+                "                    return j;\n" +
+                "          }\n" +
+                "     }\n" +
+                "\n" +
+                "     private static void swap(int[] arr, int i, int j)\n" +
+                "     {\n" +
+                "          int tmp = arr[i];\n" +
+                "          arr[i] = arr[j];\n" +
+                "          arr[j] = tmp;\n" +
+                "     }\n" +
+                "\n" +
+                "     // Sort 100k elements that are in reversed sorted order\n" +
+                "     public static void main(String[] args)\n" +
+                "     {\n" +
+                "          int arr[] = new int[100000];\n" +
+                "          for (int i = 0; i < arr.length; i++)\n" +
+                "               arr[i] = arr.length - i;\n" +
+                "\n" +
+                "          System.out.println(\"First 20 elements\");\n" +
+                "          System.out.print(\"Before sort: \");\n" +
+                "          for (int i = 0; i < 20; i++)\n" +
+                "               System.out.print(arr[i] + \" \");\n" +
+                "          System.out.println();\n" +
+                "\n" +
+                "          quicksort(arr, 0, arr.length - 1);\n" +
+                "          System.out.print(\"After sort: \");\n" +
+                "          for (int i = 0; i < 20; i++)\n" +
+                "               System.out.print(arr[i] + \" \");\n" +
+                "          System.out.println();\n" +
+                "     }\n" +
+                "\n" +
+                "}";
+        return new Source("Quicksort.java", content);
+    }
+
     public static Source createIncompleteQuickSortCodeExample(){
         final String content = "private static Random rand = new Random();\n" +
                 "\n" +

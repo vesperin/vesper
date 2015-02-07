@@ -57,7 +57,7 @@ public class EclipseJavaSnippetParser extends EclipseJavaParser implements JavaS
     }
 
 
-    private static boolean isWellConstructedCompilationUnit(ASTNode parsed){
+    public static boolean isWellConstructedCompilationUnit(ASTNode parsed){
         if(AstUtil.isOfType(CompilationUnit.class, parsed)){
             final CompilationUnit unit = AstUtil.exactCast(CompilationUnit.class, parsed);
             if(!unit.toString().equals("") && !unit.types().isEmpty()) {
@@ -68,7 +68,7 @@ public class EclipseJavaSnippetParser extends EclipseJavaParser implements JavaS
         return false;
     }
 
-    private static boolean isMissingTypeDeclarationUnit(ASTNode parsed){
+    public static boolean isMissingTypeDeclarationUnit(ASTNode parsed){
         if(AstUtil.isOfType(TypeDeclaration.class, parsed)){
             final TypeDeclaration unit = AstUtil.exactCast(TypeDeclaration.class, parsed);
             if(!unit.toString().equals("") && "MISSING".equals(unit.getName().getIdentifier())) {

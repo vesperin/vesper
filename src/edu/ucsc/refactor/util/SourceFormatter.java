@@ -362,6 +362,7 @@ public class SourceFormatter implements Formatter {
         options.put("org.eclipse.jdt.core.formatter.alignment_for_parameters_in_method_declaration.count_dependent","16|5|80");
         options.put("org.eclipse.jdt.core.formatter.comment.new_lines_at_javadoc_boundaries","true");
         options.put("org.eclipse.jdt.core.formatter.blank_lines_after_imports","1");
+        options.put("org.eclipse.jdt.core.formatter.blank_lines_between_import_groups","0");
         options.put("org.eclipse.jdt.core.formatter.insert_space_after_comma_in_multiple_local_declarations","insert");
         options.put("org.eclipse.jdt.core.formatter.indent_body_declarations_compare_to_enum_constant_header","true");
         options.put("org.eclipse.jdt.core.formatter.insert_space_after_semicolon_in_for","insert");
