@@ -63,6 +63,40 @@ public class IntrospectorTest {
         assertThat(diff.getInsertsFromOriginal().isEmpty(), is(false));
     }
 
+
+    @Test public void testResolveInsertDifferences() throws Exception {
+        final Source src = InternalUtil.createQuickSortSource();
+
+        final Introspector introspector = Vesper.createIntrospector();
+        final List<Clip> clipSpace = makeClipSpace(src, introspector);
+
+        final Diff diff = introspector.differences(
+                clipSpace.get(1).getSource(),
+                clipSpace.get(2).getSource()
+        );
+
+        final Source resolved = diff.resolve();
+        assertThat(resolved != null, is(true));
+    }
+
+
+    @Test public void testResolveWeirdMultistagedExample() throws Exception {
+        final Source src = InternalUtil.createWeirdMultistagedClass();
+
+        final Introspector introspector = Vesper.createIntrospector();
+        final List<Clip> clipSpace = makeClipSpace(src, introspector);
+
+        assertThat(clipSpace.size(), is(1));
+
+        final Map<Clip, List<Location>> summaries = introspector.summarize(clipSpace, 10);
+        assertThat(summaries.size(), is(1));
+
+        for(Clip each : summaries.keySet()){
+            final List<Location> foldings = summaries.get(each);
+            assertThat(foldings.size(), is(4));
+        }
+    }
+
     @Test public void testChangeDifferences() throws Exception {
         final Source src = InternalUtil.createQuickSortSource();
 

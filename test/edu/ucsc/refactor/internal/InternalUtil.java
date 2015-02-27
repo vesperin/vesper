@@ -1287,6 +1287,53 @@ public class InternalUtil {
         return new Source("Scratched.java", content);
     }
 
+    public static Source createWeirdMultistagedClass(){
+        String content = "public class Tester extends Activity {\n" +
+                "\n" +
+                "  String[] vals = {\"here\", \"are\", \"some\", \"values\"};\n" +
+                "  Spinner spinner;\n" +
+                "\n" +
+                "  /** Called when the activity is first created. */\n" +
+                "  @Override\n" +
+                "  public void onCreate(Bundle savedInstanceState) {\n" +
+                "    super.onCreate(savedInstanceState);\n" +
+                "    setContentView(R.layout.main);\n" +
+                "    spinner = (Spinner) findViewById(R.id.spin);\n" +
+                "    ArrayAdapter<String> ad =\n" +
+                "        new ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, vals);\n" +
+                "    spinner.setAdapter(ad);\n" +
+                "    Log.i(\"\", \"\" + spinner.getChildCount());\n" +
+                "    Timer t = new Timer();\n" +
+                "    t.schedule(new TimerTask() {\n" +
+                "\n" +
+                "      @Override\n" +
+                "      public void run() {\n" +
+                "        int a = spinner.getCount();\n" +
+                "        int b = spinner.getChildCount();\n" +
+                "        System.out.println(\"Count =\" + a);\n" +
+                "        System.out.println(\"ChildCount =\" + b);\n" +
+                "        for (int i = 0; i < b; i++) {\n" +
+                "          View v = spinner.getChildAt(i);\n" +
+                "          if (v == null) {\n" +
+                "            System.out.println(\"View not found\");\n" +
+                "          } else {\n" +
+                "            v.setOnClickListener(new View.OnClickListener() {\n" +
+                "\n" +
+                "              @Override\n" +
+                "              public void onClick(View v) {\n" +
+                "                Log.i(\"\", \"click\");\n" +
+                "              }\n" +
+                "            });\n" +
+                "          }\n" +
+                "        }\n" +
+                "      }\n" +
+                "    }, 500);\n" +
+                "  }\n" +
+                "}";
+
+        return new Source("Scratched.java", content);
+    }
+
 
 
     public static Source createSource(String name, StringBuilder builder){

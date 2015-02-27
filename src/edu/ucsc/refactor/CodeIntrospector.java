@@ -496,6 +496,14 @@ public class CodeIntrospector implements Introspector {
 
             while(itr.hasNext()) {
                 final MethodDeclaration eachMethod = itr.next();
+
+                // guarantees that only main methods are considered;
+                // any methods in closures or anonymous classes will be
+                // ignored.
+                if(eachMethod.getParent().getNodeType() != ASTNode.TYPE_DECLARATION ){
+                  continue;
+                }
+
                 final Refactorer refactorer = Vesper.createRefactorer();
                 final Location loc = Locations.locate(eachMethod);
                 final int startOffset = loc.getStart().getOffset();
@@ -598,9 +606,33 @@ public class CodeIntrospector implements Introspector {
                                AstUtil.parent(CompilationUnit.class, invoke)
                          );
 
-                         if(VISITED.contains(method)) return;
-                         buildSubtree(parent, method, G);
-                         Q.offer(method);
+                         if(method == null){
+                             final List args = invoke.arguments();
+                             for(Object arg : args){
+                                 final ASTNode argNode = (ASTNode) arg;
+                                 if(argNode.getNodeType() == ASTNode.CLASS_INSTANCE_CREATION){
+                                     final ClassInstanceCreation creation =
+                                             (ClassInstanceCreation) argNode;
+                                     final AnonymousClassDeclaration anonymousClassDeclaration =
+                                     creation.getAnonymousClassDeclaration();
+                                     if(anonymousClassDeclaration != null){
+                                         final List bodyDeclares = anonymousClassDeclaration
+                                                 .bodyDeclarations();
+                                         for( Object eachBodyDeclare : bodyDeclares){
+                                             final ASTNode eachBodyNode = (ASTNode) eachBodyDeclare;
+                                             buildSubtree(parent, eachBodyNode, G);
+                                             Q.offer(eachBodyNode);
+                                         }
+
+                                     }
+
+                                 }
+                             }
+                         } else {
+                             if(VISITED.contains(method)) return;
+                             buildSubtree(parent, method, G);
+                             Q.offer(method);
+                         }
                        } else if (isTypeDeclarationStatement(child)){
                          final SimpleType type = (SimpleType) child;
                          final ASTNode declaration =  AstUtil.findDeclaration(
