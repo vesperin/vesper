@@ -1335,6 +1335,56 @@ public class InternalUtil {
     }
 
 
+    public static Source createSourceWithDuplicatedCode(){
+        final String content = "import java.util.Random;\n" +
+                "\n" +
+                "public class Quicksort {\n" +
+                "  private static Random rand = new Random();\n" +
+                "\n" +
+                "  private static int randomPartition(int[] arr, int left, int right) {\n" +
+                "    int swapIndex = left + rand.nextInt(right - left) + 1;\n" +
+                "    swap(arr, left, swapIndex);\n" +
+                "    return partition(arr, left, right);\n" +
+                "  }\n" +
+                "\n" +
+                "  private static int randomPartition2(int[] arr, int left, int right) {\n" +
+                "    int swapIndex = left + rand.nextInt(right - left) + 1;\n" +
+                "    swap(arr, left, swapIndex);\n" +
+                "    return partition(arr, left, right);\n" +
+                "  }\n" +
+                "\n" +
+                "  private static int partition(int[] arr, int left, int right) {\n" +
+                "    int pivot = arr[left];\n" +
+                "    int i = left - 1;\n" +
+                "    int j = right + 1;\n" +
+                "    while (true) {\n" +
+                "      do\n" +
+                "        j--;\n" +
+                "      while (arr[j] > pivot);\n" +
+                "      do\n" +
+                "        i++;\n" +
+                "      while (arr[i] < pivot);\n" +
+                "      if (i < j)\n" +
+                "        swap(arr, i, j);\n" +
+                "      else\n" +
+                "        return j;\n" +
+                "    }\n" +
+                "  }\n" +
+                "\n" +
+                "  private static void swap(int[] arr, int i, int j) {\n" +
+                "    int tmp = arr[i];\n" +
+                "    arr[i] = arr[j];\n" +
+                "    arr[j] = tmp;\n" +
+                "  }\n" +
+                "\n" +
+                "}";
+        return createSource(
+                "Name.java",
+                new StringBuilder(content)
+        );
+    }
+
+
 
     public static Source createSource(String name, StringBuilder builder){
         return new Source(name, builder.toString());

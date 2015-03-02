@@ -1392,6 +1392,24 @@ public class ChangersTest {
 
     }
 
+    @Test public void testFaultyDeduplicateLogic() throws Exception {
+
+        final Context context = new Context(InternalUtil.createSourceWithDuplicatedCode());
+        parser.parseJava(context);
+
+        final DuplicatedCode detector = new DuplicatedCode();
+        final Set<Issue>        issues   = detector.detectIssues(context);
+
+        final DeduplicateCode remove = new DeduplicateCode();
+        for(Issue each : issues){
+            Change change = remove.createChange(each, Maps.<String, Parameter>newHashMap());
+            assertNotNull(change);
+            assertThat(change.isValid(), is(true));
+        }
+
+
+    }
+
 
     @Test public void testRemoveSelectedRegion(){
         final Source  code    = InternalUtil.createGeneralSource();

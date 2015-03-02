@@ -1,5 +1,6 @@
 package edu.ucsc.refactor.internal.changers;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import edu.ucsc.refactor.Cause;
 import edu.ucsc.refactor.Change;
@@ -72,12 +73,14 @@ public class DeduplicateCode extends SourceChanger {
             // rename each found invocation using the name of the original method declaration.
             // After that, remove the duplicated method declaration.
             if(AstUtil.isOfType(MethodDeclaration.class, nodes.get(0))){
-                final MethodDeclaration original    = AstUtil.exactCast(MethodDeclaration.class, nodes.get(0));
+                final MethodDeclaration original    = Preconditions.checkNotNull(
+                        AstUtil.exactCast(MethodDeclaration.class, nodes.get(0))
+                );
+
                 final Iterable<ASTNode> rest        = Iterables.skip(nodes, 1);
                 for(ASTNode eachClone : rest) {
                     final MethodDeclaration duplicate  = AstUtil.exactCast(MethodDeclaration.class, eachClone);
-                    final MethodDeclaration copied     = AstUtil.copySubtree(MethodDeclaration.class, root.getAST(), duplicate);
-                    final boolean           sameReturn = sameReturnType(original, copied);
+                    final boolean           sameReturn = sameReturnType(original, duplicate);
 
                     if(!sameReturn) { // all or none. We don't do partial deduplication
                         throw new RuntimeException("automatic deduplication cannot be done on methods "
@@ -87,7 +90,7 @@ public class DeduplicateCode extends SourceChanger {
                     }
 
 
-                    final MethodInvocationVisitor invokesOfDuplication = new MethodInvocationVisitor(copied.getName());
+                    final MethodInvocationVisitor invokesOfDuplication = new MethodInvocationVisitor(duplicate.getName());
                     root.accept(invokesOfDuplication);
                     final Set<MethodInvocation>   invokes              = invokesOfDuplication.getMethodInvocations();
 
