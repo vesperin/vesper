@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import edu.ucsc.refactor.internal.EclipseJavaParser;
 import edu.ucsc.refactor.internal.InternalUtil;
+import edu.ucsc.refactor.spi.find.TypeSpace;
 import edu.ucsc.refactor.util.SourceFormatter;
 import edu.ucsc.refactor.util.StringUtil;
 import org.junit.Test;
@@ -21,6 +22,10 @@ import static org.junit.Assert.*;
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public class IntrospectorTest {
+    static {
+      TypeSpace.getInstance();
+    }
+
     @Test public void testClipSpaceGeneration() throws Exception {
         final Source src = InternalUtil.createQuickSortSource();
 
@@ -232,6 +237,43 @@ public class IntrospectorTest {
 
         assertThat(adjusted.isEmpty(), is(false));
 
+    }
+
+
+    @Test public void testRecommendMissingImports() throws Exception {
+
+      final Introspector introspector = Vesper.createIntrospector();
+      final Source a = InternalUtil.createSourceWithGenericsAndMissingImports();
+
+      final Set<String> expectedImports = Sets.newHashSet(
+            "java.util.PriorityQueue;",
+            "java.util.List;",
+            "java.util.Collections;",
+            "java.util.ArrayList;"
+      );
+
+      final List<String> directives = Lists.newLinkedList(introspector.detectMissingImports(a));
+      for(String each : directives){
+        assertThat(expectedImports.contains(each), is(true));
+      }
+    }
+
+    @Test public void testRecommendMissingImports2() throws Exception {
+
+      final Introspector introspector = Vesper.createIntrospector();
+      final Source a = InternalUtil.createSourceUsingStackoverflowExampleWithMissingImports();
+
+      final Set<String> expectedImports = Sets.newHashSet(
+            "java.util.Arrays;",
+            "java.io.InputStreamReader;",
+            "java.io.IOException;",
+            "java.io.BufferedReader;"
+      );
+
+      final List<String> directives = Lists.newLinkedList(introspector.detectMissingImports(a));
+      for(String each : directives){
+        assertThat(expectedImports.contains(each), is(true));
+      }
     }
 
     @Test public void testSummarizedMultistageOfCodeExample() throws Exception {

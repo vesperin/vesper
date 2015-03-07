@@ -534,6 +534,12 @@ public class InternalUtil {
     }
 
 
+    public static Source createSourceWithGenericsAndMissingImports(){
+      final String content = "class Vertex implements Comparable<Vertex>\n{\n    public final String name;\n    public Edge[] adjacencies;\n    public double minDistance = Double.POSITIVE_INFINITY;\n    public Vertex previous;\n    public Vertex(String argName) { name = argName; }\n    public String toString() { return name; }\n    public int compareTo(Vertex other)\n    {\n        return Double.compare(minDistance, other.minDistance);\n    }\n\n}\n\n\nclass Edge\n{\n    public final Vertex target;\n    public final double weight;\n    public Edge(Vertex argTarget, double argWeight)\n    { target = argTarget; weight = argWeight; }\n}\n\npublic class Dijkstra\n{\n    public static void computePaths(Vertex source)\n    {\n        source.minDistance = 0.;\n        PriorityQueue<Vertex> vertexQueue = new PriorityQueue<Vertex>();\n    vertexQueue.add(source);\n\n    while (!vertexQueue.isEmpty()) {\n        Vertex u = vertexQueue.poll();\n\n            // Visit each edge exiting u\n            for (Edge e : u.adjacencies)\n            {\n                Vertex v = e.target;\n                double weight = e.weight;\n                double distanceThroughU = u.minDistance + weight;\n        if (distanceThroughU < v.minDistance) {\n            vertexQueue.remove(v);\n\n            v.minDistance = distanceThroughU ;\n            v.previous = u;\n            vertexQueue.add(v);\n        }\n            }\n        }\n    }\n\n    public static List<Vertex> getShortestPathTo(Vertex target)\n    {\n        List<Vertex> path = new ArrayList<Vertex>();\n        for (Vertex vertex = target; vertex != null; vertex = vertex.previous)\n            path.add(vertex);\n\n        Collections.reverse(path);\n        return path;\n    }\n\n    public static void main(String[] args)\n    {\n        // mark all the vertices \n        Vertex A = new Vertex(\"A\");\n        Vertex B = new Vertex(\"B\");\n        Vertex D = new Vertex(\"D\");\n        Vertex F = new Vertex(\"F\");\n        Vertex K = new Vertex(\"K\");\n        Vertex J = new Vertex(\"J\");\n        Vertex M = new Vertex(\"M\");\n        Vertex O = new Vertex(\"O\");\n        Vertex P = new Vertex(\"P\");\n        Vertex R = new Vertex(\"R\");\n        Vertex Z = new Vertex(\"Z\");\n\n        // set the edges and weight\n        A.adjacencies = new Edge[]{ new Edge(M, 8) };\n        B.adjacencies = new Edge[]{ new Edge(D, 11) };\n        D.adjacencies = new Edge[]{ new Edge(B, 11) };\n        F.adjacencies = new Edge[]{ new Edge(K, 23) };\n        K.adjacencies = new Edge[]{ new Edge(O, 40) };\n        J.adjacencies = new Edge[]{ new Edge(K, 25) };\n        M.adjacencies = new Edge[]{ new Edge(R, 8) };\n        O.adjacencies = new Edge[]{ new Edge(K, 40) };\n        P.adjacencies = new Edge[]{ new Edge(Z, 18) };\n        R.adjacencies = new Edge[]{ new Edge(P, 15) };\n        Z.adjacencies = new Edge[]{ new Edge(P, 18) };\n\n\n        computePaths(A); // run Dijkstra\n        System.out.println(\"Distance to \" + Z + \": \" + Z.minDistance);\n        List<Vertex> path = getShortestPathTo(Z);\n        System.out.println(\"Path: \" + path);\n    }\n}";
+      return createSource("Vertex.java", new StringBuilder(content));
+    }
+
+
     public static Source createSourceWithOneUsedStaticNestedClass(){
         final String content = "import java.util.List; \n" +
                 "class Preconditions {\n" +
@@ -652,8 +658,83 @@ public class InternalUtil {
 
     }
 
+  public static Source createSourceUsingStackoverflowExampleWithMissingImports(){
+    final String content = "public class MergeSort {\n" +
+          "\n" +
+          "\tpublic static void main(String[] args) throws IOException {\n" +
+          "\t\tBufferedReader R = new BufferedReader(new InputStreamReader(System.in));\n" +
+          "\t\tint arraySize = Integer.parseInt(R.readLine());\n" +
+          "\t\tint[] inputArray = new int[arraySize];\n" +
+          "\t\tfor (int i = 0; i < arraySize; i++) {\n" +
+          "\t\t\tinputArray[i] = Integer.parseInt(R.readLine());\n" +
+          "\t\t}\n" +
+          "\t\tmergeSort(inputArray);\n" +
+          "\n" +
+          "\t\tfor (int j = 0; j < inputArray.length; j++) {\n" +
+          "\t\t\tSystem.out.println(inputArray[j]);\n" +
+          "\t\t}\n" +
+          "\n" +
+          "\t}\n" +
+          "\n" +
+          "\tstatic void mergeSort(int[] A) {\n" +
+          "\t\tif (A.length > 1) {\n" +
+          "\t\t\tint q = A.length / 2;\n" +
+          "\t\t\tint[] leftArray = Arrays.copyOfRange(A, 0, q);\n" +
+          "\t\t\tint[] rightArray = Arrays.copyOfRange(A, q + 1, A.length);\n" +
+          "\t\t\tmergeSort(leftArray);\n" +
+          "\t\t\tmergeSort(rightArray);\n" +
+          "\t\t\tA = merge(leftArray, rightArray);\n" +
+          "\t\t}\n" +
+          "\t}\n" +
+          "\n" +
+          "\tstatic int[] merge(int[] l, int[] r) {\n" +
+          "\t\tint totElem = l.length + r.length;\n" +
+          "\t\tint[] a = new int[totElem];\n" +
+          "\t\tint i, li, ri;\n" +
+          "\t\ti = li = ri = 0;\n" +
+          "\t\twhile (i < totElem) {\n" +
+          "\t\t\tif ((li < l.length) && (ri < r.length)) {\n" +
+          "\t\t\t\tif (l[li] < r[ri]) {\n" +
+          "\t\t\t\t\ta[i] = l[li];\n" +
+          "\t\t\t\t\ti++;\n" +
+          "\t\t\t\t\tli++;\n" +
+          "\t\t\t\t} else {\n" +
+          "\t\t\t\t\ta[i] = r[ri];\n" +
+          "\t\t\t\t\ti++;\n" +
+          "\t\t\t\t\tri++;\n" +
+          "\t\t\t\t}\n" +
+          "\t\t\t} else {\n" +
+          "\t\t\t\tif (li >= l.length) {\n" +
+          "\t\t\t\t\twhile (ri < r.length) {\n" +
+          "\t\t\t\t\t\ta[i] = r[ri];\n" +
+          "\t\t\t\t\t\ti++;\n" +
+          "\t\t\t\t\t\tri++;\n" +
+          "\t\t\t\t\t}\n" +
+          "\t\t\t\t}\n" +
+          "\t\t\t\tif (ri >= r.length) {\n" +
+          "\t\t\t\t\twhile (li < l.length) {\n" +
+          "\t\t\t\t\t\ta[i] = l[li];\n" +
+          "\t\t\t\t\t\tli++;\n" +
+          "\t\t\t\t\t\ti++;\n" +
+          "\t\t\t\t\t}\n" +
+          "\t\t\t\t}\n" +
+          "\t\t\t}\n" +
+          "\t\t}\n" +
+          "\t\treturn a;\n" +
+          "\n" +
+          "\t}\n" +
+          "\n" +
+          "}";
 
-    public static Source createSourceWithShortNameMembers(){
+    return createSource(
+          "MergeSort.java",
+          new StringBuilder(content)
+    );
+
+  }
+
+
+  public static Source createSourceWithShortNameMembers(){
         final String content = "class Quicksort {\n" +
                 "  public static void qsort(int[] arrayOfIntegers, int si, int ei) {\n" +
                 "    if (ei <= si || si >= ei) {\n" +
