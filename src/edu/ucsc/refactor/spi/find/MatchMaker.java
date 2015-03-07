@@ -92,12 +92,7 @@ class MatchMaker {
     }
 
     @Override public boolean matches(String that) {
-      boolean allowed = false;
-      for (String pkg : allowedPackages) {
-        allowed |= that.startsWith(pkg) && !that.startsWith("edu.ucsc.refactor");
-      }
-
-      return allowed;
+      return allowedPackages.contains(that);
     }
   }
 
