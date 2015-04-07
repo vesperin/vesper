@@ -21,7 +21,7 @@ public interface DirectedGraph <T> {
      *          the vertex to set as the root and optionally add if it does not
      *          exist in the graph.
      */
-    public void addRootVertex(Vertex<T> root);
+    void addRootVertex(Vertex<T> root);
 
     /**
      * Insert a directed Edge<T> into the graph.
@@ -136,5 +136,5 @@ public interface DirectedGraph <T> {
      */
     int size();
 
-    @Override public String toString();
+    @Override String toString();
 }

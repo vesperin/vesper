@@ -371,7 +371,7 @@ public class CodeIntrospector implements Introspector {
     // detect used packages
     for (String pkg : packages) {
       final Set<String> namespaces = TypeSpace.getInstance().getClassInPackage(pkg);
-      if (namespaces == null) continue;
+      if (namespaces.isEmpty()) continue;
 
       final Set<String> common = Sets.intersection(namespaces, types);
       if (common.isEmpty()) continue;
@@ -394,6 +394,10 @@ public class CodeIntrospector implements Introspector {
       final Tuple tuple = freq.get(key);
       for(String typeName : tuple.elements){
         if(TypeSpace.inJavaLang(typeName)) continue;
+
+        if(TypeSpace.inJavaUtil(typeName) && !"java.util".equals(key)){
+          continue;
+        }
 
         if(seenNamespace.containsKey(typeName) && !seenNamespace.get(typeName).isEmpty()){
           final Set<String> otherLinkedPackages = seenNamespace.get(typeName);
@@ -513,6 +517,20 @@ public class CodeIntrospector implements Introspector {
           continue;
         }
 
+        // guarantees that methods in non-top-level classes (i.e., inner or
+        // static nested class) are not crawled by the multi stager.
+        if(AstUtil.isClass(eachMethod.getParent())){
+          final TypeDeclaration typeDeclarationStatement = AstUtil.exactCast(
+                TypeDeclaration.class,
+                eachMethod.getParent()
+          );
+          // thx to http://stackoverflow.com/questions/15699568/extract-inner-classes-using-eclipse-jdt
+          if (!typeDeclarationStatement.isPackageMemberTypeDeclaration()) {
+            continue; // skip methods in non top level classes
+          }
+        }
+
+
         final Refactorer refactorer = Vesper.createRefactorer();
         final Location loc = Locations.locate(eachMethod);
         final int startOffset = loc.getStart().getOffset();
@@ -611,7 +629,15 @@ public class CodeIntrospector implements Introspector {
               Q.offer(child);
             } else {
               parent = parent == null ? (Block) node : parent;
-              if (MethodInvocation.class.isInstance(child)) {
+
+              if(ExpressionStatement.class.isInstance(child)){
+                final ExpressionStatement statement = AstUtil.exactCast(ExpressionStatement
+                      .class, child);
+
+                buildSubtree(parent, statement.getExpression(), G);
+                Q.offer(statement.getExpression());
+
+              } else if (MethodInvocation.class.isInstance(child)) {
                 final MethodInvocation invoke = (MethodInvocation) child;
                 final ASTNode method = AstUtil.findDeclaration(
                       invoke.resolveMethodBinding(),
@@ -636,6 +662,15 @@ public class CodeIntrospector implements Introspector {
                           Q.offer(eachBodyNode);
                         }
 
+                      } else {
+                        final ASTNode innerClass = AstUtil.findDeclaration(
+                              creation.resolveTypeBinding(),
+                              AstUtil.parent(CompilationUnit.class, creation)
+                        );
+
+                        if (VISITED.contains(innerClass)) return;
+                        buildSubtree(parent, innerClass, G);
+                        Q.offer(innerClass);
                       }
 
                     }

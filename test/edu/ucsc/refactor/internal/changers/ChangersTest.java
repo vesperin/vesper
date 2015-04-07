@@ -1622,7 +1622,8 @@ public class ChangersTest {
     }
 
 
-    @Test public void testRecoveryOfStatementsFromOnlyStatementsCodeSnippet() throws Exception {
+    @Test public void testRecoveryOfStatementsFromOnlyStatementsCodeSnippet() throws
+          Exception {
         final Source  code    = InternalUtil.createSourceWithOnlyStatements();
         final Context context = new Context(code);
 
@@ -1644,6 +1645,16 @@ public class ChangersTest {
         final Set<String> staticImports  = AstUtil.getUsedStaticTypesInCode(compilationUnit);
         assertThat(staticImports.size(), is(0));
 
+    }
+
+    @Test public void testBasicImportRecommendation(){
+      final Source code = new Source("Bootstrap.java", "class Bootstrap {void inject(List<Object>" +
+            " object){}}");
+      final Context context = new Context(code);
+      parser.parseJava(context);
+      final Introspector introspector = Vesper.createIntrospector();
+      final Set<String>  required     = introspector.detectMissingImports(code);
+      assertThat(required.isEmpty(), is(false));
     }
 
     @Test public void testCodeSnippetParsing() throws Exception {

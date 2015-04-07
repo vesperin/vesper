@@ -658,6 +658,224 @@ public class InternalUtil {
 
     }
 
+  public static Source createFaultyCleanupOfCodeExample(){
+    final String content = "public static void main(String[] args) {\n" +
+          "    DateFormat dateFormatter = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, Locale.getDefault());\n" +
+          "    TimeZone.setDefault(TimeZone.getDefault());\n" +
+          "    SimpleDateFormat simpleDateFormatter = new SimpleDateFormat(\"dd/MM/yyyy\");\n" +
+          "    SimpleDateFormat simpleTimeFormatter = new SimpleDateFormat(\"hh:mm:ss a\");\n" +
+          "    Date today = new Date();\n" +
+          "    String localeFormattedInTime = dateFormatter.format(today);\n" +
+          "    try {\n" +
+          "        Date parsedDate = dateFormatter.parse(localeFormattedInTime);\n" +
+          "        System.out.println(\"Locale:\" + localeFormattedInTime);\n" +
+          "        System.out.println(\"After parsing a date: \" + parsedDate);\n" +
+          "\n" +
+          "        simpleDateFormatter.setTimeZone(TimeZone.getDefault());\n" +
+          "        simpleTimeFormatter.setTimeZone(TimeZone.getDefault());\n" +
+          "\n" +
+          "        String date = simpleDateFormatter.format(today);\n" +
+          "        String time = simpleTimeFormatter.format(today);\n" +
+          "        System.out.println(\"Today's only date: \" + date);\n" +
+          "        System.out.println(\"Today's only time: \" + time);\n" +
+          "\n" +
+          "        //// Locale to UTC converting\n" +
+          "\n" +
+          "        System.out.println(\"TimeZone.getDefault() >>> \" + TimeZone.getDefault());\n" +
+          "\n" +
+          "        simpleDateFormatter.setTimeZone(TimeZone.getTimeZone(\"UTC\"));\n" +
+          "        simpleTimeFormatter.setTimeZone(TimeZone.getTimeZone(\"UTC\"));\n" +
+          "\n" +
+          "        String utcDate = simpleDateFormatter.format(today);\n" +
+          "        String utcTime = simpleTimeFormatter.format(today);\n" +
+          "        System.out.println(\"Convert into UTC's date: \" + utcDate);\n" +
+          "        System.out.println(\"Convert into UTC's only time: \" + utcTime);\n" +
+          "\n" +
+          "        //// UTC to locale converting\n" +
+          "        /**\n" +
+          "         ** //////EDIT\n" +
+          "        */\n" +
+          "        // at this point your utcDate,utcTime are strings that are formated in UTC\n" +
+          "        // so first you need to parse them back to Dates using UTC format not Locale\n" +
+          "        Date getDate = simpleDateFormatter.parse(utcDate);\n" +
+          "        Date getTime = simpleTimeFormatter.parse(utcTime);\n" +
+          "\n" +
+          "        // NOW after having the Dates you can change the formatters timezone to your\n" +
+          "        // local to format them into strings\n" +
+          "        simpleDateFormatter.setTimeZone(TimeZone.getDefault());\n" +
+          "        simpleTimeFormatter.setTimeZone(TimeZone.getDefault());\n" +
+          "\n" +
+          "        String getLocalDate = simpleDateFormatter.format(getDate);\n" +
+          "        String getLocalTime = simpleTimeFormatter.format(getTime);\n" +
+          "        System.out.println(\"Get local date: \" + getLocalDate);\n" +
+          "        System.out.println(\"Get local time: \" + getLocalTime);\n" +
+          "\n" +
+          "    } catch (ParseException e) {\n" +
+          "        e.printStackTrace();\n" +
+          "    }\n" +
+          "\n" +
+          "}";
+
+    return createSource(
+          "Scratched.java",
+          new StringBuilder(content)
+    );
+  }
+
+
+  public static Source createSourceWithStaticNestedClass(){
+    final String content = "public class MainActivity extends Activity {\n" +
+          "\n" +
+          "  @Override\n" +
+          "  protected void onCreate(Bundle savedInstanceState) {\n" +
+          "    super.onCreate(savedInstanceState);\n" +
+          "    setContentView(R.layout.activity_main);\n" +
+          "\n" +
+          "    if (savedInstanceState == null) {\n" +
+          "      getFragmentManager().beginTransaction().add(R.id.container, new PlaceholderFragment())\n" +
+          "          .commit();\n" +
+          "    }\n" +
+          "\n" +
+          "    //Button button = (Button)findViewById(R.id.try_button);      \n" +
+          "    //button.setOnClickListener(this);\n" +
+          "  }\n" +
+          "\n" +
+          "  /**\n" +
+          "   public void onClick(View v) {\n" +
+          "\n" +
+          "   }\n" +
+          "   */\n" +
+          "\n" +
+          "  @Override\n" +
+          "  public boolean onCreateOptionsMenu(Menu menu) {\n" +
+          "\n" +
+          "    // Inflate the menu; this adds items to the action bar if it is present.\n" +
+          "    getMenuInflater().inflate(R.menu.main, menu);\n" +
+          "    return true;\n" +
+          "  }\n" +
+          "\n" +
+          "  @Override\n" +
+          "  public boolean onOptionsItemSelected(MenuItem item) {\n" +
+          "    // Handle action bar item clicks here. The action bar will\n" +
+          "    // automatically handle clicks on the Home/Up button, so long\n" +
+          "    // as you specify a parent activity in AndroidManifest.xml.\n" +
+          "    int id = item.getItemId();\n" +
+          "    if (id == R.id.action_settings) {\n" +
+          "      return true;\n" +
+          "    }\n" +
+          "    return super.onOptionsItemSelected(item);\n" +
+          "  }\n" +
+          "\n" +
+          "  /**\n" +
+          "   * A placeholder fragment containing a simple view.\n" +
+          "   */\n" +
+          "  public static class PlaceholderFragment extends Fragment implements OnClickListener {\n" +
+          "\n" +
+          "    public PlaceholderFragment() {}\n" +
+          "\n" +
+          "    @Override\n" +
+          "    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {\n" +
+          "      View rootView = inflater.inflate(R.layout.fragment_main, container, false);\n" +
+          "\n" +
+          "      Button button = (Button) rootView.findViewById(R.id.try_button);\n" +
+          "      button.setOnClickListener(this);\n" +
+          "\n" +
+          "      return rootView;\n" +
+          "    }\n" +
+          "\n" +
+          "    @Override\n" +
+          "    public void onClick(View v) {\n" +
+          "      // TODO Auto-generated method stub\n" +
+          "      Toast.makeText(getActivity(), \"I'm clicked!\", Toast.LENGTH_SHORT).show();\n" +
+          "    }\n" +
+          "\n" +
+          "  }\n" +
+          "}";
+
+      return createSource(
+            "MainActivity.java",
+            new StringBuilder(content)
+      );
+
+  }
+
+  public static Source createSourceWithInnerClass(){
+    final String content = "public class MainActivity extends Activity {\n" +
+          "\n" +
+          "  @Override\n" +
+          "  protected void onCreate(Bundle savedInstanceState) {\n" +
+          "    super.onCreate(savedInstanceState);\n" +
+          "    setContentView(R.layout.activity_main);\n" +
+          "\n" +
+          "    if (savedInstanceState == null) {\n" +
+          "      getFragmentManager().beginTransaction().add(R.id.container, new PlaceholderFragment())\n" +
+          "          .commit();\n" +
+          "    }\n" +
+          "\n" +
+          "    //Button button = (Button)findViewById(R.id.try_button);      \n" +
+          "    //button.setOnClickListener(this);\n" +
+          "  }\n" +
+          "\n" +
+          "  /**\n" +
+          "   public void onClick(View v) {\n" +
+          "\n" +
+          "   }\n" +
+          "   */\n" +
+          "\n" +
+          "  @Override\n" +
+          "  public boolean onCreateOptionsMenu(Menu menu) {\n" +
+          "\n" +
+          "    // Inflate the menu; this adds items to the action bar if it is present.\n" +
+          "    getMenuInflater().inflate(R.menu.main, menu);\n" +
+          "    return true;\n" +
+          "  }\n" +
+          "\n" +
+          "  @Override\n" +
+          "  public boolean onOptionsItemSelected(MenuItem item) {\n" +
+          "    // Handle action bar item clicks here. The action bar will\n" +
+          "    // automatically handle clicks on the Home/Up button, so long\n" +
+          "    // as you specify a parent activity in AndroidManifest.xml.\n" +
+          "    int id = item.getItemId();\n" +
+          "    if (id == R.id.action_settings) {\n" +
+          "      return true;\n" +
+          "    }\n" +
+          "    return super.onOptionsItemSelected(item);\n" +
+          "  }\n" +
+          "\n" +
+          "  /**\n" +
+          "   * A placeholder fragment containing a simple view.\n" +
+          "   */\n" +
+          "  public class PlaceholderFragment extends Fragment implements OnClickListener {\n" +
+          "\n" +
+          "    public PlaceholderFragment() {}\n" +
+          "\n" +
+          "    @Override\n" +
+          "    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {\n" +
+          "      View rootView = inflater.inflate(R.layout.fragment_main, container, false);\n" +
+          "\n" +
+          "      Button button = (Button) rootView.findViewById(R.id.try_button);\n" +
+          "      button.setOnClickListener(this);\n" +
+          "\n" +
+          "      return rootView;\n" +
+          "    }\n" +
+          "\n" +
+          "    @Override\n" +
+          "    public void onClick(View v) {\n" +
+          "      // TODO Auto-generated method stub\n" +
+          "      Toast.makeText(getActivity(), \"I'm clicked!\", Toast.LENGTH_SHORT).show();\n" +
+          "    }\n" +
+          "\n" +
+          "  }\n" +
+          "}";
+
+    return createSource(
+          "MainActivity.java",
+          new StringBuilder(content)
+    );
+
+  }
+
+
   public static Source createSourceUsingStackoverflowExampleWithMissingImports(){
     final String content = "public class MergeSort {\n" +
           "\n" +

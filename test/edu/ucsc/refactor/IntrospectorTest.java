@@ -276,6 +276,45 @@ public class IntrospectorTest {
       }
     }
 
+    @Test public void testWrapUnwrapCode() throws Exception {
+      final Introspector introspector = Vesper.createIntrospector();
+      final Source a = InternalUtil.createFaultyCleanupOfCodeExample();
+
+      Source b = null;
+      try {
+        b = Source.wrap(a, "Scratched", Source.missingHeader(introspector, a, "Scratched"));
+        assertThat(b != null, is(true));
+      } finally {
+        assert b != null;
+        final Source c = Source.unwrap(b, Source.currentHeader(b, "Scratched"));
+        assertThat(c != null, is(true));
+      }
+    }
+
+
+    @Test public void testStatingWontMissStaticNestedClass() throws Exception {
+      final Introspector introspector = Vesper.createIntrospector();
+      final Source a = InternalUtil.createSourceWithStaticNestedClass();
+
+      assertThat(a != null, is(true));
+
+      clipIt(introspector, a);
+
+    }
+
+    // TODO(Huascar) fix bug
+    // methods in inner or static nested classes are crawled by the
+    // multi stage-r and they should not be. This is clearly a bug
+    @Test public void testStatingWontMissInnerClass() throws Exception {
+      final Introspector introspector = Vesper.createIntrospector();
+      final Source a = InternalUtil.createSourceWithInnerClass();
+
+      assertThat(a != null, is(true));
+
+      clipIt(introspector, a);
+
+    }
+
     @Test public void testSummarizedMultistageOfCodeExample() throws Exception {
         final Introspector introspector = Vesper.createIntrospector();
         final Source a = InternalUtil.createIncompleteQuickSortCodeExample();
