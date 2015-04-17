@@ -7,6 +7,7 @@ import com.google.common.collect.Sets;
 import edu.ucsc.refactor.internal.EclipseJavaParser;
 import edu.ucsc.refactor.internal.InternalUtil;
 import edu.ucsc.refactor.spi.find.TypeSpace;
+import edu.ucsc.refactor.util.Locations;
 import edu.ucsc.refactor.util.SourceFormatter;
 import edu.ucsc.refactor.util.StringUtil;
 import org.junit.Test;
@@ -41,11 +42,11 @@ public class IntrospectorTest {
         final Introspector introspector = Vesper.createIntrospector();
         final List<Clip> clipSpace = makeClipSpace(src, introspector);
         final List<Clip> clipOneToBaseClip  = ImmutableList.of(clipSpace.get(clipSpace.size() -
-                1), clipSpace.get(1));
+              1), clipSpace.get(1));
 
         final Diff diff = introspector.differences(
-                clipOneToBaseClip.get(0).getSource(),
-                clipOneToBaseClip.get(1).getSource()
+              clipOneToBaseClip.get(0).getSource(),
+              clipOneToBaseClip.get(1).getSource()
         );
 
         assertThat(diff.getChangesFromOriginal().isEmpty(), is(true));
@@ -76,8 +77,8 @@ public class IntrospectorTest {
         final List<Clip> clipSpace = makeClipSpace(src, introspector);
 
         final Diff diff = introspector.differences(
-                clipSpace.get(1).getSource(),
-                clipSpace.get(2).getSource()
+              clipSpace.get(1).getSource(),
+              clipSpace.get(2).getSource()
         );
 
         final Source resolved = diff.resolve();
@@ -93,12 +94,18 @@ public class IntrospectorTest {
 
         assertThat(clipSpace.size(), is(1));
 
-        final Map<Clip, List<Location>> summaries = introspector.summarize(clipSpace, 10);
+        final Map<Clip, List<Location>> summaries = introspector.summarize(clipSpace, 7);
         assertThat(summaries.size(), is(1));
 
         for(Clip each : summaries.keySet()){
-            final List<Location> foldings = summaries.get(each);
-            assertThat(foldings.size(), is(4));
+          final List<Location> foldings = summaries.get(each);
+          assertThat(foldings.size(), is(4));
+
+          for(Location eachLocation : foldings){
+            final String content = eachLocation.getSource().getContents();
+            System.out.println(content.substring(eachLocation.getStart().getOffset(),
+                  eachLocation.getEnd().getOffset()));
+          }
         }
     }
 
@@ -114,8 +121,8 @@ public class IntrospectorTest {
         final Source c = Source.from(b, b.getContents().replaceAll("swap", "exchange"));
 
         final Diff diff = introspector.differences(
-                a,
-                c
+              a,
+              c
         );
 
         assertThat(diff.getChangesFromOriginal().isEmpty(), is(false));
@@ -130,8 +137,8 @@ public class IntrospectorTest {
         final List<Clip> clipSpace = makeClipSpace(src, introspector);
 
         final Clip clip = Clip.sync(
-                introspector,
-                clipSpace.subList(1, clipSpace.size())
+              introspector,
+              clipSpace.subList(1, clipSpace.size())
         );
 
         assertThat(clip != null, is(true));
@@ -164,19 +171,56 @@ public class IntrospectorTest {
 
 
     @Test public void testSummarizeSingleSourceCode() throws Exception {
-        final Source src = InternalUtil.createQuickSortSource();
+      final Source src = InternalUtil.createQuickSortSource();
 
-        final Introspector introspector = Vesper.createIntrospector();
-        List<Location> foldingLocations = introspector.summarize("quicksort", src, 17);
-        assertThat(foldingLocations.isEmpty(), is(false));
+      final Introspector introspector = Vesper.createIntrospector();
+      List<Location> foldingLocations = introspector.summarize("quicksort", src, 15);
+      assertThat(foldingLocations.isEmpty(), is(false));
+
+      final Context  context = new Context(src);
+      final Location whole   = Locations.locate(new EclipseJavaParser().parseJava(context));
+
+      int      total   = (whole.getEnd().getLine() - whole.getStart().getLine()) + 1;
+      for(Location each : foldingLocations){
+         total = total - (Math.abs(each.getEnd().getLine() - each.getStart().getLine()) + 1);
+      }
+
+      System.out.println(total);
+
+      for(Location each : foldingLocations){
+        final String content = each.getSource().getContents();
+        System.out.println(content.substring(each.getStart().getOffset(),
+              each.getEnd().getOffset()));
+      }
+    }
+
+    @Test public void testSummarizeWholeSourceCode_NoStartingMethod() throws Exception {
+      final Source src = InternalUtil.createQuickSortSource();
+
+      final Introspector introspector = Vesper.createIntrospector();
+      List<Location> foldingLocations = introspector.summarize(src, 17);
+      assertThat(foldingLocations.size(), is(4));
+
+      for(Location each : foldingLocations){
+        final String content = each.getSource().getContents();
+        System.out.println(content.substring(each.getStart().getOffset(),
+              each.getEnd().getOffset()));
+      }
+
     }
 
     @Test public void testSummarizeSingleMethodAndLongSourceCode() throws Exception {
         final Source src = InternalUtil.createSourceWithShortNameMembers();
 
         final Introspector introspector = Vesper.createIntrospector();
-        List<Location> foldingLocations = introspector.summarize("qsort", src, 17);
+        List<Location> foldingLocations = introspector.summarize("qsort", src, 13);
         assertThat(foldingLocations.isEmpty(), is(false));
+
+      for(Location each : foldingLocations){
+        final String content = each.getSource().getContents();
+        System.out.println(content.substring(each.getStart().getOffset(),
+              each.getEnd().getOffset()));
+      }
 
     }
 

@@ -17,7 +17,6 @@ import edu.ucsc.refactor.spi.SpaceGeneration;
 import edu.ucsc.refactor.spi.find.TypeSpace;
 import edu.ucsc.refactor.spi.graph.DirectedAcyclicGraph;
 import edu.ucsc.refactor.spi.graph.DirectedGraph;
-import edu.ucsc.refactor.spi.graph.GraphUtils;
 import edu.ucsc.refactor.spi.graph.Vertex;
 import edu.ucsc.refactor.util.Locations;
 import org.eclipse.jdt.core.dom.*;
@@ -36,6 +35,8 @@ public class CodeIntrospector implements Introspector {
       return obj.getSource().getContents().split(System.getProperty("line.separator")).length;
     }
   };
+
+  private static final String WHOLE_CODE = "wholecode";
 
   private final Host host;
 
@@ -146,6 +147,7 @@ public class CodeIntrospector implements Introspector {
     return byLinesOfCode.sortedCopy(ImmutableList.copyOf(clipSpace));
   }
 
+
   @Override public Map<Clip, List<Location>> summarize(List<Clip> clipSpace, int bound) {
     Map<Clip, List<Location>> result = Maps.newLinkedHashMap();
 
@@ -164,16 +166,42 @@ public class CodeIntrospector implements Introspector {
 
   @Override public List<Location> summarize(String startingMethod, Source code, int bound) {
 
+    // Note: the null clip; i.e., the one with no starting method.
+    // When there's no starting method then summarize code example considering the
+    // whole source code and then return result. Otherwise, perform the code below.
+    //
+    // By doing this, I will be able to show that my technique is novel and interesting.
     final Context context = makeContext(code);
-    final MethodDeclaration method = getMethod(startingMethod, context);
+    if(WHOLE_CODE.equals(startingMethod)) { return summarizeWhole(context, bound); } else {
 
-    if (method == null) return Lists.newLinkedList();
+      final MethodDeclaration method = getMethod(startingMethod, context);
 
+      if (method == null) return Lists.newLinkedList();
+
+      final BlockVisitor visitor = new BlockVisitor();
+      method.accept(visitor);
+
+      return solveCodeSummarizationProblem(context, visitor.graph(), bound);
+
+    }
+  }
+
+  @Override public List<Location> summarize(Source code, int bound) {
+    return summarize(WHOLE_CODE, code, bound);
+  }
+
+  private static List<Location> summarizeWhole(Context context, int bound){
     final BlockVisitor visitor = new BlockVisitor();
-    method.accept(visitor);
+    context.accept(visitor);
 
-    final List<Location> foldableLocations = summarizeCodeBySolvingTreeKnapsack(
-          visitor.graph(),
+    return solveCodeSummarizationProblem(context, visitor.graph(), bound);
+  }
+
+  private static List<Location> solveCodeSummarizationProblem(
+        Context context, DirectedGraph<Item> graph, int bound){
+
+    final List<Location> foldableLocations = solveTreeKnapsack(
+          graph,
           bound/*lines of code*/
     );
 
@@ -185,7 +213,6 @@ public class CodeIntrospector implements Introspector {
     }
 
     return foldableLocations;
-
   }
 
   /**
@@ -246,65 +273,59 @@ public class CodeIntrospector implements Introspector {
     return result;
   }
 
-  private static List<Location> summarizeCodeBySolvingTreeKnapsack(DirectedGraph<Item> graph, int capacity) {
-
+  private static List<Location> solveTreeKnapsack(DirectedGraph<Item> graph, int capacity) {
     final LinkedList<Vertex<Item>> Q = Lists.newLinkedList(graph.getVertices());
-    Q.addFirst(new Vertex<Item>()); // sentinel required to move the idx to 1
-
 
     final int N = Q.size();
-    final int W = capacity < 0 ? 0 : capacity;
+    @SuppressWarnings("UnnecessaryLocalVariable")
+    final int W = capacity;
 
-    int[][] opt = new int[N][W + 1];
-    boolean[][] sol = new boolean[N][W + 1];
+    double[] profit = new double[N + 1];
+    int[]    weight = new int[N + 1];
 
-    for (int i = 1; i < Q.size(); i++) {
-      for (int j = 1; j < W + 1; j++) {
+    // add vertices values
+    for( int n = 1; n <= N; n++){
+      profit[n] = graph.getVertex(n - 1).getData().benefit;
+      weight[n] = graph.getVertex(n - 1).getData().weight;
+    }
 
-        final Vertex<Item> current = Q.get(i);
-        final Item item = current.getData();
+    double[][]  opt = new double [N + 1][W + 1];
+    boolean[][] sol = new boolean[N + 1][W + 1];
 
-        if (j - item.weight < 0) {
-          opt[i][j] = opt[i - 1][j];
-        } else {
-          final int bi = item.benefit;
-          final int wi = item.weight;
+    for(int n = 1; n <= N; n++){
+      for(int w = 1; w <= W; w++){
+        // don't take item n
+        double option1 = opt[n-1][w];
 
-          if (isPrecedenceConstraintMaintained(opt, i, j, graph) &&
-                opt[i - 1][j - wi] + bi > opt[i - 1][j]) {
-
-            opt[i][j] = opt[i - 1][j - wi] + bi;
-            sol[i][j] = true;
-
-          }
+        // take item n
+        double option2 = Double.MIN_VALUE;
+        if (weight[n] <= w) {
+          option2 = profit[n] + opt[n-1][w-weight[n]];
         }
+
+        // select better of two options only if there is a precedence relation
+        // between item n and n - 1
+        opt[n][w] = Math.max(option1, option2);
+        sol[n][w] = (option2 > option1)
+              && isPrecedenceConstraintMaintained(opt, n, w, graph);
       }
     }
 
     // determine which items to take
-
-    boolean[] take = new boolean[N];
-    for (int idx = 0, w = W; idx < N; idx++) {
-      if (sol[idx][w]) {
-        take[idx] = true;
-        w = w - Q.get(idx).getData().weight;
-      } else {
-        take[idx] = false;
-      }
+    boolean[] take = new boolean[N+1];
+    for (int n = N, w = W; n > 0; n--) {
+      if (sol[n][w]) { take[n] = true;  w = w - weight[n]; }
+      else           { take[n] = false;                    }
     }
 
     final Set<Vertex<Item>> keep = Sets.newLinkedHashSet();
-
     for (int n = 1; n < N; n++) {
       if (take[n]) {
         keep.add(graph.getVertex(n - 1));
       }
     }
 
-    Q.removeFirst();   // remove the null item
-    Q.removeAll(keep); // leave the elements that will be folded
-
-
+    Q.removeAll(keep);
     final List<Location> locations = Lists.newLinkedList();
     for (Vertex<Item> foldable : Q) {
       locations.add(Locations.locate(foldable.getData().node));
@@ -314,16 +335,17 @@ public class CodeIntrospector implements Introspector {
   }
 
 
-  private static boolean isPrecedenceConstraintMaintained(int[][] opt, int i, int j, DirectedGraph<Item> graph) {
+  private static boolean isPrecedenceConstraintMaintained(
+        double[][] opt, int i, int j,
+        DirectedGraph<Item> graph) {
 
     final Vertex<Item> parent = graph.getVertex(i - 1);
-    final Vertex<Item> child = graph.size() == i ? null : graph.getVertex(i);
+    final Vertex<Item> child  = (graph.size() == i
+          ? null
+          : graph.getVertex(i)
+    );
 
-    if (opt[i][j] != opt[i - 1][j] && parent.hasEdge(child)) {
-      return true;
-    }
-
-    return true;
+    return opt[i][j] != opt[i - 1][j] && parent.hasEdge(child);
   }
 
   static MethodDeclaration getMethod(String name, Context context) {
@@ -362,7 +384,7 @@ public class CodeIntrospector implements Introspector {
 
     final Set<String> types = AstUtil.getUsedTypesInCode(context.getCompilationUnit());
     final Set<String> packages = getJdkPackages();
-    final Map<String, Tuple> freq = Maps.newHashMap();
+    final Map<String, Record> freq = Maps.newHashMap();
 
     final Set<String> result = Sets.newHashSet();
     // if duplicate, the pkg with max number of instances win
@@ -376,23 +398,23 @@ public class CodeIntrospector implements Introspector {
       final Set<String> common = Sets.intersection(namespaces, types);
       if (common.isEmpty()) continue;
 
-      Tuple t;
+      Record t;
       if (freq.containsKey(pkg)) {
         t = freq.get(pkg).update(common);
         freq.put(pkg, t);
       } else {
-        t = new Tuple(common.size(), common);
+        t = new Record(common.size(), common);
         freq.put(pkg, t);
       }
 
       addSeenBefore(seenNamespace, common, pkg);
     }
 
-    final Map<String, Tuple> copy = Maps.newLinkedHashMap(freq);
+    final Map<String, Record> copy = Maps.newLinkedHashMap(freq);
     // build package directive
     for (String key : freq.keySet()) {
-      final Tuple tuple = freq.get(key);
-      for(String typeName : tuple.elements){
+      final Record record = freq.get(key);
+      for(String typeName : record.elements){
         if(TypeSpace.inJavaLang(typeName)) continue;
 
         if(TypeSpace.inJavaUtil(typeName) && !"java.util".equals(key)){
@@ -414,7 +436,7 @@ public class CodeIntrospector implements Introspector {
     return result;
   }
 
-  static boolean isThisPackageMax(String currentPackage, Map<String, Tuple> copy, Set<String>
+  static boolean isThisPackageMax(String currentPackage, Map<String, Record> copy, Set<String>
         otherLinkedPackages){
     final int currentPackageWeight = copy.get(currentPackage).val;
 
@@ -717,19 +739,29 @@ public class CodeIntrospector implements Introspector {
     }
 
 
-    private static int calculateBenefit(ASTNode/*Block*/ node, int depth) {
+    private static double calculateBenefit(ASTNode/*Block*/ node, int depth) {
 
       final CompilationUnit root = AstUtil.parent(CompilationUnit.class, node);
 
-      int b = 0;
-      for (ASTNode each : AstUtil.getChildren(node)) {
-        final SimpleName name = AstUtil.getSimpleName(each);
-        if (name != null) {
-          b += (AstUtil.findByNode(root, name).size() / depth);
+      double b = 0;
+      for(ASTNode each : AstUtil.getChildren(node)){
+        final ElementsVisitor visitor = new ElementsVisitor();
+        each.accept(visitor);
+        final Set<SimpleName> elements = visitor.nodes;
+        for(SimpleName eachName : elements){
+          final double size = Math.abs(
+                size(AstUtil.findByNode(root, eachName)) - 1 /*declaration*/
+          );
+
+          b += size / depth;
         }
       }
 
       return b;
+    }
+
+    private static double size(List<SimpleName> list){
+      return (double)Sets.newHashSet(list).size();
     }
 
 
@@ -760,18 +792,16 @@ public class CodeIntrospector implements Introspector {
       if (!DirectedAcyclicGraph.isDescendantOf(n, c)) {
         graph.addEdge(n, c);
 
-        updateItemValue(n, c, graph);
+        updateItemValue(n, c);
       }
 
     }
 
 
-    private static void updateItemValue(Vertex<Item> from, Vertex<Item> to, DirectedGraph<Item> graph) {
+    private static void updateItemValue(Vertex<Item> from, Vertex<Item> to) {
       // update benefit of the `to` node
 
-      final List<Vertex<Item>> nodesAtDepth = ImmutableList.of(graph.getRootVertex());
-      final int depth = GraphUtils.depth(0, to, nodesAtDepth);
-
+      final int depth = to.getData().getDepth();
       to.getData().benefit = to.getData().benefit + calculateBenefit(to.getData().node, depth);
 
 
@@ -790,7 +820,7 @@ public class CodeIntrospector implements Introspector {
 
     final ASTNode node;
 
-    int benefit;
+    double benefit;
     int weight;
 
     Item(ASTNode node, int benefit) {
@@ -803,6 +833,19 @@ public class CodeIntrospector implements Introspector {
       this(node, 1);
     }
 
+    int getDepth(){
+      ASTNode parent = node;
+      int depth = 0;
+      do {
+        parent = parent.getParent();
+        if (parent != null) {
+          depth ++;
+        }
+      } while (parent != null);
+
+      return depth;
+    }
+
 
     static Item of(ASTNode node) {
       return new Item(node);
@@ -810,7 +853,8 @@ public class CodeIntrospector implements Introspector {
 
     private static int calculateNumberOfLines(ASTNode node) {
       final Location location = Locations.locate(node);
-      return Math.abs(location.getEnd().getLine() - location.getStart().getLine());
+
+      return Math.abs(location.getEnd().getLine() - location.getStart().getLine()) + 1/*inclusive*/;
     }
 
     @Override public int hashCode() {
@@ -828,20 +872,68 @@ public class CodeIntrospector implements Introspector {
   }
 
 
-  private static class Tuple {
+  private static class Record {
     final int val;
     final Set<String> elements;
 
-    Tuple(int val, Set<String> elements) {
+    Record(int val, Set<String> elements) {
       this.val = val;
       this.elements = elements;
     }
 
-    Tuple update(Set<String> seed) {
+    Record update(Set<String> seed) {
       final Set<String> merged = Sets.union(this.elements, seed);
       final int freq = merged.size();
 
-      return new Tuple(freq, merged);
+      return new Record(freq, merged);
+    }
+  }
+
+  static class ElementsVisitor extends SourceVisitor {
+    final Set<SimpleName> nodes = Sets.newHashSet();
+    final Set<ASTNode> visited = Sets.newHashSet();
+    @Override public boolean visit(FieldAccess node) {
+      nodes.add(node.getName());
+      return false;
+    }
+
+    @Override public boolean visit(ArrayAccess node) {
+      if(!visited.contains(node)){
+        visited.add(node);
+        node.accept(this);
+      }
+      return false;
+    }
+
+    @Override public boolean visit(MethodInvocation node) {
+      nodes.add(node.getName());
+      for(Object each : node.arguments()){
+        final ASTNode arg = (ASTNode)each;
+        visited.add(arg);
+        arg.accept(this);
+      }
+      return false;
+    }
+
+    @Override public boolean visit(SuperFieldAccess node) {
+      nodes.add(node.getName());
+      return false;
+    }
+
+    @Override public boolean visit(SuperMethodInvocation node) {
+      nodes.add(node.getName());
+      return false;
+    }
+
+
+    @Override public boolean visit(SimpleName node) {
+      nodes.add(node);
+      return false;
+    }
+
+    @Override public boolean visit(LabeledStatement node) {
+      nodes.add(node.getLabel());
+      return false;
     }
   }
 }

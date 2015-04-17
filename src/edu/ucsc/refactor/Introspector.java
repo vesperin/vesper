@@ -174,7 +174,7 @@ public interface Introspector {
      *
      * @param clip a clip extracted from a code example.
      * @param bound tuning parameter (lines of code) for summarization.
-     * @return a map between clips and foldable code areas; together they represent
+     * @return a list of foldable code areas; together they represent
      *      the summary of a code example.
      */
     List<Location> summarize(Clip clip, int bound);
@@ -190,4 +190,13 @@ public interface Introspector {
      * @return a list of foldable locations
      */
     List<Location> summarize(String startingMethod, Source code, int bound);
+
+    /**
+     * Summarizes a code example given a limited number of lines of code.
+     *
+     * @param code The code example.
+     * @param bound Tuning parameter (lines of code) for summarization.
+     * @return a list of foldable locations
+     */
+    List<Location> summarize(Source code, int bound);
 }
