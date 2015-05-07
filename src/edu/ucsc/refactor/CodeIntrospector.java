@@ -95,7 +95,10 @@ public class CodeIntrospector implements Introspector {
   }
 
   @Override public Set<String> detectMissingImports(Source code) {
-    return recommendImports(code);
+    final Set<String> typesIn = typesInside(code);
+    if(typesIn.isEmpty()) return ImmutableSet.of();
+
+    return recommendImports(typesIn);
   }
 
   @Override public List<Change> detectImprovements(Source code) {
@@ -188,6 +191,13 @@ public class CodeIntrospector implements Introspector {
 
   @Override public List<Location> summarize(Source code, int bound) {
     return summarize(WHOLE_CODE, code, bound);
+  }
+
+  @Override public Set<String> typesInside(Source code) {
+    final Context context = makeContext(code);
+    final Set<String> localTypes   = AstUtil.getUsedTypesInCode(context.getCompilationUnit());
+    final Set<String> staticTypes  = AstUtil.getUsedStaticTypesInCode(context.getCompilationUnit());
+    return Sets.union(localTypes, staticTypes);
   }
 
   private static List<Location> summarizeWhole(Context context, int bound){
@@ -376,13 +386,11 @@ public class CodeIntrospector implements Introspector {
   /**
    * Recommend the required import directives for source to be syntactically correct.
    *
-   * @param code The source to be scanned through looking for potential imports to recommend.
+   * @param typesIn set of types found in the source code.
    * @return the required import directives.
    */
-  static Set<String> recommendImports(Source code) {
-    final Context context = makeContext(code);
-
-    final Set<String> types = AstUtil.getUsedTypesInCode(context.getCompilationUnit());
+  static Set<String> recommendImports(Set<String> typesIn) {
+    final Set<String> types = Preconditions.checkNotNull(typesIn);
     final Set<String> packages = getJdkPackages();
     final Map<String, Record> freq = Maps.newHashMap();
 

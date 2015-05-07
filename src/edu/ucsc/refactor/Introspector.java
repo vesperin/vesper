@@ -199,4 +199,11 @@ public interface Introspector {
      * @return a list of foldable locations
      */
     List<Location> summarize(Source code, int bound);
+
+    /**
+     * Returns all of the types inside a given code example.
+     * @param code the code example
+     * @return the set of types inside the example.
+     */
+    Set<String> typesInside(Source code);
 }
