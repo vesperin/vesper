@@ -348,6 +348,19 @@ public class IntrospectorTest {
       }
     }
 
+    @Test public void testWeirdSideEffect(){
+      final Source code = new Source("Weird.java", "class Bootstrap {void inject(List<Object> " +
+            "object){}}");
+      final Introspector introspector = Vesper.createIntrospector();
+      final List<Clip> m = introspector.multiStage(code);
+      final Map<Clip, List<Location>> s = introspector.summarize(m, 15);
+
+      for(Clip each : s.keySet()){
+        assertThat(s.get(each).isEmpty(), is(true));
+      }
+
+    }
+
     @Test public void testWrapUnwrapCode() throws Exception {
       final Introspector introspector = Vesper.createIntrospector();
       final Source a = InternalUtil.createFaultyCleanupOfCodeExample();

@@ -329,7 +329,7 @@ public class CodeIntrospector implements Introspector {
     }
 
     final Set<Vertex<Item>> keep = Sets.newLinkedHashSet();
-    for (int n = 1; n < N; n++) {
+    for (int n = 1; n <= N; n++) {
       if (take[n]) {
         keep.add(graph.getVertex(n - 1));
       }
@@ -349,13 +349,20 @@ public class CodeIntrospector implements Introspector {
         double[][] opt, int i, int j,
         DirectedGraph<Item> graph) {
 
+
     final Vertex<Item> parent = graph.getVertex(i - 1);
-    final Vertex<Item> child  = (graph.size() == i
+    final Vertex<Item> child = (graph.size() == i
           ? null
           : graph.getVertex(i)
     );
 
-    return opt[i][j] != opt[i - 1][j] && parent.hasEdge(child);
+    // a graph made of a single node implies the following:
+    // - the single node is the root
+    // - no precedence constraints can be enforced since it has not parent and no children
+    final boolean singleNode    = graph.size() == 1;
+    final boolean pass          = singleNode && graph.isRootVertex(parent) && child == null;
+
+    return  (pass) || (opt[i][j] != opt[i - 1][j] && parent.hasEdge(child));
   }
 
   static MethodDeclaration getMethod(String name, Context context) {
