@@ -245,4 +245,17 @@ public class StringUtil {
 
        return offset;
     }
+
+    /**
+     * Splits the content of a file into separate lines.
+     *
+     * @param content The content to split.
+     * @return a List of all lines in the content string.
+     */
+    public static List<String> contentToLines(String content) {
+
+        return normalize(
+                Splitter.on(System.getProperty("line.separator")).split(content)
+        );
+    }
 }

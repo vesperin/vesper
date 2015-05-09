@@ -1,6 +1,5 @@
 package edu.ucsc.refactor;
 
-import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import difflib.*;
 import edu.ucsc.refactor.util.SourceFormatter;
@@ -123,8 +122,8 @@ public class Diff {
 
     private Patch getPatch() {
         return DiffUtils.diff(
-                contentToLines(original.getContents()),
-                contentToLines(revised.getContents())
+                StringUtil.contentToLines(original.getContents()),
+                StringUtil.contentToLines(revised.getContents())
         );
     }
 
@@ -142,8 +141,8 @@ public class Diff {
     public Source resolve() {
         final Patch patch = getPatch();
         try {
-            final List<?> applied = patch.applyTo(contentToLines(original.getContents()));
-            if (!applied.equals(contentToLines(revised.getContents()))) return null;
+            final List<?> applied = patch.applyTo(StringUtil.contentToLines(original.getContents()));
+            if (!applied.equals(StringUtil.contentToLines(revised.getContents()))) return null;
 
             final StringBuilder stringList = new StringBuilder();
             final Iterator<?>   itr        = applied.iterator();
@@ -161,20 +160,6 @@ public class Diff {
         } catch (PatchFailedException e) {
             throw new RuntimeException("Unable to resolved differences between the sources!");
         }
-    }
-
-
-    /**
-     * Splits the content of a file into separate lines.
-     *
-     * @param content The content to split.
-     * @return a List of all lines in the content string.
-     */
-    private static List<String> contentToLines(String content) {
-
-        return StringUtil.normalize(
-                Splitter.on(System.getProperty("line.separator")).split(content)
-        );
     }
 
 

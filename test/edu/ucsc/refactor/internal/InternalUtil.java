@@ -1296,6 +1296,16 @@ public class InternalUtil {
     }
 
 
+  public static Source createStatementOnlyCodeExample(){
+    final String content = "\tSystem.out.println(\"Hello, world!\");\n" +
+          "\tSystem.out.println(\"Hello, world!\");\n";
+//          +
+//          "\tprivate void aloha(){}\n";
+
+    return  new Source("EditMe.java", content);
+  }
+
+
     public static Source createMethodWithShellCodeExample(){
         final String content = "class WellManners {\n" +
                 "  public void greet() {\n" +

@@ -271,15 +271,37 @@ public class IntrospectorTest {
     @Test public void testMultistageOfIncompleteCodeExample() throws Exception {
 
         final Introspector introspector = Vesper.createIntrospector();
+        final CodePacker packer = new JavaCodePacker();
         final Source a = InternalUtil.createIncompleteQuickSortCodeExample();
 
         final List<String> directives = Lists.newLinkedList(introspector.detectMissingImports(a));
         final String addon = StringUtil.concat("Quicksort", true, directives);
-
+        final List<String> directives2 = Lists.newLinkedList(packer.missingImports(a, ""));
+        assertEquals(directives, directives2);
 
         final Map<Clip, List<Location>> adjusted   = summarizedSpace(introspector, a, addon);
 
+
+        final Source packed = packer.packs(a, "Quicksort");
+        final List<Clip> clips2 = introspector.multiStage(packed);
+        final Map<Clip, List<Location>> adjusted2 = introspector.summarize(clips2, 17);
+
         assertThat(adjusted.isEmpty(), is(false));
+        assertThat(adjusted2.isEmpty(), is(false));
+
+        assertThat(adjusted.size() == adjusted2.size(), is(true));
+        final int N = adjusted.size();
+
+        final List<Clip> setA = Lists.newArrayList(adjusted.keySet());
+        final List<Clip> setB = Lists.newArrayList(adjusted2.keySet());
+
+
+        for(int i = 0; i < N; i++){
+           final Clip c1 = setA.get(i);
+           final Clip c2 = setB.get(i);
+
+           assertThat(c1.getSource().equals(c2.getSource()), is(true));
+        }
 
     }
 
@@ -297,6 +319,9 @@ public class IntrospectorTest {
       );
 
       final List<String> directives = Lists.newLinkedList(introspector.detectMissingImports(a));
+      final CodePacker packer = new JavaCodePacker();
+      final List<String> directive2s = Lists.newLinkedList(packer.missingImports(a, ""));
+      assertEquals(directives,directive2s);
       for(String each : directives){
         assertThat(expectedImports.contains(each), is(true));
       }
@@ -305,6 +330,7 @@ public class IntrospectorTest {
     @Test public void testRecommendMissingImports2() throws Exception {
 
       final Introspector introspector = Vesper.createIntrospector();
+      final CodePacker   packer       = new JavaCodePacker();
       final Source a = InternalUtil.createSourceUsingStackoverflowExampleWithMissingImports();
 
       final Set<String> expectedImports = Sets.newHashSet(
@@ -315,6 +341,8 @@ public class IntrospectorTest {
       );
 
       final List<String> directives = Lists.newLinkedList(introspector.detectMissingImports(a));
+      final List<String> directives2 = Lists.newLinkedList(packer.missingImports(a, ""));
+      assertEquals(directives, directives2);
       for(String each : directives){
         assertThat(expectedImports.contains(each), is(true));
       }
@@ -324,14 +352,21 @@ public class IntrospectorTest {
       final Introspector introspector = Vesper.createIntrospector();
       final Source a = InternalUtil.createFaultyCleanupOfCodeExample();
 
-      Source b = null;
+      Source b  = null;
+      Source bb = null;
       try {
         b = Source.wrap(a, "Scratched", Source.missingHeader(introspector, a, "Scratched"));
         assertThat(b != null, is(true));
+        bb = new JavaCodePacker().packs(a);
+        assertEquals(b, bb);
       } finally {
-        assert b != null;
-        final Source c = Source.unwrap(b, Source.currentHeader(b, "Scratched"));
+        assert b  != null;
+        assert bb != null;
+        final Source c  = Source.unwrap(b, Source.currentHeader(b, "Scratched"));
+        final Source cc = new JavaCodePacker().unpacks(b);
         assertThat(c != null, is(true));
+        assertThat(cc != null, is(true));
+        assertEquals(c, cc);
       }
     }
 
@@ -418,15 +453,21 @@ public class IntrospectorTest {
 
         final String addon = Source.missingHeader(introspector, a, "Greeter");
         final Source wrapped = Source.wrap(a, "Greeter", addon);
+        final Source packed  = new JavaCodePacker().packs(a, "Greeter");
 
-        final Context context = new Context(wrapped);
+        assertEquals(wrapped, packed);
+
+        final Context context  = new Context(wrapped);
+        final Context context2 = new Context(packed);
 
         new EclipseJavaParser().parseJava(context);
+        new EclipseJavaParser().parseJava(context2);
 
-        final Set<Issue> issues = introspector.detectIssues(context);
+        final Set<Issue> issues  = introspector.detectIssues(context);
+        final Set<Issue> issues2 = introspector.detectIssues(context2);
 
         assertThat(issues.isEmpty(), is(true));
-
+        assertEquals(issues, issues2);
 
     }
 
@@ -479,9 +520,14 @@ public class IntrospectorTest {
     @Test public void testAdjustedSummarizedMultistageOfCodeExample() throws Exception {
 
         final Introspector introspector = Vesper.createIntrospector();
+        final CodePacker   packer       = new JavaCodePacker();
         final Source a = InternalUtil.createIncompleteQuickSortCodeExample();
 
-        final List<String> directives = Lists.newLinkedList(introspector.detectMissingImports(a));
+        final List<String> directives  = Lists.newLinkedList(introspector.detectMissingImports(a));
+        final List<String> directives2 = Lists.newLinkedList(packer.missingImports(a, ""));
+
+        assertEquals(directives, directives2);
+
         final String addon = StringUtil.concat("Quicksort", true, directives);
 
         final Map<Clip, List<Location>> adjusted   = adjustSummarizedSpace(introspector, a, addon);

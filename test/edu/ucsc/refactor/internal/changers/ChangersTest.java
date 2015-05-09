@@ -2,6 +2,7 @@ package edu.ucsc.refactor.internal.changers;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import edu.ucsc.refactor.*;
 import edu.ucsc.refactor.internal.*;
 import edu.ucsc.refactor.internal.detectors.*;
@@ -1617,7 +1618,14 @@ public class ChangersTest {
 
         final Introspector introspector = Vesper.createIntrospector();
         final Set<String>  required     = introspector.detectMissingImports(code);
+
+        final CodePacker packer = new JavaCodePacker();
+        final Set<String> required2     = Sets.newHashSet(packer.missingImports(code, ""));
+
         assertThat(required.size(), is(1));
+        assertThat(required2.size(), is(1));
+
+        assertEquals(required, required2);
 
     }
 
@@ -1628,10 +1636,10 @@ public class ChangersTest {
         final Context context = new Context(code);
 
         final CompilationUnit compilationUnit = AstUtil.getCompilationUnit(
-                parser.parseJava(
-                        context,
-                        EclipseJavaParser.PARSE_STATEMENTS
-                )
+              parser.parseJava(
+                    context,
+                    EclipseJavaParser.PARSE_STATEMENTS
+              )
         );
 
 
@@ -1640,7 +1648,11 @@ public class ChangersTest {
 
         final Introspector introspector = Vesper.createIntrospector();
         final Set<String>  required     = introspector.detectMissingImports(code);
+        final CodePacker   packer       = new JavaCodePacker();
+        final Set<String>  required2    = packer.missingImports(code, "");
         assertThat(required.isEmpty(), is(false));
+
+        assertEquals(required, required2);
 
         final Set<String> staticImports  = AstUtil.getUsedStaticTypesInCode(compilationUnit);
         assertThat(staticImports.size(), is(0));
@@ -1653,7 +1665,10 @@ public class ChangersTest {
       final Context context = new Context(code);
       parser.parseJava(context);
       final Introspector introspector = Vesper.createIntrospector();
+      final CodePacker   packer       = new JavaCodePacker();
       final Set<String>  required     = introspector.detectMissingImports(code);
+      final Set<String>  required2    = packer.missingImports(code, "");
+      assertEquals(required, required2);
       assertThat(required.isEmpty(), is(false));
     }
 
@@ -1743,9 +1758,9 @@ public class ChangersTest {
         final Introspector introspector = Vesper.createIntrospector();
 
         final Source patched = Source.wrap(
-                a,
-                "WellManners",
-                Source.missingHeader(introspector, a, "WellManners")
+              a,
+              "WellManners",
+              Source.missingHeader(introspector, a, "WellManners")
         );
 
         final Source formatted = Source.from(patched, new SourceFormatter().format(patched
@@ -1761,9 +1776,9 @@ public class ChangersTest {
         final Source a = InternalUtil.createMethodOnlyCodeExample();
 
         final Source b = Source.wrap(
-                a,
-                "WellManners",
-                Source.missingHeader(introspector, a, "WellManners")
+              a,
+              "WellManners",
+              Source.missingHeader(introspector, a, "WellManners")
         );
 
 
@@ -1793,10 +1808,16 @@ public class ChangersTest {
         final Source b = InternalUtil.createMethodWithShellCodeExample();
 
         final Source c = Source.wrap(
-                a,
-                "WellManners",
-                Source.missingHeader(introspector, a, "WellManners")
+              a,
+              "WellManners",
+              Source.missingHeader(introspector, a, "WellManners")
         );
+
+
+        final CodePacker packer  = new JavaCodePacker();
+        final Source cprime      = packer.packs(a, "WellManners");
+
+        assertEquals(c, cprime);
 
         final Source formatted = Source.from(c, new SourceFormatter().format(c
                 .getContents()));
