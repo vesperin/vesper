@@ -93,15 +93,13 @@ public final class Vesper {
      * @return the adjusted source selection.
      */
     public static SourceSelection createAdjustedSelection(int startOffset, int endOffset, Source toAdjust){
-        final Introspector introspector = Vesper.createIntrospector();
+        final CodePacker   packer       = new JavaCodePacker();
         final String       withName     = "Scratched";
 
-        final String addon = Source.missingHeader(introspector, toAdjust, withName);
+        final String addon = packer.missingHeader(toAdjust, withName);
 
         final int adjustFactor = StringUtil.offsetOf(addon) + 1/* bc of \n char*/;
-
-        final Source adjusted  = Source.wrap(toAdjust, withName, Source.header(introspector,
-                toAdjust, withName, false));
+        final Source adjusted  = packer.packs(toAdjust, withName);
 
         return new SourceSelection(
                 adjusted, startOffset + adjustFactor, endOffset + adjustFactor

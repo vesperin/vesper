@@ -12,9 +12,11 @@ import edu.ucsc.refactor.packing.PackingUtils;
 import edu.ucsc.refactor.util.StringUtil;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static java.util.Arrays.asList;
 
@@ -22,54 +24,6 @@ import static java.util.Arrays.asList;
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public class JavaCodePacker implements CodePacker {
-  private static final Set<String> ALLOWED_PACKAGES;
-  static {
-    final Set<String> pkgs = Sets.newLinkedHashSet(
-          asList(
-                "java.io",
-                //"java.lang", //Dont include these; they dont require to be imported
-                "java.math",
-                "java.net",
-                "java.nio",
-                "java.text",
-                "java.util",
-                "java.sql",
-                "org.w3c.dom",
-                "javax.print",
-                "javax.sound",
-                "javax.imageio",
-                "javax.swing",
-                "java.awt",
-                "javax.accessibility",
-                "org.ietf.jgss",
-                "javax.xml",
-                "javax.security",
-                "javax.crypto",
-                "java.security",
-                "javax.script",
-                "org.xml.sax",
-                "javax.jws",
-                "java.applet",
-                "javax.tools",
-                "javax.management",
-                "javax.transaction",
-                "javax.net",
-                "java.rmi",
-                "javax.naming",
-                "javax.activity",
-                "java.beans",
-                "javax.activation",
-                "com.google.common",
-                "com.google.gson",
-                "org.eclipse.jdt.core",
-                "org.junit",
-                "difflib"
-          )
-    );
-
-    ALLOWED_PACKAGES = ImmutableSet.copyOf(pkgs);
-  }
-
 
   private final MatchingStrategy matcher;
   private final PackingSpace typeSpace;
@@ -89,7 +43,8 @@ public class JavaCodePacker implements CodePacker {
    */
   public JavaCodePacker(PackingSpaceGeneration precomputation, MatchingStrategy matchingLogic){
     this.matcher    = matchingLogic;
-    this.typeSpace  = Preconditions.checkNotNull(precomputation).generateSpace(ALLOWED_PACKAGES);
+    this.typeSpace  = Preconditions.checkNotNull(precomputation).generateSpace
+          (PackingUtils.ALLOWED_PACKAGES);
   }
 
   @Override public String existingHeader(Source code) {
@@ -139,8 +94,13 @@ public class JavaCodePacker implements CodePacker {
 
   @Override public Source packs(Source code, String name) {
     final String top    = missingHeader(code, name);
-    // todo(Huascar) detect if there is a missing method; if there is then include it.
-    final String body   = code.getContents();
+    final boolean main  = needsMethod(code.getContents());
+
+    final String body   = main ?
+          ("\npublic static void main(String... args){\n" + StringUtil.trim(code.getContents()) +
+                "\n}") :
+          code.getContents();
+
     final String bottom = "}";
 
     final String content = top + body + bottom;
@@ -152,20 +112,78 @@ public class JavaCodePacker implements CodePacker {
     return packs(code, "");
   }
 
-  @Override public Source unpacks(Source packed) {
-    final String addon = existingHeader(packed);
+  @Override public Source unpacks(Source packed, Source original) {
+    final String addon    = existingHeader(packed);
+    final String content  = packed.getContents();
+    final boolean main    = needsMethod(content);
+
+    final String  end   = !main && hasMain(content)
+          && !hasMain(original.getContents()) ? "}}" : "}";
+    final String  start = !main && hasMain(content)
+          && !hasMain(original.getContents())
+          ? addon + "\npublic static void main(String... args){\n"
+          : addon;
 
     final String currentContent = packed.getContents();
     final String updatedContent = StringUtil.trim(
           StringUtil.removeEnd(
-                StringUtil.removeStart(currentContent, addon),
-                "}"
+                StringUtil.trim(StringUtil.removeStart(currentContent, start)),
+                end
           )
     );
 
     final Source cropped = Source.from(packed, updatedContent);
     cropped.setName("Scratched.java");
     return cropped;
+  }
+
+  static boolean hasMain(String content){
+    return content.contains(("public static void main"));
+  }
+
+  static boolean needsMethod(String content){
+    final String regex  = "^\\s*?(((public|private|protected|static|final|native|synchronized" +
+          "|abstract|threadsafe|transient)\\s+?)*)\\s*?(\\w+?)\\s+?(\\w+?)\\s*?\\(([^)]*)\\)[\\w\\s,]*?";
+    final Pattern pattern = Pattern.compile(regex);
+    if(hasMain(content)) return false;
+
+    final List<String> lines = StringUtil.contentToLines(content);
+    for(String eachLine : lines){
+      final Matcher matcher   = pattern.matcher(eachLine);
+      if(matcher.find()) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  static List<Class<?>> getClasspath(Set<String> allowedPackages){
+    return ClassCatcher.catchClassesInClassPath(allowedPackages);
+  }
+
+  static List<MethodFinder> computeMethodFinders(final List<Class<?>> classes){
+    final List<Class<?>> targetClasses = classes.isEmpty() ? getClasspath(PackingUtils
+          .ALLOWED_PACKAGES) : classes;
+    final List<MethodFinder> finders = Lists.newLinkedList();
+    for(Class<?> each : targetClasses){
+      finders.add(new MethodFinder(each));
+    }
+
+    return finders;
+  }
+
+
+  static Set<Method> getMethodsMatchingSignature(List<Class<?>> classpath, Class<?> returnType,
+                                                 Class<?>... arguments) {
+    final List<MethodFinder> finders = computeMethodFinders(classpath);
+    final Set<Method> methods = Sets.newLinkedHashSet();
+    for(MethodFinder each : finders){
+      methods.addAll(each.findInstanceMethods(each.declaringClass, returnType, arguments));
+      methods.addAll(each.findStaticMethods(each.declaringClass, returnType, arguments));
+    }
+
+    return methods;
   }
 
 
@@ -391,6 +409,194 @@ public class JavaCodePacker implements CodePacker {
 
     @Override public int size() {
       return pkgToClasses.size();
+    }
+  }
+
+  interface ObjectMatcher<T> {
+    /**
+     * matches an object of type {@code T}.
+     * @param that The object to be matched.
+     * @return true if matched; false otherwise.
+     */
+    boolean matches(T that);
+  }
+
+  static class MatchMaker {
+
+    /**
+     * Creates a method matcher.
+     * @param returnType the return type to be matched
+     * @param arguments  the method arguments to be matched
+     * @return a new method matcher.
+     */
+    public static ObjectMatcher<Method> methodMatcher(Class<?> returnType, Class<?>... arguments){
+      return new MethodMatcher(returnType, arguments);
+    }
+
+    /**
+     * Creates a method matcher
+     */
+    static class MethodMatcher implements ObjectMatcher<Method> {
+      private final Class<?> returnType;
+      private final Set<Class<?>> arguments;
+
+      MethodMatcher(Class<?> returnType, Class<?>... arguments){
+
+        this.returnType = returnType;
+        this.arguments  = Sets.newLinkedHashSet(asList(Preconditions.checkNotNull(arguments)));
+        Preconditions.checkArgument(!this.arguments.contains(null));
+
+      }
+      @Override public boolean matches(Method that) {
+        boolean returnTypeIsOk = false;
+        for (Class<?> ic : getInterchangeable(returnType))
+          if (ic.isAssignableFrom(that.getReturnType()))
+            returnTypeIsOk = true;
+
+        if (!returnTypeIsOk)
+          return false;
+
+        Class<?>[] methodArguments = that.getParameterTypes();
+
+        if (methodArguments.length != arguments.size())
+          return false;
+
+        if (methodArguments.length == 0) {
+          return true;
+        } else {
+
+          final Collection<List<Class<?>>> permutations = permute(arguments);
+
+          outer:
+          for (List<Class<?>> permutation : permutations) {
+            for (int i = 0; i < methodArguments.length; i++) {
+
+              boolean canAssign = false;
+              for (Class<?> ic : getInterchangeable(permutation.get(i)))
+                if (methodArguments[i].isAssignableFrom(ic))
+                  canAssign = true;
+
+              if (!canAssign)
+                continue outer;
+            }
+            return true;
+          }
+
+          return false;
+        }
+      }
+
+      private static Collection<List<Class<?>>> permute(Set<Class<?>> arguments){
+        return Collections2.orderedPermutations(arguments, new Comparator<Class<?>>() {
+          @Override
+          public int compare(Class<?> o1, Class<?> o2) {
+            if (o1.equals(o2)) {
+              return 0;
+            }
+
+            if (o1.isAssignableFrom(o2)) {
+              return -1;
+            } else {
+              if (!o2.isAssignableFrom(o2)) {
+                throw new IllegalArgumentException(
+                      "The classes share no relation"
+                );
+              }
+
+              return 1;
+            }
+          }
+        });
+
+      }
+
+
+      /**
+       * Returns the autoboxing types
+       *
+       * @param type the type to autobox :)
+       * @return a list of types that it could be
+       */
+      @SuppressWarnings("InstantiatingObjectToGetClassObject")
+      private static Class<?>[] getInterchangeable(Class<?> type) {
+
+        if (type == Boolean.class || type == Boolean.TYPE)
+          return new Class<?>[]{Boolean.class, Boolean.TYPE};
+        if (type == Character.class || type == Character.TYPE)
+          return new Class<?>[]{Character.class, Character.TYPE};
+        if (type == Short.class || type == Short.TYPE)
+          return new Class<?>[]{Short.class, Short.TYPE};
+        if (type == Integer.class || type == Integer.TYPE)
+          return new Class<?>[]{Integer.class, Integer.TYPE};
+        if (type == Float.class || type == Float.TYPE)
+          return new Class<?>[]{Float.class, Float.TYPE};
+        if (type == Double.class || type == Double.TYPE)
+          return new Class<?>[]{Double.class, Double.TYPE};
+        if (type == Void.class || type == Void.TYPE)
+          return new Class<?>[]{Void.class, Void.TYPE};
+        if(type == new int[0].getClass()){
+          return new Class<?>[]{new int[0].getClass(), Integer.TYPE};
+        }
+        if(type == new char[0].getClass()){
+          return new Class<?>[]{new char[0].getClass(), Character.TYPE};
+        }
+
+        if(type == new boolean[0].getClass()){
+          return new Class<?>[]{new boolean[0].getClass(), Boolean.TYPE};
+        }
+
+        return new Class<?>[]{type};
+      }
+    }
+  }
+
+  static class MethodFinder {
+    final Class<?> declaringClass;
+
+    MethodFinder(Class<?> declaringClass){
+      this.declaringClass = declaringClass;
+    }
+
+    /**
+     * Finds instance method matches
+     *
+     * @param returnType the return type
+     * @param arguments  the arguments (in any order)
+     * @return list of instance methods
+     */
+    List<Method> findInstanceMethods(Class<?> klass, Class<?> returnType, Class<?>...
+          arguments) {
+
+      final ObjectMatcher<Method> methodMatcher = MatchMaker.methodMatcher(returnType, arguments);
+      final List<Method> matches = new LinkedList<Method>();
+
+      for (Method method : klass.getMethods()) {
+        if ((method.getModifiers() & Modifier.STATIC) == 0)
+          if (methodMatcher.matches(method))
+            matches.add(method);
+      }
+
+      return matches;
+    }
+
+    /**
+     * Finds static method matches
+     *
+     * @param returnType the return type
+     * @param arguments  the arguments (in any order)
+     * @return list of static methods
+     */
+    List<Method> findStaticMethods(Class<?> klass, Class<?> returnType, Class<?>...
+          arguments) {
+      final ObjectMatcher<Method> methodMatcher = MatchMaker.methodMatcher(returnType, arguments);
+      final List<Method> matches = new LinkedList<Method>();
+
+      for (Method method : klass.getMethods())
+        if ((method.getModifiers() & Modifier.STATIC) != 0)
+          if (methodMatcher.matches(method))
+            matches.add(method);
+
+      return matches;
     }
   }
 }

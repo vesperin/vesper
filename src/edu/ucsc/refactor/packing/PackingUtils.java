@@ -1,189 +1,208 @@
 package edu.ucsc.refactor.packing;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static java.util.Arrays.asList;
 
 /**
  * @author hsanchez@cs.ucsc.edu (Huascar A. Sanchez)
  */
 public class PackingUtils {
 
-  private static final Set<String> JAVA_LANG = Sets.newHashSet(
-        "Cloneable",
-        "Runnable",
-        "Boolean",
-        "Byte",
-        "Character",
-        "Class",
-        "ClassLoader",
-        "Compiler",
-        "Double",
-        "Float",
-        "Integer",
-        "Long",
-        "Math",
-        "Number",
-        "Object",
-        "Process",
-        "Runtime",
-        "SecurityManager",
-        "Short",
-        "String",
-        "StringBuffer",
-        "System",
-        "Thread",
-        "ThreadGroup",
-        "Throwable",
-        "Void",
-        "ArithmeticException",
-        "ArrayIndexOutOfBoundsException",
-        "ArrayStoreException",
-        "ClassCastException",
-        "ClassNotFoundException",
-        "CloneNotSupportedException",
-        "Exception",
-        "IllegalAccessException",
-        "IllegalArgumentException",
-        "IllegalMonitorStateException",
-        "IllegalStateException",
-        "IllegalThreadStateException",
-        "IndexOutOfBoundsException",
-        "InstantiationException",
-        "InterruptedException",
-        "NegativeArraySizeException",
-        "NoSuchFieldException",
-        "NoSuchMethodException",
-        "NullPointerException",
-        "NumberFormatException",
-        "RuntimeException",
-        "SecurityException",
-        "StringIndexOutOfBoundsException",
-        "AbstractMethodError",
-        "ClassCircularityError",
-        "ClassFormatError",
-        "Error",
-        "ExceptionInInitializerError",
-        "IllegalAccessError",
-        "IncompatibleClassChangeError",
-        "InstantiationError",
-        "InternalError",
-        "LinkageError",
-        "NoClassDefFoundError",
-        "NoSuchFieldError",
-        "NoSuchMethodError",
-        "OutOfMemoryError",
-        "StackOverflowError",
-        "ThreadDeath",
-        "UnknownError",
-        "UnsatisfiedLinkError",
-        "VerifyError",
-        "VirtualMachineError"
-  );
+  public static final Set<String> ALLOWED_PACKAGES;
+  private static final Set<String> JAVA_LANG;
+  private static final Set<String> JAVA_UTIL;
+  static {
+    final Set<String> pkgs = Sets.newLinkedHashSet(
+          asList(
+                "java.io",
+                //"java.lang", //Dont include these; they dont require to be imported
+                "java.math",
+                "java.net",
+                "java.nio",
+                "java.text",
+                "java.util",
+                "java.sql",
+                "org.w3c.dom",
+                "javax.print",
+                "javax.sound",
+                "javax.imageio",
+                "javax.swing",
+                "java.awt",
+                "javax.accessibility",
+                "org.ietf.jgss",
+                "javax.xml",
+                "javax.security",
+                "javax.crypto",
+                "java.security",
+                "javax.script",
+                "org.xml.sax",
+                "javax.jws",
+                "java.applet",
+                "javax.tools",
+                "javax.management",
+                "javax.transaction",
+                "javax.net",
+                "java.rmi",
+                "javax.naming",
+                "javax.activity",
+                "java.beans",
+                "javax.activation",
+                "com.google.common",
+                "com.google.gson",
+                "org.eclipse.jdt.core",
+                "org.junit",
+                "difflib"
+          )
+    );
 
-  private static final Set<String> JAVA_UTIL = ImmutableSet.of(
-        "Collection",
-        "Comparator",
-        "Deque",
-        "Enumeration",
-        "EventListener",
-        "Formattable",
-        "Iterator",
-        "List",
-        "ListIterator",
-        "Map",
-        "Map.Entry",
-        "NavigableMap",
-        "NavigableSet",
-        "Observer",
-        "Queue",
-        "RandomAccess",
-        "Set",
-        "SortedMap",
-        "SortedSet",
-        "AbstractCollection",
-        "AbstractList",
-        "AbstractMap",
-        "AbstractMap.SimpleEntry",
-        "AbstractMap.SimpleImmutableEntry",
-        "AbstractQueue", "AbstractSequentialList",
-        "AbstractSet", "ArrayDeque", "ArrayList",
-        "Arrays", "BitSet", "Calendar", "Collections",
-        "Currency", "Date", "Dictionary", "EnumMap", "EnumSet",
-        "EventListenerProxy", "EventObject", "FormattableFlags",
-        "Formatter", "GregorianCalendar", "HashMap",
-        "HashSet", "Hashtable", "IdentityHashMap",
-        "LinkedHashMap", "LinkedHashSet",
-        "LinkedList", "ListResourceBundle",
-        "Locale", "Observable", "PriorityQueue",
-        "Properties", "PropertyPermission",
-        "PropertyResourceBundle", "Random",
-        "ResourceBundle", "ResourceBundle.Control",
-        "Scanner", "ServiceLoader", "SimpleTimeZone",
-        "Stack", "StringTokenizer", "Timer",
-        "TimerTask", "TimeZone", "TreeMap",
-        "TreeSet", "UUID", "Vector", "WeakHashMap",
-        "Formatter.BigDecimalLayoutForm",
-        "ConcurrentModificationException",
-        "DuplicateFormatFlagsException",
-        "EmptyStackException",
-        "FormatFlagsConversionMismatchException",
-        "FormatterClosedException", "IllegalFormatCodePointException",
-        "IllegalFormatConversionException",
-        "IllegalFormatException", "IllegalFormatFlagsException",
-        "IllegalFormatPrecisionException", "IllegalFormatWidthException",
-        "InputMismatchException", "InvalidPropertiesFormatException",
-        "MissingFormatArgumentException",
-        "MissingFormatWidthException", "MissingResourceException",
-        "NoSuchElementException", "TooManyListenersException",
-        "UnknownFormatConversionException", "UnknownFormatFlagsException",
-        "ServiceConfigurationError"
-  );
+    ALLOWED_PACKAGES = ImmutableSet.copyOf(pkgs);
+
+    final Set<String> javaLang = Sets.newHashSet(
+          "Cloneable",
+          "Runnable",
+          "Boolean",
+          "Byte",
+          "Character",
+          "Class",
+          "ClassLoader",
+          "Compiler",
+          "Double",
+          "Float",
+          "Integer",
+          "Long",
+          "Math",
+          "Number",
+          "Object",
+          "Process",
+          "Runtime",
+          "SecurityManager",
+          "Short",
+          "String",
+          "StringBuffer",
+          "System",
+          "Thread",
+          "ThreadGroup",
+          "Throwable",
+          "Void",
+          "ArithmeticException",
+          "ArrayIndexOutOfBoundsException",
+          "ArrayStoreException",
+          "ClassCastException",
+          "ClassNotFoundException",
+          "CloneNotSupportedException",
+          "Exception",
+          "IllegalAccessException",
+          "IllegalArgumentException",
+          "IllegalMonitorStateException",
+          "IllegalStateException",
+          "IllegalThreadStateException",
+          "IndexOutOfBoundsException",
+          "InstantiationException",
+          "InterruptedException",
+          "NegativeArraySizeException",
+          "NoSuchFieldException",
+          "NoSuchMethodException",
+          "NullPointerException",
+          "NumberFormatException",
+          "RuntimeException",
+          "SecurityException",
+          "StringIndexOutOfBoundsException",
+          "AbstractMethodError",
+          "ClassCircularityError",
+          "ClassFormatError",
+          "Error",
+          "ExceptionInInitializerError",
+          "IllegalAccessError",
+          "IncompatibleClassChangeError",
+          "InstantiationError",
+          "InternalError",
+          "LinkageError",
+          "NoClassDefFoundError",
+          "NoSuchFieldError",
+          "NoSuchMethodError",
+          "OutOfMemoryError",
+          "StackOverflowError",
+          "ThreadDeath",
+          "UnknownError",
+          "UnsatisfiedLinkError",
+          "VerifyError",
+          "VirtualMachineError"
+    );
+
+    JAVA_LANG = ImmutableSet.copyOf(javaLang);
+
+    final Set<String> javaUtil = ImmutableSet.of(
+          "Collection",
+          "Comparator",
+          "Deque",
+          "Enumeration",
+          "EventListener",
+          "Formattable",
+          "Iterator",
+          "List",
+          "ListIterator",
+          "Map",
+          "Map.Entry",
+          "NavigableMap",
+          "NavigableSet",
+          "Observer",
+          "Queue",
+          "RandomAccess",
+          "Set",
+          "SortedMap",
+          "SortedSet",
+          "AbstractCollection",
+          "AbstractList",
+          "AbstractMap",
+          "AbstractMap.SimpleEntry",
+          "AbstractMap.SimpleImmutableEntry",
+          "AbstractQueue", "AbstractSequentialList",
+          "AbstractSet", "ArrayDeque", "ArrayList",
+          "Arrays", "BitSet", "Calendar", "Collections",
+          "Currency", "Date", "Dictionary", "EnumMap", "EnumSet",
+          "EventListenerProxy", "EventObject", "FormattableFlags",
+          "Formatter", "GregorianCalendar", "HashMap",
+          "HashSet", "Hashtable", "IdentityHashMap",
+          "LinkedHashMap", "LinkedHashSet",
+          "LinkedList", "ListResourceBundle",
+          "Locale", "Observable", "PriorityQueue",
+          "Properties", "PropertyPermission",
+          "PropertyResourceBundle", "Random",
+          "ResourceBundle", "ResourceBundle.Control",
+          "Scanner", "ServiceLoader", "SimpleTimeZone",
+          "Stack", "StringTokenizer", "Timer",
+          "TimerTask", "TimeZone", "TreeMap",
+          "TreeSet", "UUID", "Vector", "WeakHashMap",
+          "Formatter.BigDecimalLayoutForm",
+          "ConcurrentModificationException",
+          "DuplicateFormatFlagsException",
+          "EmptyStackException",
+          "FormatFlagsConversionMismatchException",
+          "FormatterClosedException", "IllegalFormatCodePointException",
+          "IllegalFormatConversionException",
+          "IllegalFormatException", "IllegalFormatFlagsException",
+          "IllegalFormatPrecisionException", "IllegalFormatWidthException",
+          "InputMismatchException", "InvalidPropertiesFormatException",
+          "MissingFormatArgumentException",
+          "MissingFormatWidthException", "MissingResourceException",
+          "NoSuchElementException", "TooManyListenersException",
+          "UnknownFormatConversionException", "UnknownFormatFlagsException",
+          "ServiceConfigurationError"
+    );
+
+    JAVA_UTIL = ImmutableSet.copyOf(javaUtil);
+
+  }
 
   private PackingUtils(){}
 
-  /**
-   * Returns the autoboxing types
-   *
-   * @param type the type to autobox :)
-   * @return a list of types that it could be
-   */
-  @SuppressWarnings("InstantiatingObjectToGetClassObject")
-  public static List<Class<?>> autobox(Class<?> type) {
-
-    if (type == Boolean.class || type == Boolean.TYPE)
-      return ImmutableList.<Class<?>>of(Boolean.class, Boolean.TYPE);
-    if (type == Character.class || type == Character.TYPE)
-      return ImmutableList.<Class<?>>of(Character.class, Character.TYPE);
-    if (type == Short.class || type == Short.TYPE)
-      return ImmutableList.<Class<?>>of(Short.class, Short.TYPE);
-    if (type == Integer.class || type == Integer.TYPE)
-      return ImmutableList.<Class<?>>of(Integer.class, Integer.TYPE);
-    if (type == Float.class || type == Float.TYPE)
-      return ImmutableList.<Class<?>>of(Float.class, Float.TYPE);
-    if (type == Double.class || type == Double.TYPE)
-      return ImmutableList.<Class<?>>of(Double.class, Double.TYPE);
-    if (type == Void.class || type == Void.TYPE)
-      return ImmutableList.<Class<?>>of(Void.class, Void.TYPE);
-    if (type == new int[0].getClass()) {
-      return ImmutableList.<Class<?>>of(new int[0].getClass(), Integer.TYPE);
-    }
-    if (type == new char[0].getClass()) {
-      return ImmutableList.<Class<?>>of(new char[0].getClass(), Character.TYPE);
-    }
-
-    if (type == new boolean[0].getClass()) {
-      return ImmutableList.<Class<?>>of(new boolean[0].getClass(), Boolean.TYPE);
-    }
-
-    return ImmutableList.<Class<?>>of(type);
-  }
 
   public static PackingSpace failoverTypeSpace(){
     return new FailoverTypeSpace();

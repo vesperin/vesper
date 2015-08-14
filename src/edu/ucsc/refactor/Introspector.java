@@ -66,14 +66,6 @@ public interface Introspector {
     Set<Issue> detectIssues(Context context);
 
     /**
-     * Scans a {@link Source} tracked by the {@code Refactorer}, looking for any missing imports.
-     *
-     * @param code The code to be scanned.
-     * @return a set of required imports.
-     */
-    Set<String> detectMissingImports(Source code);
-
-    /**
      * Recommends changes for a {@code Source} based on a list of found {@code issues}.
      * E.g., if this {@code Source} has 10 issues in it, then the
      * {@code Refactorer} will recommend 10 changes that will address this 10 issues.

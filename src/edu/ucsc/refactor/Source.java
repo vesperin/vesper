@@ -2,13 +2,14 @@ package edu.ucsc.refactor;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import edu.ucsc.refactor.util.*;
+import edu.ucsc.refactor.util.Note;
+import edu.ucsc.refactor.util.Notes;
+import edu.ucsc.refactor.util.StringUtil;
+import edu.ucsc.refactor.util.UniqueIdentifierGenerator;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 
-import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -19,7 +20,6 @@ import java.util.regex.Pattern;
 public class Source {
     public static final String SOURCE_FILE_PROPERTY = "vesper.source_file.source_file_property";
 
-    private static final String END = "}";
     private static final String REGEX = "class[^;=\\n]*\\s[\\S\\s]*?";
 
     private final String        contents;
@@ -113,106 +113,6 @@ public class Source {
     public static Source from(ASTNode node){
        return (Source) node.getRoot().getProperty(Source.SOURCE_FILE_PROPERTY);
     }
-
-    /**
-     * Performs a quick patching, for refactoring purposes.
-     *
-     * @param incomplete the incomplete code example to patch.
-     * @param withName the name of the complete code
-     * @param withContent the content to be prepended
-     *
-     * @return the patched code example.
-     */
-    public static Source wrap(Source incomplete, String withName, String withContent){
-
-        final String content = withContent + incomplete.getContents() + END;
-
-        final Source revised = from(incomplete, content);
-        if(!revised.getName().equals(withName)){
-            revised.setName(withName + ".java");
-        }
-
-        return revised;
-    }
-
-
-    /**
-     * Crops a complete code example (e.g., class A {...}) by removing its class definition header
-     * (class ..) and its ending curly brace (e.g., `}`).
-     *
-     * This method abstracts out the parts of the code example, which for bookkeeping, produced by
-     * {@link Source#wrap} when trying to transform incomplete code examples.
-     *
-     * This method should be used only for cases when trying to refactor an incomplete code
-     * example. Having written that, Violette should send information on whether this method
-     * can be invoked or not.
-     *
-     * @param a the Source to be cropped.
-     * @param addon class definition header string
-     * @return the cropped Source.
-     */
-    public static Source unwrap(Source a, String addon){
-
-        final String currentContent = a.getContents();
-        final String updatedContent = StringUtil.trim(
-                StringUtil.removeEnd(
-                        StringUtil.removeStart(currentContent, addon),
-                        END
-                )
-        );
-
-        final Source cropped = Source.from(a, updatedContent);
-        cropped.setName("Scratched.java");
-        return cropped;
-    }
-
-    /**
-     * Crops a complete code example (e.g., class A {...}) by removing its class definition header
-     * (class .. {) and its ending curly brace (e.g., `}`).
-     *
-     * This method abstracts out the parts of the code example, which for bookkeeping, produced by
-     * {@link Source#wrap} when trying to transform incomplete code examples.
-     *
-     * This method should be used only for cases when trying to refactor an incomplete code
-     * example. Having written that, Violette should send information on whether this method
-     * can be invoked or not.
-     *
-     * @param toAdjust the Source to be cropped.
-     * @return the cropped Source.
-     */
-    public static Source unwrap(Source toAdjust){
-        final String header = Source.currentHeader(toAdjust, StringUtil
-                .extractFileName(toAdjust.getName()));
-
-        return unwrap(toAdjust, header);
-    }
-
-    public static String missingHeader(Introspector introspector, Source a, String name){
-        return header(introspector, a, name, false);
-    }
-
-    public static String currentHeader(Source a, String name){
-        return header(null, a, name, true);
-    }
-
-    static String header(Introspector introspector, Source a, String name, boolean parsed){
-
-        if(parsed){
-            final Context context = CodeIntrospector.makeContext(a);
-
-            final String withName = StringUtil.extractFileName(a.getName());
-            final List<String> withImports = CodeIntrospector.findImports(
-                    CodeIntrospector.findImports(context)
-            );
-
-            return StringUtil.concat(withName, false, withImports);
-        } else {
-            final List<String> directives = Lists.newLinkedList(introspector.detectMissingImports(a));
-            return StringUtil.concat(name, true, directives);
-        }
-    }
-
-
 
 
     /**

@@ -58,7 +58,8 @@ public interface CodePacker {
    * Unpacks a packed code example.
    *
    * @param packed packed code example to be unpacked.
+   * @param original original source code as a reference
    * @return unpacked code example.
    */
-  Source unpacks(Source packed);
+  Source unpacks(Source packed, Source original);
 }

@@ -14,7 +14,6 @@ import edu.ucsc.refactor.locators.MethodUnit;
 import edu.ucsc.refactor.spi.IssueDetector;
 import edu.ucsc.refactor.spi.JavaSnippetParser;
 import edu.ucsc.refactor.spi.SpaceGeneration;
-import edu.ucsc.refactor.spi.find.TypeSpace;
 import edu.ucsc.refactor.spi.graph.DirectedAcyclicGraph;
 import edu.ucsc.refactor.spi.graph.DirectedGraph;
 import edu.ucsc.refactor.spi.graph.Vertex;
@@ -92,13 +91,6 @@ public class CodeIntrospector implements Introspector {
                 context.getSource().getLength()
           ) // scan whole source code
     );
-  }
-
-  @Override public Set<String> detectMissingImports(Source code) {
-    final Set<String> typesIn = typesInside(code);
-    if(typesIn.isEmpty()) return ImmutableSet.of();
-
-    return recommendImports(typesIn);
   }
 
   @Override public List<Change> detectImprovements(Source code) {
@@ -231,13 +223,15 @@ public class CodeIntrospector implements Introspector {
    * @param space The summarized clip space.
    * @return adjusted summarized clip space.
    */
-  public static Map<Clip, List<Location>> adjustClipspace(Map<Clip, List<Location>> space) {
+  public static Map<Clip, List<Location>> adjustClipspace(Map<Clip, List<Location>> space,
+                                                          Source original) {
 
+    final CodePacker packer = new JavaCodePacker();
     final Map<Clip, List<Location>> result = Maps.newLinkedHashMap();
     for (Clip each : space.keySet()) {
       final List<Location> folds = space.get(each);
 
-      final Source adjustedSrc = Source.unwrap(each.getSource());
+      final Source adjustedSrc = packer.unpacks(each.getSource(), original);
       final List<Location> adjustedLocs = Locations.adjustLocations(
             folds,
             adjustedSrc
@@ -287,6 +281,10 @@ public class CodeIntrospector implements Introspector {
     final LinkedList<Vertex<Item>> Q = Lists.newLinkedList(graph.getVertices());
 
     final int N = Q.size();
+
+    // if single Block node, then return empty list
+    if(N == 1) return Lists.newArrayList();
+
     @SuppressWarnings("UnnecessaryLocalVariable")
     final int W = capacity;
 
@@ -308,7 +306,7 @@ public class CodeIntrospector implements Introspector {
         double option1 = opt[n-1][w];
 
         // take item n
-        double option2 = Double.MIN_VALUE;
+        double option2 = Double.NEGATIVE_INFINITY;
         if (weight[n] <= w) {
           option2 = profit[n] + opt[n-1][w-weight[n]];
         }
@@ -388,107 +386,6 @@ public class CodeIntrospector implements Introspector {
     }
 
     return context;
-  }
-
-  /**
-   * Recommend the required import directives for source to be syntactically correct.
-   *
-   * @param typesIn set of types found in the source code.
-   * @return the required import directives.
-   */
-  static Set<String> recommendImports(Set<String> typesIn) {
-    final Set<String> types = Preconditions.checkNotNull(typesIn);
-    final Set<String> packages = getJdkPackages();
-    final Map<String, Record> freq = Maps.newHashMap();
-
-    final Set<String> result = Sets.newHashSet();
-    // if duplicate, the pkg with max number of instances win
-    final Map<String, Set<String>> seenNamespace = Maps.newLinkedHashMap();
-
-    // detect used packages
-    for (String pkg : packages) {
-      final Set<String> namespaces = TypeSpace.getInstance().getClassInPackage(pkg);
-      if (namespaces.isEmpty()) continue;
-
-      final Set<String> common = Sets.intersection(namespaces, types);
-      if (common.isEmpty()) continue;
-
-      Record t;
-      if (freq.containsKey(pkg)) {
-        t = freq.get(pkg).update(common);
-        freq.put(pkg, t);
-      } else {
-        t = new Record(common.size(), common);
-        freq.put(pkg, t);
-      }
-
-      addSeenBefore(seenNamespace, common, pkg);
-    }
-
-    final Map<String, Record> copy = Maps.newLinkedHashMap(freq);
-    // build package directive
-    for (String key : freq.keySet()) {
-      final Record record = freq.get(key);
-      for(String typeName : record.elements){
-        if(TypeSpace.inJavaLang(typeName)) continue;
-
-        if(TypeSpace.inJavaUtil(typeName) && !"java.util".equals(key)){
-          continue;
-        }
-
-        if(seenNamespace.containsKey(typeName) && !seenNamespace.get(typeName).isEmpty()){
-          final Set<String> otherLinkedPackages = seenNamespace.get(typeName);
-          if(isThisPackageMax(key, copy, otherLinkedPackages)){
-            result.add(key + "." + typeName + ";");
-          }
-        } else {
-          result.add(key + "." + typeName + ";");
-        }
-      }
-
-    }
-
-    return result;
-  }
-
-  static boolean isThisPackageMax(String currentPackage, Map<String, Record> copy, Set<String>
-        otherLinkedPackages){
-    final int currentPackageWeight = copy.get(currentPackage).val;
-
-    int max = currentPackageWeight;
-    for(String otherPackages : otherLinkedPackages){
-      final int otherPackageWeight = copy.get(otherPackages).val;
-      if(otherPackageWeight > max){
-        max = otherPackageWeight;
-      }
-    }
-
-    return max == currentPackageWeight;
-  }
-
-  static void addSeenBefore(Map<String, Set<String>> source, Set<String> newOnes, String pkg) {
-
-    for (String key : newOnes) {
-      if(source.containsKey(key)){ source.get(key).add(pkg); } else {
-        final Set<String> pkgs = Sets.newLinkedHashSet();
-        pkgs.add(pkg);
-        source.put(key, pkgs);
-      }
-    }
-  }
-
-  static Set<String> getJdkPackages() {
-    final Package[] ps = Package.getPackages();
-    final Set<String> result = Sets.newHashSet();
-    for (Package each : ps) {
-      if (each.getName().contains("sun.") ||
-            each.getName().contains("javax.")
-            || each.getName().contains("org.") || each.getName().contains("edu.ucsc."))
-        continue;
-      result.add(each.getName());
-    }
-
-    return result;
   }
 
   static Clip transform(Clip that, ChangeRequest request, boolean isBase) {
@@ -671,52 +568,20 @@ public class CodeIntrospector implements Introspector {
                 final ExpressionStatement statement = AstUtil.exactCast(ExpressionStatement
                       .class, child);
 
-                buildSubtree(parent, statement.getExpression(), G);
-                Q.offer(statement.getExpression());
+                final Expression expression = AstUtil.exactCast(Expression.class, statement
+                      .getExpression());
+                if(MethodInvocation.class.isInstance(expression)){
+                  final MethodInvocation methodInvocation = AstUtil.exactCast(MethodInvocation
+                        .class, expression);
+                  handleMethodInvocation(parent, G, Q, methodInvocation);
+                } else {
+                  buildSubtree(parent, expression, G);
+                  Q.offer(expression);
+                }
+
 
               } else if (MethodInvocation.class.isInstance(child)) {
-                final MethodInvocation invoke = (MethodInvocation) child;
-                final ASTNode method = AstUtil.findDeclaration(
-                      invoke.resolveMethodBinding(),
-                      AstUtil.parent(CompilationUnit.class, invoke)
-                );
-
-                if (method == null) {
-                  final List args = invoke.arguments();
-                  for (Object arg : args) {
-                    final ASTNode argNode = (ASTNode) arg;
-                    if (argNode.getNodeType() == ASTNode.CLASS_INSTANCE_CREATION) {
-                      final ClassInstanceCreation creation =
-                            (ClassInstanceCreation) argNode;
-                      final AnonymousClassDeclaration anonymousClassDeclaration =
-                            creation.getAnonymousClassDeclaration();
-                      if (anonymousClassDeclaration != null) {
-                        final List bodyDeclares = anonymousClassDeclaration
-                              .bodyDeclarations();
-                        for (Object eachBodyDeclare : bodyDeclares) {
-                          final ASTNode eachBodyNode = (ASTNode) eachBodyDeclare;
-                          buildSubtree(parent, eachBodyNode, G);
-                          Q.offer(eachBodyNode);
-                        }
-
-                      } else {
-                        final ASTNode innerClass = AstUtil.findDeclaration(
-                              creation.resolveTypeBinding(),
-                              AstUtil.parent(CompilationUnit.class, creation)
-                        );
-
-                        if (VISITED.contains(innerClass)) return;
-                        buildSubtree(parent, innerClass, G);
-                        Q.offer(innerClass);
-                      }
-
-                    }
-                  }
-                } else {
-                  if (VISITED.contains(method)) return;
-                  buildSubtree(parent, method, G);
-                  Q.offer(method);
-                }
+                handleMethodInvocation(parent, G, Q, (MethodInvocation) child);
               } else if (isTypeDeclarationStatement(child)) {
                 final SimpleType type = (SimpleType) child;
                 final ASTNode declaration = AstUtil.findDeclaration(
@@ -737,6 +602,52 @@ public class CodeIntrospector implements Introspector {
         }
       }
 
+    }
+
+
+    static void handleMethodInvocation(Block parent, DirectedGraph<Item> G, Deque<ASTNode> Q,
+                                       MethodInvocation invoke){
+      final ASTNode method = AstUtil.findDeclaration(
+            invoke.resolveMethodBinding(),
+            AstUtil.parent(CompilationUnit.class, invoke)
+      );
+
+      if (method == null) {
+        final List args = invoke.arguments();
+        for (Object arg : args) {
+          final ASTNode argNode = (ASTNode) arg;
+          if (argNode.getNodeType() == ASTNode.CLASS_INSTANCE_CREATION) {
+            final ClassInstanceCreation creation =
+                  (ClassInstanceCreation) argNode;
+            final AnonymousClassDeclaration anonymousClassDeclaration =
+                  creation.getAnonymousClassDeclaration();
+            if (anonymousClassDeclaration != null) {
+              final List bodyDeclares = anonymousClassDeclaration
+                    .bodyDeclarations();
+              for (Object eachBodyDeclare : bodyDeclares) {
+                final ASTNode eachBodyNode = (ASTNode) eachBodyDeclare;
+                buildSubtree(parent, eachBodyNode, G);
+                Q.offer(eachBodyNode);
+              }
+
+            } else {
+              final ASTNode innerClass = AstUtil.findDeclaration(
+                    creation.resolveTypeBinding(),
+                    AstUtil.parent(CompilationUnit.class, creation)
+              );
+
+              if (VISITED.contains(innerClass)) return;
+              buildSubtree(parent, innerClass, G);
+              Q.offer(innerClass);
+            }
+
+          }
+        }
+      } else {
+        if (VISITED.contains(method)) return;
+        buildSubtree(parent, method, G);
+        Q.offer(method);
+      }
     }
 
     private static boolean isTypeDeclarationStatement(ASTNode node) {
@@ -792,7 +703,9 @@ public class CodeIntrospector implements Introspector {
     }
 
 
-    private static void connect(DirectedGraph<Item> graph, ASTNode parent, ASTNode child) {
+    private static void connect(DirectedGraph<Item> graph,
+                                ASTNode parent, ASTNode child) {
+
       final Vertex<Item> n = graph.getVertex(parent.toString());
 
       final Block b = (Block) child;
@@ -822,7 +735,8 @@ public class CodeIntrospector implements Introspector {
 
       // update weight of the `from` node
       if (isInnerBlock(from.getData().node, to.getData().node)) {
-        from.getData().weight = from.getData().weight - to.getData().weight;
+        final int weightChange = from.getData().weight - to.getData().weight;
+        from.getData().weight  = weightChange < 0 ? 0 : weightChange;
       }
     }
 
@@ -886,23 +800,6 @@ public class CodeIntrospector implements Introspector {
 
   }
 
-
-  private static class Record {
-    final int val;
-    final Set<String> elements;
-
-    Record(int val, Set<String> elements) {
-      this.val = val;
-      this.elements = elements;
-    }
-
-    Record update(Set<String> seed) {
-      final Set<String> merged = Sets.union(this.elements, seed);
-      final int freq = merged.size();
-
-      return new Record(freq, merged);
-    }
-  }
 
   static class ElementsVisitor extends SourceVisitor {
     final Set<SimpleName> nodes = Sets.newHashSet();
