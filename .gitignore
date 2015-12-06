@@ -19,3 +19,4 @@ build/
 log/
 target/
 .java-version
+.shelf/
