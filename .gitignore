@@ -18,3 +18,4 @@ build/
 # Maven
 log/
 target/
+.java-version
