@@ -26,9 +26,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
@@ -1836,6 +1834,51 @@ public class ChangersTest {
     assertNotNull(cropped);
 
   }
+
+  @Test public void testSomeAssumption() throws Exception {
+    final Source incomplete = new Source("Scratched.java", "String line = Joiner.on(\";\").join" +
+          "(text);");
+    final Context context = new Context(incomplete);
+    final ResultPackage pkg = new EclipseJavaSnippetParser().offer(context);
+
+    final FieldsVisitor visitor = new FieldsVisitor();
+
+    pkg.getParsedNode().accept(visitor);
+
+    for(FieldDeclaration each : visitor.getFields()){
+      assertNotNull(each);
+    }
+
+//    final Source c = InternalUtil.createCompleteQuickSortCodeExample();
+//    final MethodDeclarationVisitor visitor = new MethodDeclarationVisitor();
+//    final Context context = new Context(c);
+//
+//    new EclipseJavaSnippetParser().parseJava(context).accept(visitor);
+
+
+  }
+
+  public static class FieldsVisitor extends ASTVisitor {
+    private	Collection<FieldDeclaration> fields = new ArrayList<FieldDeclaration>();
+
+    @Override
+    public boolean visit(FieldDeclaration node) {
+      fields.add(node);
+
+      return super.visit(node);
+    }
+
+    /**
+     * This method allows to get all the FieldDeclaration for the Class on which it is;
+     *
+     * @return
+     * 				a List of all FieldDeclaration;
+     */
+    public Collection<FieldDeclaration> getFields() {
+      return fields;
+    }
+  }
+
 
 
   @Test public void testCropContentWithOffsetAdjustment() throws Exception {

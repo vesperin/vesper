@@ -1695,6 +1695,19 @@ public class InternalUtil {
   }
 
 
+  public static Source createWeirdAndIncompleteCodeExampleWithUnusedNestedClass() {
+    String content =
+          "System.out.println();\n" +
+          "System.out.println();" +
+          "\n" +
+          "static class Wow {\n" +
+          "\tString statement = null;\n" +
+          "}";
+
+    return new Source("Scratched.java", content);
+  }
+
+
   public static Source createIncompleteCodeExampleWithUnusedNestedClass() {
     String content = "public static void greet(String message) {\n" +
           "  System.out.println(message);\n" +

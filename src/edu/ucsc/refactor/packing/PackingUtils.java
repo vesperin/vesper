@@ -1,8 +1,6 @@
 package edu.ucsc.refactor.packing;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 
 import java.util.Collections;
 import java.util.Map;
@@ -55,6 +53,20 @@ public class PackingUtils {
                 "java.beans",
                 "javax.activation",
                 "com.google.common",
+                "com.google.common.annotations",
+                "com.google.common.base",
+                "com.google.common.collect",
+                "com.google.common.cache",
+                "com.google.common.escape",
+                "com.google.common.eventbus",
+                "com.google.common.hash",
+                "com.google.common.html",
+                "com.google.common.io",
+                "com.google.common.math",
+                "com.google.common.net",
+                "com.google.common.primitives",
+                "com.google.common.util.concurrent",
+                "com.google.common.xml",
                 "com.google.gson",
                 "org.eclipse.jdt.core",
                 "org.junit",
@@ -222,6 +234,30 @@ public class PackingUtils {
     return JAVA_UTIL.contains(typeName);
   }
 
+  private static Map<String, Set<String>> invert(Map<String, Set<String>> map){
+    final Map<String, Set<String>> result = Maps.newHashMap();
+
+    for(String key : map.keySet()){
+      final Set<String> values = map.get(key);
+      for(String value : values){
+        if(result.containsKey(value)){ result.get(value).add(key); } else {
+          result.put(value, Sets.newHashSet(key));
+        }
+      }
+    }
+
+    return result;
+  }
+
+  public static String getCanonicalTypeName(String type){
+    final Map<String, Set<String>> invertedIndex = FailoverTypeSpace.INVERTED_TYPE_SPACE;
+    if(!invertedIndex.containsKey(type)) return "()";
+
+    final Set<String> result = invertedIndex.get(type);
+
+    return result.iterator().next() + "." + type;
+  }
+
   public static Set<String> getJdkPackages() {
     final Package[] ps = Package.getPackages();
     final Set<String> result = Sets.newHashSet();
@@ -262,6 +298,7 @@ public class PackingUtils {
 
   static class FailoverTypeSpace implements PackingSpace {
     static Map<String, Set<String>> TYPE_SPACE;
+    static Map<String, Set<String>> INVERTED_TYPE_SPACE;
 
     static {
       final Map<String, Set<String>> container = Maps.newHashMap();
@@ -425,7 +462,12 @@ public class PackingUtils {
             "UnsupportedEncodingException", "UTFDataFormatException", "WriteAbortedException",
             "IOError"));
 
-      TYPE_SPACE = Collections.unmodifiableMap(container);
+      TYPE_SPACE            = Collections.unmodifiableMap(container);
+
+      final Map<String, Set<String>> copy = Collections.synchronizedMap(container);
+      copy.put("java.lang", JAVA_LANG);
+
+      INVERTED_TYPE_SPACE   = Collections.unmodifiableMap(invert(copy));
     }
 
     private final Map<String, Set<String>> pkgToClasses;

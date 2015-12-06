@@ -9,6 +9,7 @@ import edu.ucsc.refactor.internal.InternalUtil;
 import edu.ucsc.refactor.util.Locations;
 import edu.ucsc.refactor.util.SourceFormatter;
 import edu.ucsc.refactor.util.StringUtil;
+import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.junit.Test;
 
 import java.util.List;
@@ -472,19 +473,19 @@ public class IntrospectorTest {
     final CodePacker packer = new JavaCodePacker();
 
     final Map<Clip, List<Location>> summarized = summarizedSpace(introspector, packer, a);
-    for (Clip each : summarized.keySet()) {
-      final String content = each.getSource().getContents();
-      final List<Location> locations = summarized.get(each);
-      for (Location eachLocation : locations) {
-        final String extracted = content.substring(
-              eachLocation.getStart().getOffset(),
-              eachLocation.getEnd().getOffset()
-        );
+    assertSummary(summarized);
+  }
 
-        assertThat(StringUtil.isEmpty(extracted), is(false));
+  @Test public void testDetectIssuesOnWeirdAndIncompleteCodeExample() throws Exception {
+    final Source a = InternalUtil.createWeirdAndIncompleteCodeExampleWithUnusedNestedClass();
+    final CodePacker packer = new JavaCodePacker();
 
-      }
-    }
+    final Source wrapped = packer.packs(a, "Greeter");
+
+    final Context context = new Context(wrapped);
+
+    final CompilationUnit unit = new EclipseJavaParser().parseJava(context);
+    assertNotNull(unit);
 
   }
 
@@ -595,19 +596,7 @@ public class IntrospectorTest {
     final Source a = InternalUtil.createIncompleteQuickSortCodeExample();
 
     final Map<Clip, List<Location>> adjusted = adjustSummarizedSpace(introspector, packer, a);
-
-    for (Clip each : adjusted.keySet()) {
-      final String content = each.getSource().getContents();
-      final List<Location> locations = adjusted.get(each);
-      for (Location eachLocation : locations) {
-        final String extracted = content.substring(
-              eachLocation.getStart().getOffset(),
-              eachLocation.getEnd().getOffset()
-        );
-
-        assertThat(StringUtil.isEmpty(extracted), is(false));
-      }
-    }
+    assertSummary(adjusted);
   }
 
   @Test public void testMultistageVsAdjustedMultistageOfCodeExample() throws Exception {
@@ -681,6 +670,22 @@ public class IntrospectorTest {
     assertThat(summarized.size() == adjusted.size(), is(true));
 
     return adjusted;
+  }
+
+  private static void assertSummary(Map<Clip, List<Location>> summarized) {
+    for (Clip each : summarized.keySet()) {
+      final String content = each.getSource().getContents();
+      final List<Location> locations = summarized.get(each);
+      for (Location eachLocation : locations) {
+        final String extracted = content.substring(
+              eachLocation.getStart().getOffset(),
+              eachLocation.getEnd().getOffset()
+        );
+
+        assertThat(StringUtil.isEmpty(extracted), is(false));
+
+      }
+    }
   }
 
 

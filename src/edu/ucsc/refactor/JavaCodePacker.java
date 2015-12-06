@@ -599,4 +599,85 @@ public class JavaCodePacker implements CodePacker {
       return matches;
     }
   }
+
+  public static void main(String[] args) throws Exception {
+    final List<Class<?>> classpath = JavaCodePacker.getClasspath(PackingUtils.ALLOWED_PACKAGES);
+    for(Class<?> eachClass : classpath){
+      try {
+        for(Method eachMethod : eachClass.getDeclaredMethods()){
+          if(eachClass.toString().contains("ImmutableList")){
+            System.out.println(toCanonicalName(eachMethod).replace("$", "."));
+          }
+        }
+      } catch (Throwable e){
+        System.err.println(e.getMessage());
+      }
+    }
+
+  }
+
+  static String toCanonicalName(Method method){
+    try {
+      StringBuilder var1 = new StringBuilder();
+      int var2 = method.getModifiers() & 1343;
+      if(var2 != 0) {
+        var1.append(Modifier.toString(var2)).append(" ");
+      }
+
+      var1.append(getTypeName(method.getReturnType())).append(" ");
+      var1.append(getTypeName(method.getDeclaringClass())).append(".");
+      var1.append(method.getName()).append("(");
+      Class[] var3 = method.getParameterTypes();
+
+      for(int var4 = 0; var4 < var3.length; ++var4) {
+        var1.append(getTypeName(var3[var4]));
+        if(var4 < var3.length - 1) {
+          var1.append(",");
+        }
+      }
+
+      var1.append(")");
+      Class[] var7 = method.getExceptionTypes();
+      if(var7.length > 0) {
+        var1.append(" throws ");
+
+        for(int var5 = 0; var5 < var7.length; ++var5) {
+          var1.append(var7[var5].getName().substring(var7[var5].getName().lastIndexOf(".") + 1));
+          if(var5 < var7.length - 1) {
+            var1.append(",");
+          }
+        }
+      }
+
+      return var1.toString();
+    } catch (Exception var6) {
+      return "<" + var6 + ">";
+    }
+  }
+
+  static String getTypeName(Class var0) {
+    if(var0.isArray()) {
+      try {
+        Class var1 = var0;
+
+        int var2;
+        for(var2 = 0; var1.isArray(); var1 = var1.getComponentType()) {
+          ++var2;
+        }
+
+        StringBuilder var3 = new StringBuilder(1000);
+        var3.append(var1.getName().substring(var1.getName().lastIndexOf(".") + 1));
+
+        for(int var4 = 0; var4 < var2; ++var4) {
+          var3.append("[]");
+        }
+
+        return var3.toString();
+      } catch (Throwable ignored) {
+        // ignored
+      }
+    }
+
+    return var0.getName();
+  }
 }
